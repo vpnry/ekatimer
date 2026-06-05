@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_desc_15m">15 minutes meditation</string>
+    <string name="widget_desc_30m">30 minutes meditation</string>
+    <string name="widget_desc_1h">1 hour meditation</string>
+    <string name="widget_desc_1_5h">1.5 hours meditation</string>
+    <string name="widget_desc_2h">2 hours meditation</string>
+    <string name="widget_desc_2_5h">2.5 hours meditation</string>
+    <string name="widget_desc_3h">3 hours meditation</string>
+    <string name="widget_desc_3_5h">3.5 hours meditation</string>
+    <string name="widget_desc_4h">4 hours meditation</string>
+    <string name="widget_desc_endat">End time meditation</string>
+    <string name="widget_desc_unlimited">Unlimited meditation</string>
+</resources>

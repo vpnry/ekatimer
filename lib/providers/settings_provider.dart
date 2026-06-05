@@ -1,0 +1,171 @@
+import 'package:flutter/material.dart';
+import '../models/app_settings.dart';
+import '../models/timer_mode.dart';
+import '../models/sound_config.dart';
+import '../models/vibration_config.dart';
+import '../services/persistence_service.dart';
+import '../services/notification_service.dart';
+
+class SettingsProvider extends ChangeNotifier {
+  AppSettings _settings = const AppSettings();
+
+  AppSettings get settings => _settings;
+
+  TimerMode get defaultTimerMode => _settings.defaultTimerMode;
+  int get defaultDurationMinutes => _settings.defaultDurationMinutes;
+  String get screenControl => _settings.screenControl;
+  String get themeMode => _settings.themeMode;
+  SoundConfig get soundConfig => _settings.soundConfig;
+  VibrationConfig get vibrationConfig => _settings.vibrationConfig;
+  int get sessionDelaySeconds => _settings.sessionDelaySeconds;
+  bool get reminderEnabled => _settings.reminderEnabled;
+  int get reminderHour => _settings.reminderHour;
+  int get reminderMinute => _settings.reminderMinute;
+  String get locale => _settings.locale;
+
+  Future<void> loadSettings() async {
+    _settings = await PersistenceService.loadSettings();
+    notifyListeners();
+  }
+
+  Future<void> setTimerMode(TimerMode mode) async {
+    _settings = _settings.copyWith(defaultTimerMode: mode);
+    await PersistenceService.setTimerMode(mode.asString);
+    notifyListeners();
+  }
+
+  Future<void> setTimerDuration(int minutes) async {
+    _settings = _settings.copyWith(defaultDurationMinutes: minutes);
+    await PersistenceService.setTimerDuration(minutes);
+    notifyListeners();
+  }
+
+  Future<void> setScreenControl(String control) async {
+    _settings = _settings.copyWith(screenControl: control);
+    await PersistenceService.setScreenControl(control);
+    notifyListeners();
+  }
+
+  Future<void> setThemeMode(String mode) async {
+    _settings = _settings.copyWith(themeMode: mode);
+    await PersistenceService.setThemeMode(mode);
+    notifyListeners();
+  }
+
+  Future<void> setStartSound(String sound) async {
+    final updated = _settings.soundConfig.copyWith(startSound: sound);
+    _settings = _settings.copyWith(soundConfig: updated);
+    await PersistenceService.setStartSound(sound);
+    notifyListeners();
+  }
+
+  Future<void> setEndSound(String sound) async {
+    final updated = _settings.soundConfig.copyWith(endSound: sound);
+    _settings = _settings.copyWith(soundConfig: updated);
+    await PersistenceService.setEndSound(sound);
+    notifyListeners();
+  }
+
+  Future<void> setIntervalSound(String sound) async {
+    final updated = _settings.soundConfig.copyWith(intervalSound: sound);
+    _settings = _settings.copyWith(soundConfig: updated);
+    await PersistenceService.setIntervalSound(sound);
+    notifyListeners();
+  }
+
+  Future<void> setBellSound(String sound) async {
+    final updated = _settings.soundConfig.copyWith(bellSound: sound);
+    _settings = _settings.copyWith(soundConfig: updated);
+    await PersistenceService.setBellSound(sound);
+    notifyListeners();
+  }
+
+  Future<void> setIntervalMinutes(int minutes) async {
+    final updated = _settings.soundConfig.copyWith(intervalMinutes: minutes);
+    _settings = _settings.copyWith(soundConfig: updated);
+    await PersistenceService.setIntervalMinutes(minutes);
+    notifyListeners();
+  }
+
+  Future<void> setBellIntervalMinutes(int minutes) async {
+    final updated = _settings.soundConfig.copyWith(bellIntervalMinutes: minutes);
+    _settings = _settings.copyWith(soundConfig: updated);
+    await PersistenceService.setBellIntervalMinutes(minutes);
+    notifyListeners();
+  }
+
+  Future<void> setVolume(int volume) async {
+    final updated = _settings.soundConfig.copyWith(volume: volume);
+    _settings = _settings.copyWith(soundConfig: updated);
+    await PersistenceService.setVolume(volume);
+    notifyListeners();
+  }
+
+  Future<void> setStartVibration(String vib) async {
+    final updated = _settings.vibrationConfig.copyWith(startVibration: vib);
+    _settings = _settings.copyWith(vibrationConfig: updated);
+    await PersistenceService.setStartVibration(vib);
+    notifyListeners();
+  }
+
+  Future<void> setEndVibration(String vib) async {
+    final updated = _settings.vibrationConfig.copyWith(endVibration: vib);
+    _settings = _settings.copyWith(vibrationConfig: updated);
+    await PersistenceService.setEndVibration(vib);
+    notifyListeners();
+  }
+
+  Future<void> setIntervalVibration(String vib) async {
+    final updated = _settings.vibrationConfig.copyWith(intervalVibration: vib);
+    _settings = _settings.copyWith(vibrationConfig: updated);
+    await PersistenceService.setIntervalVibration(vib);
+    notifyListeners();
+  }
+
+  Future<void> setReminderEnabled(bool enabled) async {
+    _settings = _settings.copyWith(reminderEnabled: enabled);
+    await PersistenceService.setReminderEnabled(enabled);
+
+    if (enabled) {
+      final notificationService = NotificationService();
+      await notificationService.scheduleDailyReminder(
+        id: 1,
+        hour: _settings.reminderHour,
+        minute: _settings.reminderMinute,
+      );
+    } else {
+      final notificationService = NotificationService();
+      await notificationService.cancelNotification(1);
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> setSessionDelay(int seconds) async {
+    _settings = _settings.copyWith(sessionDelaySeconds: seconds);
+    await PersistenceService.setSessionDelay(seconds);
+    notifyListeners();
+  }
+
+  Future<void> setLocale(String locale) async {
+    _settings = _settings.copyWith(locale: locale);
+    await PersistenceService.setLocale(locale);
+    notifyListeners();
+  }
+
+  Future<void> setReminderTime(int hour, int minute) async {
+    _settings = _settings.copyWith(reminderHour: hour, reminderMinute: minute);
+    await PersistenceService.setReminderTime(hour, minute);
+
+    if (_settings.reminderEnabled) {
+      final notificationService = NotificationService();
+      await notificationService.scheduleDailyReminder(
+        id: 1,
+        hour: hour,
+        minute: minute,
+      );
+    }
+
+    notifyListeners();
+  }
+}
