@@ -60,8 +60,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               icon: Icons.timelapse_outlined,
               title: t.translate('settings.defaultDuration'),
-              subtitle: t.translate('settings.defaultDurationSubtitle',
-                  args: {'minutes': '${settings.defaultDurationMinutes}'}),
+              subtitle: t.translate(
+                'settings.defaultDurationSubtitle',
+                args: {'minutes': '${settings.defaultDurationMinutes}'},
+              ),
               trailing: SizedBox(
                 width: 120,
                 child: Slider(
@@ -78,14 +80,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const Divider(),
 
-            _buildSectionHeader(context, t.translate('settings.delayBeforeStart')),
+            _buildSectionHeader(
+              context,
+              t.translate('settings.delayBeforeStart'),
+            ),
             _buildListTile(
               context,
               icon: Icons.timer_off_outlined,
               title: t.translate('settings.delaySeconds'),
               subtitle: settings.sessionDelaySeconds > 0
-                  ? t.translate('settings.delayCount',
-                      args: {'seconds': '${settings.sessionDelaySeconds}'})
+                  ? t.translate(
+                      'settings.delayCount',
+                      args: {'seconds': '${settings.sessionDelaySeconds}'},
+                    )
                   : t.translate('settings.disabled'),
               trailing: SizedBox(
                 width: 160,
@@ -97,8 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   label: settings.sessionDelaySeconds > 0
                       ? '${settings.sessionDelaySeconds}s'
                       : 'Off',
-                  onChanged: (value) =>
-                      settings.setSessionDelay(value.round()),
+                  onChanged: (value) => settings.setSessionDelay(value.round()),
                 ),
               ),
             ),
@@ -147,8 +153,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.repeat_one_outlined,
               title: t.translate('settings.intervalSound'),
               subtitle: settings.soundConfig.intervalMinutes > 0
-                  ? t.translate('settings.everyMin',
-                      args: {'minutes': '${settings.soundConfig.intervalMinutes}'})
+                  ? t.translate(
+                      'settings.everyMin',
+                      args: {
+                        'minutes': '${settings.soundConfig.intervalMinutes}',
+                      },
+                    )
                   : t.translate('settings.disabled'),
               value: settings.soundConfig.intervalMinutes,
               maxValue: 60,
@@ -161,8 +171,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.notifications_outlined,
               title: t.translate('settings.mindfulnessBell'),
               subtitle: settings.soundConfig.bellIntervalMinutes > 0
-                  ? t.translate('settings.everyMin',
-                      args: {'minutes': '${settings.soundConfig.bellIntervalMinutes}'})
+                  ? t.translate(
+                      'settings.everyMin',
+                      args: {
+                        'minutes':
+                            '${settings.soundConfig.bellIntervalMinutes}',
+                      },
+                    )
                   : t.translate('settings.disabled'),
               value: settings.soundConfig.bellIntervalMinutes,
               maxValue: 60,
@@ -173,7 +188,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const Divider(),
 
-            _buildSectionHeader(context, t.translate('settings.vibrationSettings')),
+            _buildSectionHeader(
+              context,
+              t.translate('settings.vibrationSettings'),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: VibrationPicker(
@@ -430,13 +448,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'bell.m4a, gardenbird.m4a, bowl.m4a, bowlstrong.m4a, gong.m4a, watch.m4a',
+                'bell.wav, gardenbird.wav, bowl.wav, bowlstrong.wav, gong.wav, watch.wav',
                 style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Obtained from Joseph SARDIN - BigSoundBank.com',
-              ),
+              const Text('Obtained from Joseph SARDIN - BigSoundBank.com'),
               const SizedBox(height: 8),
               const Text(
                 'You are allowed to:\n'
@@ -453,10 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'This is:\n'
                 'Creative Commons CC0 1.0 Universal\n'
                 'Public Domain Dedication.',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 13,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
               ),
               const SizedBox(height: 16),
               const Text(

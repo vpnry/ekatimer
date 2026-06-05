@@ -41,7 +41,7 @@ class AudioService {
 
     try {
       await _player.stop();
-      await _player.play(AssetSource('sounds/$soundName.m4a'));
+      await _player.play(AssetSource('sounds/$soundName.wav'));
       _isPlaying = true;
       _currentSound = soundName;
     } catch (e) {
