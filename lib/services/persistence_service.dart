@@ -29,7 +29,7 @@ class PersistenceService {
       themeMode: p.getString(AppConstants.prefThemeMode) ?? 'system',
       soundConfig: SoundConfig(
         startSound: p.getString(AppConstants.prefStartSound) ?? 'none',
-        endSound: p.getString(AppConstants.prefEndSound) ?? 'BowlStrong',
+        endSound: p.getString(AppConstants.prefEndSound) ?? 'ThreeBowl',
         intervalSound: p.getString(AppConstants.prefIntervalSound) ?? 'Bowl',
         bellSound: p.getString(AppConstants.prefBellSound) ?? 'Bowl',
         intervalMinutes: p.getInt(AppConstants.prefIntervalMinutes) ?? 0,

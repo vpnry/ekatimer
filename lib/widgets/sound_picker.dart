@@ -20,25 +20,28 @@ class SoundPicker extends StatefulWidget {
   State<SoundPicker> createState() => _SoundPickerState();
 }
 
-  String _soundLabel(BuildContext context, String sound) {
-    final t = TranslationService.of(context);
-    switch (sound) {
-      case 'Bell':
-        return t.translate('sound.bell');
-      case 'Bowl':
-        return t.translate('sound.bowl');
-      case 'BowlStrong':
-        return t.translate('sound.bowlStrong');
-      case 'GardenBird':
-        return t.translate('sound.gardenBird');
-      case 'Gong':
-        return t.translate('sound.gong');
-      case 'Watch':
-        return t.translate('sound.watch');
-      default:
-        return sound;
-    }
+String _soundLabel(BuildContext context, String sound) {
+  final t = TranslationService.of(context);
+  switch (sound) {
+    case 'ThreeBowl':
+      return t.translate('sound.threeBowl');
+    case 'Bell':
+      return t.translate('sound.bell');
+    case 'Bowl':
+      return t.translate('sound.bowl');
+    case 'BowlStrong':
+      return t.translate('sound.bowlStrong');
+    case 'GardenBird':
+      return t.translate('sound.gardenBird');
+    case 'Gong':
+      return t.translate('sound.gong');
+
+    case 'Watch':
+      return t.translate('sound.watch');
+    default:
+      return sound;
   }
+}
 
 class _SoundPickerState extends State<SoundPicker>
     with SingleTickerProviderStateMixin {
@@ -61,7 +64,8 @@ class _SoundPickerState extends State<SoundPicker>
     final audioService = AudioService();
     audioService.init().then((_) {
       if (!mounted) return;
-      if (audioService.isPlaying && audioService.currentSound == widget.currentSound) {
+      if (audioService.isPlaying &&
+          audioService.currentSound == widget.currentSound) {
         setState(() => _isPreviewing = true);
         _pulseController.repeat(reverse: true);
       }
@@ -109,10 +113,7 @@ class _SoundPickerState extends State<SoundPicker>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: theme.textTheme.titleMedium,
-        ),
+        Text(widget.label, style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         AnimatedBuilder(
           animation: _pulseAnimation,
@@ -154,7 +155,9 @@ class _SoundPickerState extends State<SoundPicker>
                 items: [
                   DropdownMenuItem(
                     value: 'none',
-                    child: Text(TranslationService.of(context).translate('common.none')),
+                    child: Text(
+                      TranslationService.of(context).translate('common.none'),
+                    ),
                   ),
                   ...AppConstants.builtInSounds.map((sound) {
                     return DropdownMenuItem(
@@ -165,7 +168,8 @@ class _SoundPickerState extends State<SoundPicker>
                             animation: _pulseAnimation,
                             builder: (context, _) {
                               return Transform.scale(
-                                scale: (_isPreviewing &&
+                                scale:
+                                    (_isPreviewing &&
                                         widget.currentSound == sound)
                                     ? _pulseAnimation.value
                                     : 1.0,
@@ -175,7 +179,8 @@ class _SoundPickerState extends State<SoundPicker>
                                       ? Icons.volume_up_rounded
                                       : Icons.music_note,
                                   size: 18,
-                                  color: (_isPreviewing &&
+                                  color:
+                                      (_isPreviewing &&
                                           widget.currentSound == sound)
                                       ? AppColors.primary
                                       : theme.colorScheme.primary,
@@ -184,14 +189,13 @@ class _SoundPickerState extends State<SoundPicker>
                             },
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            _soundLabel(context, sound),
-                          ),
+                          Text(_soundLabel(context, sound)),
                           const Spacer(),
-                          if (_isPreviewing &&
-                              widget.currentSound == sound)
+                          if (_isPreviewing && widget.currentSound == sound)
                             Text(
-                              TranslationService.of(context).translate('common.playing'),
+                              TranslationService.of(
+                                context,
+                              ).translate('common.playing'),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: AppColors.primary,

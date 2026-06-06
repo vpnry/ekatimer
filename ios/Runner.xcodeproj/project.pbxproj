@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15,6 +15,7 @@
 		0C12E2292FD28D7200A74D49 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C12E2282FD28D7200A74D49 /* WidgetKit.framework */; };
 		0C12E22B2FD28D7200A74D49 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C12E22A2FD28D7200A74D49 /* SwiftUI.framework */; };
 		0C12E2362FD28D7300A74D49 /* MeditationWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0C12E2262FD28D7200A74D49 /* MeditationWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		0C2D339D2FD470E60073C370 /* ThreeBowl.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0C2D339C2FD470E60073C370 /* ThreeBowl.wav */; };
 		0C95E34E2FD262CC00B70FC9 /* med.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0C95E34D2FD262CC00B70FC9 /* med.icon */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
@@ -79,6 +80,7 @@
 		0C12E22A2FD28D7200A74D49 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		0C12E23D2FD28DE800A74D49 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		0C12E23E2FD28E4700A74D49 /* MeditationWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeditationWidgetExtension.entitlements; sourceTree = "<group>"; };
+		0C2D339C2FD470E60073C370 /* ThreeBowl.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ThreeBowl.wav; sourceTree = "<group>"; };
 		0C95E34D2FD262CC00B70FC9 /* med.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = med.icon; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
@@ -205,6 +207,7 @@
 				0C0AE0B32FD3884F005CE018 /* BowlStrong.wav */,
 				0C0AE0B42FD3884F005CE018 /* GardenBird.wav */,
 				0C0AE0B52FD3884F005CE018 /* Watch.wav */,
+				0C2D339C2FD470E60073C370 /* ThreeBowl.wav */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -345,6 +348,7 @@
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
+				0C2D339D2FD470E60073C370 /* ThreeBowl.wav in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				0C0AE0B62FD3884F005CE018 /* GardenBird.wav in Resources */,
 				0C0AE0B72FD3884F005CE018 /* Watch.wav in Resources */,

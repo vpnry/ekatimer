@@ -9,7 +9,7 @@ class SoundConfig {
 
   const SoundConfig({
     this.startSound = 'none',
-    this.endSound = 'BowlStrong',
+    this.endSound = 'ThreeBowl',
     this.intervalSound = 'Bowl',
     this.bellSound = 'Bowl',
     this.intervalMinutes = 0,
@@ -52,7 +52,7 @@ class SoundConfig {
   factory SoundConfig.fromMap(Map<String, dynamic> map) {
     return SoundConfig(
       startSound: map['startSound'] as String? ?? 'none',
-      endSound: map['endSound'] as String? ?? 'BowlStrong',
+      endSound: map['endSound'] as String? ?? 'ThreeBowl',
       intervalSound: map['intervalSound'] as String? ?? 'Bowl',
       bellSound: map['bellSound'] as String? ?? 'Bowl',
       intervalMinutes: map['intervalMinutes'] as int? ?? 0,

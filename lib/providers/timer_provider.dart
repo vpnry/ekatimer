@@ -38,7 +38,7 @@ class TimerProvider extends ChangeNotifier {
   int intervalMinutes = 0;
   int bellIntervalMinutes = 0;
   String startSound = 'none';
-  String endSound = 'BowlStrong';
+  String endSound = 'ThreeBowl';
   String intervalSound = 'Bowl';
   String bellSound = 'Bowl';
   String startVibration = 'none';

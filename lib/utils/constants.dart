@@ -43,6 +43,7 @@ class AppConstants {
   static const String sessionStateEndTime = 'session_end_time';
 
   static const List<String> builtInSounds = [
+    'ThreeBowl',
     'Bell',
     'Bowl',
     'BowlStrong',
@@ -52,6 +53,7 @@ class AppConstants {
   ];
 
   static const Map<String, String> soundLabels = {
+    'ThreeBowl': 'Three Bowl',
     'Bell': 'Bell',
     'Bowl': 'Bowl',
     'BowlStrong': 'Strong Bowl',

@@ -453,6 +453,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 16),
               const Text('Obtained from Joseph SARDIN - BigSoundBank.com'),
+              const SizedBox(height: 4),
+              const Text('ThreeBowl.wav by naturenotesuk'),
+              const SizedBox(height: 4),
+              const Text(
+                'https://freesound.org/s/667491/ — License: Attribution 4.0',
+                style: TextStyle(fontSize: 11),
+              ),
               const SizedBox(height: 8),
               const Text(
                 'You are allowed to:\n'
