@@ -284,6 +284,7 @@ class AlarmSchedulerPlugin {
                             val assetPath = "flutter_assets/$soundPath"
                             val afd = context.assets.openFd(assetPath)
                             mediaPlayer = MediaPlayer().apply {
+                                setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK)
                                 setAudioAttributes(
                                     AudioAttributes.Builder()
                                         .setUsage(AudioAttributes.USAGE_ALARM)
@@ -317,6 +318,7 @@ class AlarmSchedulerPlugin {
                         val file = File(soundPath)
                         if (file.exists()) {
                             mediaPlayer = MediaPlayer().apply {
+                                setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK)
                                 setAudioAttributes(
                                     AudioAttributes.Builder()
                                         .setUsage(AudioAttributes.USAGE_ALARM)
@@ -349,6 +351,7 @@ class AlarmSchedulerPlugin {
                 // Fallback to default alarm sound
                 val defaultUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 mediaPlayer = MediaPlayer().apply {
+                    setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK)
                     setAudioAttributes(
                         AudioAttributes.Builder()
                             .setUsage(AudioAttributes.USAGE_ALARM)
