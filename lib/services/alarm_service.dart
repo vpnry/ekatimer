@@ -182,30 +182,6 @@ class AlarmService {
     }
   }
 
-  /// Start a foreground service to keep the timer alive in background.
-  Future<bool> startForegroundService({int requestCode = 1001}) async {
-    try {
-      await _channel.invokeMethod('startForegroundService', {
-        'requestCode': requestCode,
-      });
-      return true;
-    } catch (e) {
-      debugPrint('AlarmService: startForegroundService failed: $e');
-      return false;
-    }
-  }
-
-  /// Stop the foreground service.
-  Future<bool> stopForegroundService() async {
-    try {
-      await _channel.invokeMethod('stopForegroundService');
-      return true;
-    } catch (e) {
-      debugPrint('AlarmService: stopForegroundService failed: $e');
-      return false;
-    }
-  }
-
   void dispose() {
     _eventSubscription?.cancel();
     _eventSubscription = null;

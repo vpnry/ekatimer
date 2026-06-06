@@ -6,8 +6,6 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:label="ekaTimer"
@@ -151,16 +149,6 @@
             android:name=".AlarmReceiver"
             android:exported="false"
             android:enabled="true" />
-
-        <!-- Foreground service for keeping timer alive in background -->
-        <service
-            android:name=".TimerForegroundService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="timer_running" />
-        </service>
 
         <activity
             android:name=".MainActivity"

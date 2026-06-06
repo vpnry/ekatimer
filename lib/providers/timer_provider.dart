@@ -193,12 +193,9 @@ class TimerProvider extends ChangeNotifier {
     // Acquire CPU wake lock to keep Dart timer running when screen is off
     await _alarmService.acquireCpuWakeLock();
 
-    // Start foreground service to keep timer alive in background
-    final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
-    await _alarmService.startForegroundService(requestCode: requestCode);
-
     // Schedule a native AlarmManager alarm as a backup (wakes from doze)
     if (_endTime != null) {
+      final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
       final remainingMs = _endTime!.millisecondsSinceEpoch;
       await _alarmService.scheduleEndAlarm(
         endTimeMillis: remainingMs,
@@ -246,8 +243,6 @@ class TimerProvider extends ChangeNotifier {
       requestCode: _timerMode == TimerMode.timed ? 1001 : 1002,
     );
     await _alarmService.releaseCpuWakeLock();
-    // Stop foreground service while paused - will restart on resume
-    await _alarmService.stopForegroundService();
     await _persistSessionState();
     notifyListeners();
   }
@@ -264,11 +259,10 @@ class TimerProvider extends ChangeNotifier {
     _state = TimerState.running;
     _alarmFired = false;
 
-    // Re-acquire CPU wake lock, restart foreground service, and reschedule alarm
+    // Re-acquire CPU wake lock and reschedule alarm
     await _alarmService.acquireCpuWakeLock();
-    final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
-    await _alarmService.startForegroundService(requestCode: requestCode);
     if (_endTime != null) {
+      final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
       await _alarmService.scheduleEndAlarm(
         endTimeMillis: _endTime!.millisecondsSinceEpoch,
         requestCode: requestCode,
@@ -284,10 +278,9 @@ class TimerProvider extends ChangeNotifier {
   Future<void> stopSession({bool completed = true}) async {
     _stopTick();
 
-    // Cancel any pending alarms, release CPU wake lock, and stop foreground service
+    // Cancel any pending alarms and release CPU wake lock
     await _alarmService.cancelAllAlarms();
     await _alarmService.releaseCpuWakeLock();
-    await _alarmService.stopForegroundService();
 
     final now = DateTime.now();
     _elapsedSeconds = _calculateElapsedSeconds(now);
@@ -362,11 +355,10 @@ class TimerProvider extends ChangeNotifier {
     _lastBellMinute = -1;
 
     if (!isPaused) {
-      // Re-acquire CPU wake lock, restart foreground service, and reschedule alarm on restore
+      // Re-acquire CPU wake lock and reschedule alarm on restore
       await _alarmService.acquireCpuWakeLock();
-      final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
-      await _alarmService.startForegroundService(requestCode: requestCode);
       if (_endTime != null && _endTime!.millisecondsSinceEpoch > 0) {
+        final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
         await _alarmService.scheduleEndAlarm(
           endTimeMillis: _endTime!.millisecondsSinceEpoch,
           requestCode: requestCode,
@@ -463,10 +455,9 @@ class TimerProvider extends ChangeNotifier {
   Future<void> _onSessionComplete() async {
     _stopTick();
     
-    // Cancel native alarm (already triggered but clean up), release wake lock, and stop foreground service
+    // Cancel native alarm (already triggered but clean up) and release wake lock
     await _alarmService.cancelAllAlarms();
     await _alarmService.releaseCpuWakeLock();
-    await _alarmService.stopForegroundService();
 
     _state = TimerState.completed;
 
@@ -554,7 +545,6 @@ class TimerProvider extends ChangeNotifier {
     _stopTick();
     _alarmService.cancelAllAlarms();
     _alarmService.releaseCpuWakeLock();
-    _alarmService.stopForegroundService();
     super.dispose();
   }
 }

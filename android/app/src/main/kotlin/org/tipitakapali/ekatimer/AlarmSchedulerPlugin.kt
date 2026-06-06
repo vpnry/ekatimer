@@ -10,7 +10,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.media.RingtoneManager
@@ -105,15 +104,6 @@ class AlarmSchedulerPlugin {
                             requestExactAlarmPermission(context)
                             result.success(true)
                         }
-                        "startForegroundService" -> {
-                            val requestCode = call.argument<Int>("requestCode") ?: REQUEST_CODE_TIMED_END
-                            startForegroundService(context, requestCode)
-                            result.success(true)
-                        }
-                        "stopForegroundService" -> {
-                            stopForegroundService(context)
-                            result.success(true)
-                        }
                         else -> result.notImplemented()
                     }
                 } catch (e: Exception) {
@@ -175,24 +165,6 @@ class AlarmSchedulerPlugin {
                 context.startActivity(intent)
                 Log.d(TAG, "Requested exact alarm permission via Settings intent")
             }
-        }
-
-        fun startForegroundService(context: Context, requestCode: Int) {
-            val serviceIntent = Intent(context, TimerForegroundService::class.java).apply {
-                putExtra("requestCode", requestCode)
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(serviceIntent)
-            }
-            Log.d(TAG, "Started foreground service for requestCode=$requestCode")
-        }
-
-        fun stopForegroundService(context: Context) {
-            val serviceIntent = Intent(context, TimerForegroundService::class.java)
-            context.stopService(serviceIntent)
-            Log.d(TAG, "Stopped foreground service")
         }
 
         private fun scheduleEndAlarm(context: Context, delaySeconds: Int, endTimeMillis: Long, requestCode: Int, soundPath: String = "") {
