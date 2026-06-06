@@ -43,22 +43,22 @@ class AppConstants {
   static const String sessionStateEndTime = 'session_end_time';
 
   static const List<String> builtInSounds = [
+    'Gong',
     'ThreeBowl',
-    'Bell',
     'Bowl',
     'BowlStrong',
     'GardenBird',
-    'Gong',
+    'Bell',
     'Watch',
   ];
 
   static const Map<String, String> soundLabels = {
+    'Gong': 'Gong',
     'ThreeBowl': 'Three Bowl',
-    'Bell': 'Bell',
     'Bowl': 'Bowl',
     'BowlStrong': 'Strong Bowl',
     'GardenBird': 'Garden Bird',
-    'Gong': 'Gong',
+    'Bell': 'Bell',
     'Watch': 'Watch',
     'none': 'None',
   };

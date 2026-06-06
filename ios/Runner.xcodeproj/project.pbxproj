@@ -7,16 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0C0AE0B62FD3884F005CE018 /* GardenBird.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0C0AE0B42FD3884F005CE018 /* GardenBird.wav */; };
-		0C0AE0B72FD3884F005CE018 /* Watch.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0C0AE0B52FD3884F005CE018 /* Watch.wav */; };
-		0C0AE0B82FD3884F005CE018 /* Bowl.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0C0AE0B22FD3884F005CE018 /* Bowl.wav */; };
-		0C0AE0B92FD3884F005CE018 /* Bell.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0C0AE0B12FD3884F005CE018 /* Bell.wav */; };
-		0C0AE0BA2FD3884F005CE018 /* BowlStrong.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0C0AE0B32FD3884F005CE018 /* BowlStrong.wav */; };
 		0C12E2292FD28D7200A74D49 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C12E2282FD28D7200A74D49 /* WidgetKit.framework */; };
 		0C12E22B2FD28D7200A74D49 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C12E22A2FD28D7200A74D49 /* SwiftUI.framework */; };
 		0C12E2362FD28D7300A74D49 /* MeditationWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0C12E2262FD28D7200A74D49 /* MeditationWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		0C2D339D2FD470E60073C370 /* ThreeBowl.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0C2D339C2FD470E60073C370 /* ThreeBowl.wav */; };
 		0C95E34E2FD262CC00B70FC9 /* med.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0C95E34D2FD262CC00B70FC9 /* med.icon */; };
+		0CA72F442FD48A1A002AE5E1 /* Watch.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0CA72F432FD48A1A002AE5E1 /* Watch.wav */; };
+		0CA72F452FD48A1A002AE5E1 /* ThreeBowl.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0CA72F422FD48A1A002AE5E1 /* ThreeBowl.wav */; };
+		0CA72F462FD48A1A002AE5E1 /* Bell.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0CA72F3D2FD48A1A002AE5E1 /* Bell.wav */; };
+		0CA72F472FD48A1A002AE5E1 /* Gong.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0CA72F412FD48A1A002AE5E1 /* Gong.wav */; };
+		0CA72F482FD48A1A002AE5E1 /* GardenBird.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0CA72F402FD48A1A002AE5E1 /* GardenBird.wav */; };
+		0CA72F492FD48A1A002AE5E1 /* BowlStrong.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0CA72F3F2FD48A1A002AE5E1 /* BowlStrong.wav */; };
+		0CA72F4A2FD48A1A002AE5E1 /* Bowl.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0CA72F3E2FD48A1A002AE5E1 /* Bowl.wav */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
@@ -70,18 +71,19 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0C0AE0B12FD3884F005CE018 /* Bell.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Bell.wav; sourceTree = "<group>"; };
-		0C0AE0B22FD3884F005CE018 /* Bowl.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Bowl.wav; sourceTree = "<group>"; };
-		0C0AE0B32FD3884F005CE018 /* BowlStrong.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = BowlStrong.wav; sourceTree = "<group>"; };
-		0C0AE0B42FD3884F005CE018 /* GardenBird.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = GardenBird.wav; sourceTree = "<group>"; };
-		0C0AE0B52FD3884F005CE018 /* Watch.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Watch.wav; sourceTree = "<group>"; };
 		0C12E2262FD28D7200A74D49 /* MeditationWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MeditationWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C12E2282FD28D7200A74D49 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		0C12E22A2FD28D7200A74D49 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		0C12E23D2FD28DE800A74D49 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		0C12E23E2FD28E4700A74D49 /* MeditationWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeditationWidgetExtension.entitlements; sourceTree = "<group>"; };
-		0C2D339C2FD470E60073C370 /* ThreeBowl.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ThreeBowl.wav; sourceTree = "<group>"; };
 		0C95E34D2FD262CC00B70FC9 /* med.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = med.icon; sourceTree = "<group>"; };
+		0CA72F3D2FD48A1A002AE5E1 /* Bell.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Bell.wav; sourceTree = "<group>"; };
+		0CA72F3E2FD48A1A002AE5E1 /* Bowl.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Bowl.wav; sourceTree = "<group>"; };
+		0CA72F3F2FD48A1A002AE5E1 /* BowlStrong.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = BowlStrong.wav; sourceTree = "<group>"; };
+		0CA72F402FD48A1A002AE5E1 /* GardenBird.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = GardenBird.wav; sourceTree = "<group>"; };
+		0CA72F412FD48A1A002AE5E1 /* Gong.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Gong.wav; sourceTree = "<group>"; };
+		0CA72F422FD48A1A002AE5E1 /* ThreeBowl.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ThreeBowl.wav; sourceTree = "<group>"; };
+		0CA72F432FD48A1A002AE5E1 /* Watch.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Watch.wav; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
@@ -202,12 +204,13 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
-				0C0AE0B12FD3884F005CE018 /* Bell.wav */,
-				0C0AE0B22FD3884F005CE018 /* Bowl.wav */,
-				0C0AE0B32FD3884F005CE018 /* BowlStrong.wav */,
-				0C0AE0B42FD3884F005CE018 /* GardenBird.wav */,
-				0C0AE0B52FD3884F005CE018 /* Watch.wav */,
-				0C2D339C2FD470E60073C370 /* ThreeBowl.wav */,
+				0CA72F3D2FD48A1A002AE5E1 /* Bell.wav */,
+				0CA72F3E2FD48A1A002AE5E1 /* Bowl.wav */,
+				0CA72F3F2FD48A1A002AE5E1 /* BowlStrong.wav */,
+				0CA72F402FD48A1A002AE5E1 /* GardenBird.wav */,
+				0CA72F412FD48A1A002AE5E1 /* Gong.wav */,
+				0CA72F422FD48A1A002AE5E1 /* ThreeBowl.wav */,
+				0CA72F432FD48A1A002AE5E1 /* Watch.wav */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -347,14 +350,15 @@
 			files = (
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
+				0CA72F442FD48A1A002AE5E1 /* Watch.wav in Resources */,
+				0CA72F452FD48A1A002AE5E1 /* ThreeBowl.wav in Resources */,
+				0CA72F462FD48A1A002AE5E1 /* Bell.wav in Resources */,
+				0CA72F472FD48A1A002AE5E1 /* Gong.wav in Resources */,
+				0CA72F482FD48A1A002AE5E1 /* GardenBird.wav in Resources */,
+				0CA72F492FD48A1A002AE5E1 /* BowlStrong.wav in Resources */,
+				0CA72F4A2FD48A1A002AE5E1 /* Bowl.wav in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
-				0C2D339D2FD470E60073C370 /* ThreeBowl.wav in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
-				0C0AE0B62FD3884F005CE018 /* GardenBird.wav in Resources */,
-				0C0AE0B72FD3884F005CE018 /* Watch.wav in Resources */,
-				0C0AE0B82FD3884F005CE018 /* Bowl.wav in Resources */,
-				0C0AE0B92FD3884F005CE018 /* Bell.wav in Resources */,
-				0C0AE0BA2FD3884F005CE018 /* BowlStrong.wav in Resources */,
 				0C95E34E2FD262CC00B70FC9 /* med.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -469,7 +473,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = MeditationWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = UZ9CGUQ4RH;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -514,7 +518,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = MeditationWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = UZ9CGUQ4RH;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -556,7 +560,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = MeditationWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = UZ9CGUQ4RH;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -647,7 +651,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = UZ9CGUQ4RH;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -837,7 +841,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = UZ9CGUQ4RH;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -866,7 +870,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = UZ9CGUQ4RH;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;

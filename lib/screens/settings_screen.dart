@@ -442,46 +442,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Free Sound Library - CC0 1.0 Universal',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
+              // CC0
               const Text(
-                'bell.wav, gardenbird.wav, bowl.wav, bowlstrong.wav, gong.wav, watch.wav',
+                'CC0 1.0 Universal (Public Domain)',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'bell.wav\n'
+                'gardenbird.wav\n'
+                'bowl.wav\n'
+                'bowlstrong.wav\n'
+                'watch.wav',
                 style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
               ),
-              const SizedBox(height: 16),
-              const Text('Obtained from Joseph SARDIN - BigSoundBank.com'),
-              const SizedBox(height: 4),
-              const Text('ThreeBowl.wav by naturenotesuk'),
-              const SizedBox(height: 4),
-              const Text(
-                'https://freesound.org/s/667491/ — License: Attribution 4.0',
-                style: TextStyle(fontSize: 11),
-              ),
               const SizedBox(height: 8),
               const Text(
-                'You are allowed to:\n'
-                '• Share, copy, distribute and communicate the material by all means '
-                'and in all formats.\n'
-                '• Adapt, remix, transform and create from material.\n'
-                '• Use, including for commercial purposes.\n'
-                '• Without any restrictions.\n'
-                '• Without asking permission.',
-                style: TextStyle(fontSize: 13, height: 1.5),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'This is:\n'
-                'Creative Commons CC0 1.0 Universal\n'
-                'Public Domain Dedication.',
-                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'https://creativecommons.org/publicdomain/zero/1.0/',
+                'Source: Joseph SARDIN (BigSoundBank.com)',
                 style: TextStyle(fontSize: 12),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Attribution 4.0
+              const Divider(),
+
+              const SizedBox(height: 12),
+
+              const Text(
+                'Creative Commons Attribution 4.0',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 8),
+
+              const Text(
+                'ThreeBowl.wav',
+                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+              const Text(
+                'Author: naturenotesuk',
+                style: TextStyle(fontSize: 12),
+              ),
+              const Text(
+                'https://freesound.org/s/667491/',
+                style: TextStyle(fontSize: 11),
+              ),
+
+              const SizedBox(height: 12),
+
+              const Text(
+                'gong.wav',
+                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+              const Text('Author: reinsamba', style: TextStyle(fontSize: 12)),
+              const Text(
+                'https://freesound.org/s/46062/',
+                style: TextStyle(fontSize: 11),
               ),
             ],
           ),
