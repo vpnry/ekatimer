@@ -39,7 +39,7 @@ class PersistenceService {
       ),
       vibrationConfig: VibrationConfig(
         startVibration: p.getString(AppConstants.prefStartVibration) ?? 'none',
-        endVibration: p.getString(AppConstants.prefEndVibration) ?? 'none',
+        endVibration: p.getString(AppConstants.prefEndVibration) ?? 'medium',
         intervalVibration:
             p.getString(AppConstants.prefIntervalVibration) ?? 'none',
       ),

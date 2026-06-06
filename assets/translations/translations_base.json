@@ -3,7 +3,6 @@
     "app.title": "ekaTimer",
     "app.splash.subtitle": "eka",
     "app.splash.timer": "Timer",
-
     "home.mode.timed": "Timed",
     "home.mode.endAt": "End At",
     "home.mode.unlimited": "Unlimited",
@@ -21,7 +20,6 @@
     "home.until": "Until",
     "home.hours": "h",
     "home.minutes": "m",
-
     "meditation.remaining": "Remaining",
     "meditation.elapsed": "Elapsed",
     "meditation.endAt": "End at",
@@ -35,7 +33,6 @@
     "meditation.startingIn": "Starting in",
     "meditation.tapToSkip": "Tap to start now",
     "meditation.paused": "PAUSED",
-
     "complete.backToHome": "Back to Home",
     "complete.meditationTime": "Meditation Time",
     "complete.sessionComplete": "Session Complete",
@@ -44,7 +41,6 @@
     "complete.totalTime": "Total Time",
     "complete.bestStreak": "Best Streak",
     "complete.daysStreak": "{count} {unit} streak!",
-
     "history.title": "Session History",
     "history.clearAll": "Clear all history",
     "history.noSessions": "No sessions yet",
@@ -59,7 +55,6 @@
     "history.clearAllConfirm": "Are you sure you want to delete all session history? This cannot be undone.",
     "history.clearAllBtn": "Clear All",
     "history.stopped": "Stopped",
-
     "stats.title": "Statistics",
     "stats.overview": "Overview",
     "stats.weekly": "Weekly",
@@ -78,7 +73,6 @@
     "stats.weeklyTitle": "Weekly Meditation Time",
     "stats.monthlyTitle": "Monthly Meditation Time",
     "stats.noData": "No data yet",
-
     "settings.title": "Meditation Settings",
     "settings.timerSettings": "Timer Settings",
     "settings.defaultTimerMode": "Default Timer Mode",
@@ -121,7 +115,6 @@
     "settings.startVibration": "Start Vibration",
     "settings.endVibration": "End Vibration",
     "settings.intervalVibration": "Interval Vibration",
-
     "common.save": "Save",
     "common.cancel": "Cancel",
     "common.delete": "Delete",
@@ -134,14 +127,12 @@
     "common.long": "Long",
     "common.double": "Double",
     "common.playing": "Playing",
-
     "sound.bell": "Bell",
     "sound.bowl": "Bowl",
     "sound.bowlStrong": "Strong Bowl",
     "sound.gardenBird": "Garden Bird",
     "sound.gong": "Gong",
     "sound.watch": "Watch",
-
     "time.am": "AM",
     "time.pm": "PM",
     "time.sec": "sec",
@@ -151,13 +142,11 @@
     "time.minsAgo": "{n} {unit} ago",
     "time.minute": "minute",
     "time.minutes": "minutes",
-
     "license.title": "License & Attribution",
     "license.gpl": "GNU General Public License v3.0 (GPLv3)",
     "license.free": "ekaTimer is free software licensed under GPLv3.",
     "license.inspired": "Inspired by",
     "license.source": "Source Code",
-
     "editPresets.title": "Edit Preset Duration",
     "editPresets.desc": "Set the values for the 4 fixed hour buttons (in minutes):",
     "editPresets.fillAll": "Please fill in all 4 fields.",

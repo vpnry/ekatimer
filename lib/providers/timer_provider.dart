@@ -46,7 +46,7 @@ class TimerProvider extends ChangeNotifier {
   String intervalVibration = 'none';
   int volume = 80;
 
-  int sessionDelaySeconds = 10;
+  int sessionDelaySeconds = 0;
   int _delayRemainingSeconds = 0;
   Timer? _delayTimer;
 

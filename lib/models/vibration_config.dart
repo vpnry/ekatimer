@@ -5,7 +5,7 @@ class VibrationConfig {
 
   const VibrationConfig({
     this.startVibration = 'none',
-    this.endVibration = 'none',
+    this.endVibration = 'medium',
     this.intervalVibration = 'none',
   });
 
