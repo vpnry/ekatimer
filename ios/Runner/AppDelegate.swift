@@ -12,8 +12,9 @@ import AudioToolbox
 fileprivate var _widgetActionData: [String: Any]? = nil
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate,
-                          UNUserNotificationCenterDelegate {  // FIX 1: Adopt delegate so we can
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+    
+    // FIX 1: Adopt delegate so we can
                                                               // intercept foreground notification
                                                               // delivery and play AVAudioPlayer.
 
@@ -96,11 +97,11 @@ fileprivate var _widgetActionData: [String: Any]? = nil
   // foreground (screen on, app visible).  Without this iOS suppresses the
   // banner AND the sound.  We play the sound ourselves via AVAudioPlayer so
   // the in-app experience is identical to the background/screen-off path.
-  func userNotificationCenter(
+override func userNotificationCenter(
     _ center: UNUserNotificationCenter,
     willPresent notification: UNNotification,
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-  ) {
+) {
     let userInfo = notification.request.content.userInfo
     print("AppDelegate: willPresent notification – \(notification.request.identifier)")
 
@@ -121,11 +122,11 @@ fileprivate var _widgetActionData: [String: Any]? = nil
   // FIX 4: didReceive fires when the user TAPS the notification (foreground or
   // background).  We do NOT replay the sound here because the system already
   // played content.sound on delivery.  We just hand off to Flutter if needed.
-  func userNotificationCenter(
+override func userNotificationCenter(
     _ center: UNUserNotificationCenter,
     didReceive response: UNNotificationResponse,
     withCompletionHandler completionHandler: @escaping () -> Void
-  ) {
+) {
     print("AppDelegate: didReceive notification response – \(response.notification.request.identifier)")
     completionHandler()
   }
