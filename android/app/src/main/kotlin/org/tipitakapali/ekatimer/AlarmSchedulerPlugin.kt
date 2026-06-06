@@ -25,6 +25,7 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.BinaryMessenger.BinaryMessageHandler
 import java.io.File
+import androidx.core.app.NotificationCompat
 
 class AlarmSchedulerPlugin {
     companion object {
@@ -401,6 +402,8 @@ class AlarmReceiver : BroadcastReceiver() {
     companion object {
         // Track the alarm wake lock so we can release it when sound completes
         private var alarmWakeLock: PowerManager.WakeLock? = null
+        private const val ALARM_NOTIFICATION_CHANNEL = "alarm_channel"
+        private var notificationChannelCreated = false
 
         fun releaseAlarmWakeLock() {
             try {
@@ -412,6 +415,70 @@ class AlarmReceiver : BroadcastReceiver() {
             }
             alarmWakeLock = null
         }
+
+        /**
+         * Show a full-screen intent notification to wake the screen and launch
+         * the app. This is the proper Android 10+ approach for alarm-type events
+         * — the system handles screen wake and activity launch reliably, unlike
+         * startActivity() from a BroadcastReceiver which is blocked on API 29+.
+         *
+         * Requires USE_FULL_SCREEN_INTENT permission (declared in manifest).
+         */
+        private fun showAlarmNotification(context: Context, requestCode: Int) {
+            // Create the alarm notification channel (once)
+            if (!notificationChannelCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    ALARM_NOTIFICATION_CHANNEL,
+                    "Timer Alarms",
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = "Alarms for meditation timer completion"
+                    // We play our own sound via MediaPlayer, so silence the notification itself
+                    setSound(null, null)
+                    enableVibration(true)
+                    enableLights(true)
+                }
+                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                nm.createNotificationChannel(channel)
+                notificationChannelCreated = true
+                Log.d(AlarmSchedulerPlugin.TAG, "Alarm notification channel created")
+            }
+
+            // Build the full-screen PendingIntent that launches MainActivity
+            val fullScreenIntent = context.packageManager.getLaunchIntentForPackage(
+                context.packageName
+            )?.apply {
+                addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+                )
+                putExtra("from_alarm", requestCode)
+            }
+
+            val fullScreenPendingIntent = PendingIntent.getActivity(
+                context,
+                requestCode,
+                fullScreenIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            // Build and post the notification
+            val notification = NotificationCompat.Builder(context, ALARM_NOTIFICATION_CHANNEL)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setFullScreenIntent(fullScreenPendingIntent, true)
+                .setContentTitle("Meditation Complete")
+                .setContentText("Your meditation session has ended.")
+                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                .setAutoCancel(true)
+                .setOngoing(false)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .build()
+
+            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.notify(requestCode, notification)
+            Log.d(AlarmSchedulerPlugin.TAG, "Alarm notification posted for requestCode=$requestCode")
+        }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -420,8 +487,6 @@ class AlarmReceiver : BroadcastReceiver() {
 
         // Handle the show intent from setAlarmClock (wake screen on alarm clock icon tap)
         if (action == "org.tipitakapali.ekatimer.ALARM_SHOW") {
-            // Launch the main Flutter activity so the user sees the timer when
-            // tapping the alarm clock icon in the status bar
             val launchIntent = context.packageManager.getLaunchIntentForPackage(
                 context.packageName
             )?.apply {
@@ -452,52 +517,14 @@ class AlarmReceiver : BroadcastReceiver() {
                 PowerManager.PARTIAL_WAKE_LOCK,
                 "ekatimer:alarm_wakelock"
             )
-            wakeLock.acquire(120000L) // 2 minute max for alarm sound
+            wakeLock.acquire(120000L)
             alarmWakeLock = wakeLock
 
-            // 2. Wake the screen and turn it on.
-            //    We acquire a SCREEN_BRIGHT wake lock with ACQUIRE_CAUSES_WAKEUP
-            //    to wake the display on all API levels.
-            //    On API 27-34 we also use Intent.FLAG_ACTIVITY_TURN_SCREEN_ON.
-            //    Note: FLAG_ACTIVITY_TURN_SCREEN_ON was removed in API 35+,
-            //    so we use reflection to stay compatible.
-            pm.newWakeLock(
-                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or
-                PowerManager.ACQUIRE_CAUSES_WAKEUP or
-                PowerManager.ON_AFTER_RELEASE,
-                "ekatimer:screen_wakelock"
-            ).acquire(5000L)
-
-            val launchIntent = context.packageManager.getLaunchIntentForPackage(
-                context.packageName
-            )?.apply {
-                addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP
-                )
-                // Use reflection to add FLAG_ACTIVITY_TURN_SCREEN_ON since it
-                // was removed from the SDK in API 35 but still exists at runtime
-                // on API 27-34.
-                try {
-                    val field = Intent::class.java.getField("FLAG_ACTIVITY_TURN_SCREEN_ON")
-                    val flag = field.getInt(null)
-                    addFlags(flag)
-                } catch (e: Exception) {
-                    // Flag not available (API 35+) — the SCREEN_BRIGHT wake lock
-                    // with ACQUIRE_CAUSES_WAKEUP above handles screen wakeup
-                    Log.d(AlarmSchedulerPlugin.TAG, "FLAG_ACTIVITY_TURN_SCREEN_ON not available, using wake lock instead")
-                }
-                // Signal to MainActivity that this launch came from an alarm
-                putExtra("from_alarm", requestCode)
-            }
-            if (launchIntent != null) {
-                try {
-                    context.startActivity(launchIntent)
-                } catch (e: Exception) {
-                    Log.e(AlarmSchedulerPlugin.TAG, "Failed to launch activity for END_ALARM", e)
-                }
-            }
+            // 2. Show a full-screen notification to wake the screen and launch the app.
+            //    This is the proper Android 10+ approach — replaces the unreliable
+            //    SCREEN_BRIGHT wake lock + startActivity() pattern which is blocked
+            //    on API 29+. The system handles screen wake and activity launch.
+            showAlarmNotification(context, requestCode)
 
             // 3. Play end sound directly from native — bypasses Flutter EventChannel
             //    which may not deliver events when Flutter isolate is paused.
