@@ -81,36 +81,40 @@ struct QuickStartWidgetView: View {
     }
 
     var body: some View {
-        ZStack {
-            // Full background (works on iOS 14+, no version-specific API needed)
-            bgColor
-                .ignoresSafeArea()
+        let content = VStack(spacing: 4) {
+            Spacer()
 
-            VStack(spacing: 4) {
-                Spacer()
+            // Icon
+            Image(systemName: sfSymbol)
+                .font(.system(size: 22))
+                .foregroundColor(accentColor)
 
-                // Icon
-                Image(systemName: sfSymbol)
-                    .font(.system(size: 22))
-                    .foregroundColor(accentColor)
+            Spacer().frame(height: 2)
 
-                Spacer().frame(height: 2)
+            // Duration / action label (large)
+            Text(entry.label)
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundColor(foregroundColor)
 
-                // Duration / action label (large)
-                Text(entry.label)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(foregroundColor)
+            // "Meditate" label (small, elegant)
+            Text("Meditate")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundColor(foregroundColor.opacity(0.5))
+                .textCase(.uppercase)
 
-                // "Meditate" label (small, elegant)
-                Text("Meditate")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundColor(foregroundColor.opacity(0.5))
-                    .textCase(.uppercase)
-
-                Spacer()
-            }
+            Spacer()
         }
         .widgetURL(widgetUrl)
+
+        if #available(iOS 17.0, *) {
+            content
+                .containerBackground(bgColor, for: .widget)
+        } else {
+            ZStack {
+                bgColor.ignoresSafeArea()
+                content
+            }
+        }
     }
 }
 
@@ -126,7 +130,6 @@ struct Meditation15mWidget: Widget {
         .configurationDisplayName("15m Meditation")
         .description("Start a 15-minute meditation.")
         .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
     }
 }
 
@@ -140,7 +143,6 @@ struct Meditation30mWidget: Widget {
         .configurationDisplayName("30m Meditation")
         .description("Start a 30-minute meditation.")
         .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
     }
 }
 
@@ -154,7 +156,6 @@ struct Meditation1HWidget: Widget {
         .configurationDisplayName("1H Meditation")
         .description("Start a 1-hour meditation.")
         .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
     }
 }
 
@@ -168,7 +169,6 @@ struct Meditation1_5HWidget: Widget {
         .configurationDisplayName("1.5H Meditation")
         .description("Start a 1.5-hour meditation.")
         .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
     }
 }
 
@@ -182,7 +182,6 @@ struct Meditation2HWidget: Widget {
         .configurationDisplayName("2H Meditation")
         .description("Start a 2-hour meditation.")
         .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
     }
 }
 
@@ -196,7 +195,6 @@ struct Meditation2_5HWidget: Widget {
         .configurationDisplayName("2.5H Meditation")
         .description("Start a 2.5-hour meditation.")
         .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
     }
 }
 
@@ -210,7 +208,6 @@ struct Meditation3HWidget: Widget {
         .configurationDisplayName("3H Meditation")
         .description("Start a 3-hour meditation.")
         .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
     }
 }
 
@@ -224,7 +221,6 @@ struct Meditation3_5HWidget: Widget {
         .configurationDisplayName("3.5H Meditation")
         .description("Start a 3.5-hour meditation.")
         .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
     }
 }
 
@@ -238,7 +234,6 @@ struct Meditation4HWidget: Widget {
         .configurationDisplayName("4H Meditation")
         .description("Start a 4-hour meditation.")
         .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
     }
 }
 
@@ -252,7 +247,6 @@ struct MeditationEndAtWidget: Widget {
         .configurationDisplayName("End At Meditation")
         .description("Set an end time for your meditation.")
         .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
     }
 }
 
@@ -266,7 +260,6 @@ struct MeditationUnlimitedWidget: Widget {
         .configurationDisplayName("Unlimited Meditation")
         .description("Meditate without a time limit.")
         .supportedFamilies([.systemSmall])
-        .contentMarginsDisabled()
     }
 }
 
