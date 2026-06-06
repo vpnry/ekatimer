@@ -21,10 +21,10 @@
               "value" : false
             }
           ],
-          "image-name" : "whitemode.png",
-          "name" : "whitemode",
+          "image-name" : "li.png",
+          "name" : "li",
           "position" : {
-            "scale" : 1.02,
+            "scale" : 1.4,
             "translation-in-points" : [
               0,
               0
@@ -34,15 +34,22 @@
         {
           "hidden-specializations" : [
             {
-              "value" : false
+              "value" : true
             },
             {
-              "appearance" : "light",
-              "value" : true
+              "appearance" : "dark",
+              "value" : false
             }
           ],
-          "image-name" : "dark_mode.png",
-          "name" : "dark_mode"
+          "image-name" : "dar.png",
+          "name" : "dar",
+          "position" : {
+            "scale" : 1.4,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
         }
       ],
       "shadow" : {
