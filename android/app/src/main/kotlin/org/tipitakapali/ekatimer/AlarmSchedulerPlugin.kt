@@ -298,10 +298,12 @@ class AlarmSchedulerPlugin {
                                 setOnCompletionListener {
                                     Log.d(TAG, "MediaPlayer completed end sound")
                                     releaseMediaPlayer()
+                                    AlarmReceiver.releaseAlarmWakeLock()
                                 }
                                 setOnErrorListener { _, what, extra ->
                                     Log.e(TAG, "MediaPlayer error: what=$what, extra=$extra")
                                     releaseMediaPlayer()
+                                    AlarmReceiver.releaseAlarmWakeLock()
                                     true
                                 }
                                 prepareAsync()
@@ -329,10 +331,12 @@ class AlarmSchedulerPlugin {
                                 setOnCompletionListener {
                                     Log.d(TAG, "MediaPlayer completed end sound")
                                     releaseMediaPlayer()
+                                    AlarmReceiver.releaseAlarmWakeLock()
                                 }
                                 setOnErrorListener { _, what, extra ->
                                     Log.e(TAG, "MediaPlayer error: what=$what, extra=$extra")
                                     releaseMediaPlayer()
+                                    AlarmReceiver.releaseAlarmWakeLock()
                                     true
                                 }
                                 prepareAsync()
@@ -359,10 +363,12 @@ class AlarmSchedulerPlugin {
                     setOnCompletionListener {
                         Log.d(TAG, "MediaPlayer completed default alarm sound")
                         releaseMediaPlayer()
+                        AlarmReceiver.releaseAlarmWakeLock()
                     }
                     setOnErrorListener { _, what, extra ->
                         Log.e(TAG, "MediaPlayer error: what=$what, extra=$extra")
                         releaseMediaPlayer()
+                        AlarmReceiver.releaseAlarmWakeLock()
                         true
                     }
                     prepareAsync()
@@ -504,10 +510,8 @@ class AlarmReceiver : BroadcastReceiver() {
                 Log.w(AlarmSchedulerPlugin.TAG, "Alarm fired but no EventChannel sink available, requestCode=$requestCode")
             }
 
-            // 5. Release the wake lock after a generous delay to let the sound play fully
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                releaseAlarmWakeLock()
-            }, 120000L) // 2 minutes
+            // 5. Wake lock is released in playEndSound's setOnCompletionListener
+            //    when the sound finishes, rather than after a fixed 2-minute timeout.
         }
     }
 }

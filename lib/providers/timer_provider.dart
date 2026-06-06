@@ -200,7 +200,7 @@ class TimerProvider extends ChangeNotifier {
       await _alarmService.scheduleEndAlarm(
         endTimeMillis: remainingMs,
         requestCode: requestCode,
-        soundPath: endSound,
+        soundPath: _nativeSoundPath(endSound),
       );
     }
 
@@ -266,7 +266,7 @@ class TimerProvider extends ChangeNotifier {
       await _alarmService.scheduleEndAlarm(
         endTimeMillis: _endTime!.millisecondsSinceEpoch,
         requestCode: requestCode,
-        soundPath: endSound,
+        soundPath: _nativeSoundPath(endSound),
       );
     }
 
@@ -362,7 +362,7 @@ class TimerProvider extends ChangeNotifier {
         await _alarmService.scheduleEndAlarm(
           endTimeMillis: _endTime!.millisecondsSinceEpoch,
           requestCode: requestCode,
-          soundPath: endSound,
+          soundPath: _nativeSoundPath(endSound),
         );
       }
       _startTick();
@@ -429,6 +429,13 @@ class TimerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Convert a bare sound name (e.g. "ThreeBowl") to the native asset path
+  /// format expected by [AlarmService] and the Android plugin.
+  String _nativeSoundPath(String soundName) {
+    if (soundName.isEmpty || soundName == 'none') return '';
+    return 'assets/sounds/$soundName.wav';
+  }
+
   void _checkIntervalSounds(DateTime now) {
     final currentMinute = (_elapsedSeconds ~/ 60);
 
@@ -452,7 +459,7 @@ class TimerProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _onSessionComplete() async {
+  Future<void> _onSessionComplete({bool playAudio = true}) async {
     _stopTick();
     
     // Cancel native alarm (already triggered but clean up) and release wake lock
@@ -464,7 +471,9 @@ class TimerProvider extends ChangeNotifier {
     final now = DateTime.now();
     _elapsedSeconds = _totalDurationSeconds;
 
-    await _audioService.playSound(endSound);
+    if (playAudio) {
+      await _audioService.playSound(endSound);
+    }
     await _vibrationService.vibrate(endVibration);
 
     final session = MeditationSession(
@@ -517,8 +526,8 @@ class TimerProvider extends ChangeNotifier {
     // The native alarm fired while in doze - complete the session
     if (_state == TimerState.running) {
       // Play end sound via native side as a backup (works even in deep sleep)
-      _alarmService.playEndSound(soundPath: endSound);
-      _onSessionComplete();
+      _alarmService.playEndSound(soundPath: _nativeSoundPath(endSound));
+      _onSessionComplete(playAudio: false);
     }
   }
 
@@ -532,7 +541,7 @@ class TimerProvider extends ChangeNotifier {
       await _alarmService.scheduleEndAlarm(
         endTimeMillis: _endTime!.millisecondsSinceEpoch,
         requestCode: requestCode,
-        soundPath: endSound,
+        soundPath: _nativeSoundPath(endSound),
       );
       debugPrint('TimerProvider: Alarm rescheduled after permission granted');
     }
