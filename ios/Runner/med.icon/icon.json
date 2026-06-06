@@ -12,39 +12,10 @@
     {
       "layers" : [
         {
-          "hidden-specializations" : [
-            {
-              "value" : true
-            },
-            {
-              "appearance" : "light",
-              "value" : false
-            }
-          ],
-          "image-name" : "li.png",
-          "name" : "li",
+          "image-name" : "ekaTimer_Brownbg.png",
+          "name" : "ekaTimer_Brownbg",
           "position" : {
-            "scale" : 1.4,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
-        },
-        {
-          "hidden-specializations" : [
-            {
-              "value" : true
-            },
-            {
-              "appearance" : "dark",
-              "value" : false
-            }
-          ],
-          "image-name" : "dar.png",
-          "name" : "dar",
-          "position" : {
-            "scale" : 1.4,
+            "scale" : 1.46,
             "translation-in-points" : [
               0,
               0
