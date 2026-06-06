@@ -358,6 +358,15 @@ class TimerProvider extends ChangeNotifier {
       // Re-acquire CPU wake lock and reschedule alarm on restore
       await _alarmService.acquireCpuWakeLock();
       if (_endTime != null && _endTime!.millisecondsSinceEpoch > 0) {
+        // If the end time is already in the past, the session ended while
+        // we were away. Complete silently — the native alarm already fired
+        // and played the sound. This prevents a double-alarm on unlock.
+        if (_endTime!.isBefore(DateTime.now())) {
+          await _alarmService.releaseCpuWakeLock();
+          await _onSessionComplete(silent: true);
+          return;
+        }
+
         final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
         await _alarmService.scheduleEndAlarm(
           endTimeMillis: _endTime!.millisecondsSinceEpoch,
@@ -459,7 +468,7 @@ class TimerProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _onSessionComplete({bool playAudio = true}) async {
+  Future<void> _onSessionComplete({bool silent = false}) async {
     _stopTick();
     
     // Cancel native alarm (already triggered but clean up) and release wake lock
@@ -471,10 +480,12 @@ class TimerProvider extends ChangeNotifier {
     final now = DateTime.now();
     _elapsedSeconds = _totalDurationSeconds;
 
-    if (playAudio) {
+    // Only play sound/vibration if this isn't a silent complete
+    // (e.g. restoring an already-expired session where the alarm already played)
+    if (!silent) {
       await _audioService.playSound(endSound);
+      await _vibrationService.vibrate(endVibration);
     }
-    await _vibrationService.vibrate(endVibration);
 
     final session = MeditationSession(
       id: _currentSessionId ?? const Uuid().v4(),
@@ -527,7 +538,8 @@ class TimerProvider extends ChangeNotifier {
     if (_state == TimerState.running) {
       // Play end sound via native side as a backup (works even in deep sleep)
       _alarmService.playEndSound(soundPath: _nativeSoundPath(endSound));
-      _onSessionComplete(playAudio: false);
+      // Pass silent: true since the native layer already played the sound
+      _onSessionComplete(silent: true);
     }
   }
 

@@ -55,6 +55,26 @@ class WidgetActionHandler {
     }
   }
 
+  /// Get raw widget action data from the native side without processing it.
+  /// Used to check for non-widget launch flags like `fromAlarm`.
+  static Future<Map<String, dynamic>?> getWidgetActionData(
+    BuildContext context,
+  ) async {
+    try {
+      final channel = MethodChannel(_channelName);
+      final result = await channel.invokeMethod<Map<dynamic, dynamic>>(
+        'getWidgetAction',
+      );
+      if (result == null || result.isEmpty) return null;
+      return result.cast<String, dynamic>();
+    } on MissingPluginException {
+      return null;
+    } catch (e) {
+      debugPrint('WidgetActionHandler.getWidgetActionData error: $e');
+      return null;
+    }
+  }
+
   /// Check if the app was launched by a widget tap and handle the action.
   ///
   /// Returns true if the session was started (navigate to MeditationScreen),

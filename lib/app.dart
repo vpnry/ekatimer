@@ -214,7 +214,21 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
   }
 
   Future<void> _checkForActiveSession() async {
+    // Capture provider references before any async gaps
     final timerProvider = context.read<TimerProvider>();
+
+    // Check if app was launched by an alarm. If so, skip session restore
+    // entirely — the alarm handler (onNativeAlarmFired via EventChannel)
+    // already completed the session and cleared persistence. Re-checking
+    // here would race with the async clear and restore an expired session.
+    final widgetData = await WidgetActionHandler.getWidgetActionData(context);
+    if (widgetData?['fromAlarm'] == true) {
+      if (mounted) {
+        setState(() => _checkingSession = false);
+      }
+      return;
+    }
+
     final hasSession = await timerProvider.hasActiveSession();
 
     if (hasSession && mounted) {

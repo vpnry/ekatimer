@@ -85,6 +85,12 @@ class MainActivity : FlutterActivity() {
                         data["action"] = widgetAction!!
                         data["statsPeriod"] = widgetStatsPeriod ?: "week"
                     }
+                    // Tell Flutter if this launch was from an alarm so it can
+                    // skip the session restore check (the alarm handler already
+                    // completed the session via EventChannel).
+                    if (intent?.getIntExtra("from_alarm", -1) != -1) {
+                        data["fromAlarm"] = true
+                    }
                     result.success(data.ifEmpty { null })
                 }
                 else -> result.notImplemented()
