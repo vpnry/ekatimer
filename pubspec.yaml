@@ -44,7 +44,7 @@ flutter_launcher_icons:
   android: true
   ios: false
 
-  image_path: "images/whitemode.png"
+  image_path: "images/ekaTimer_Brownbg_Zoom.png"
 
-  adaptive_icon_foreground: "images/whitemode.png"
+  adaptive_icon_foreground: "images/ekaTimer_Brownbg_Zoom.png"
   adaptive_icon_background: "#FFFFFF"
