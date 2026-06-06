@@ -94,7 +94,7 @@ class TimerForegroundService : Service() {
 
         return builder
             .setContentTitle("ekaTimer")
-            .setContentText("Timer is running...")
+            .setContentText("Meditation timer is running...")
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentIntent(pendingIntent)
             .setOngoing(true)

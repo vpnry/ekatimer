@@ -44,7 +44,7 @@ class PersistenceService {
             p.getString(AppConstants.prefIntervalVibration) ?? 'none',
       ),
       sessionDelaySeconds:
-          p.getInt(AppConstants.prefSessionDelay) ?? 10,
+          p.getInt(AppConstants.prefSessionDelay) ?? 0,
       locale: p.getString(AppConstants.prefLocale) ?? _detectDeviceLocale(),
       reminderEnabled: p.getBool(AppConstants.prefReminderEnabled) ?? false,
       reminderHour: p.getInt(AppConstants.prefReminderHour) ?? 19,
