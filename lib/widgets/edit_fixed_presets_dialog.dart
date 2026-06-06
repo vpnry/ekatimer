@@ -70,7 +70,7 @@ class _EditFixedPresetsDialogState extends State<EditFixedPresetsDialog> {
                   SizedBox(
                     width: 30,
                     child: Text(
-                      '${i + 1}h',
+                      String.fromCharCode(65 + i),
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ),
@@ -81,7 +81,7 @@ class _EditFixedPresetsDialogState extends State<EditFixedPresetsDialog> {
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         hintText: t.translate('editPresets.minutesFor',
-                            args: {'hour': '${i + 1}'}),
+                            args: {'hour': String.fromCharCode(65 + i)}),
                         border: const OutlineInputBorder(),
                         isDense: true,
                       ),
