@@ -58,7 +58,10 @@ class NotificationService {
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
     );
-    const iosDetails = DarwinNotificationDetails();
+    const iosDetails = DarwinNotificationDetails(
+      presentSound: true,
+      interruptionLevel: InterruptionLevel.timeSensitive,
+    );
     const details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
@@ -90,7 +93,10 @@ class NotificationService {
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
     );
-    const iosDetails = DarwinNotificationDetails();
+    const iosDetails = DarwinNotificationDetails(
+      presentSound: true,
+      interruptionLevel: InterruptionLevel.timeSensitive,
+    );
     const details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
