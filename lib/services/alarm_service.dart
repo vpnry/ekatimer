@@ -26,6 +26,10 @@ class AlarmService {
   /// Callback invoked when a native alarm fires (e.g., end timer reached).
   void Function(int requestCode)? onAlarmFired;
 
+  /// Callback invoked when exact alarm permission state changes.
+  /// Parameter: true if permission granted, false if denied.
+  void Function(bool hasPermission)? onPermissionChanged;
+
   Future<void> init() async {
     if (_initialized) return;
 
@@ -34,6 +38,17 @@ class AlarmService {
         .receiveBroadcastStream()
         .listen((dynamic event) {
       if (event is Map) {
+        // Handle permission change events
+        if (event['type'] == 'permission_changed') {
+          final hasPermission = event['hasPermission'] as bool? ?? false;
+          debugPrint('AlarmService: Permission changed (broadcast), hasPermission=$hasPermission');
+          if (onPermissionChanged != null) {
+            onPermissionChanged!(hasPermission);
+          }
+          return;
+        }
+
+        // Handle alarm fired events
         final requestCode = event['requestCode'] as int?;
         if (requestCode != null && onAlarmFired != null) {
           onAlarmFired!(requestCode);
@@ -41,6 +56,19 @@ class AlarmService {
       }
     }, onError: (dynamic error) {
       debugPrint('AlarmService: EventChannel error: $error');
+    });
+
+    // Listen for permission changes from MainActivity.onResume via MethodChannel
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'onExactAlarmPermissionChanged') {
+        final hasPermission = call.arguments as bool? ?? false;
+        debugPrint('AlarmService: Permission changed (onResume), hasPermission=$hasPermission');
+        if (onPermissionChanged != null) {
+          onPermissionChanged!(hasPermission);
+        }
+        return true;
+      }
+      return null;
     });
 
     _initialized = true;
@@ -128,6 +156,52 @@ class AlarmService {
       return true;
     } catch (e) {
       debugPrint('AlarmService: playEndSound failed: $e');
+      return false;
+    }
+  }
+
+  /// Check if the app has permission to schedule exact alarms.
+  Future<bool> hasExactAlarmPermission() async {
+    try {
+      final result = await _channel.invokeMethod('hasExactAlarmPermission');
+      return result == true;
+    } catch (e) {
+      debugPrint('AlarmService: hasExactAlarmPermission failed: $e');
+      return false;
+    }
+  }
+
+  /// Request exact alarm permission from the user (opens Settings screen).
+  Future<bool> requestExactAlarmPermission() async {
+    try {
+      await _channel.invokeMethod('requestExactAlarmPermission');
+      return true;
+    } catch (e) {
+      debugPrint('AlarmService: requestExactAlarmPermission failed: $e');
+      return false;
+    }
+  }
+
+  /// Start a foreground service to keep the timer alive in background.
+  Future<bool> startForegroundService({int requestCode = 1001}) async {
+    try {
+      await _channel.invokeMethod('startForegroundService', {
+        'requestCode': requestCode,
+      });
+      return true;
+    } catch (e) {
+      debugPrint('AlarmService: startForegroundService failed: $e');
+      return false;
+    }
+  }
+
+  /// Stop the foreground service.
+  Future<bool> stopForegroundService() async {
+    try {
+      await _channel.invokeMethod('stopForegroundService');
+      return true;
+    } catch (e) {
+      debugPrint('AlarmService: stopForegroundService failed: $e');
       return false;
     }
   }

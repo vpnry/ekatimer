@@ -1,15 +1,22 @@
 package org.tipitakapali.ekatimer
 
 import android.app.AlarmManager
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
+import android.os.IBinder
 import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
@@ -34,8 +41,15 @@ class AlarmSchedulerPlugin {
         private var wakeLock: PowerManager.WakeLock? = null
         private var mediaPlayer: MediaPlayer? = null
         var eventSink: EventChannel.EventSink? = null
+        private var permissionReceiver: ExactAlarmPermissionReceiver? = null
+        private var appContext: Context? = null
 
         fun register(binaryMessenger: BinaryMessenger, context: Context) {
+            appContext = context.applicationContext
+
+            // Register broadcast receiver for exact alarm permission changes
+            registerPermissionReceiver(context)
+
             // Set up event channel for native -> Flutter communication
             EventChannel(binaryMessenger, EVENT_CHANNEL).setStreamHandler(object : EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
@@ -84,11 +98,21 @@ class AlarmSchedulerPlugin {
                             playEndSound(context, soundPath)
                             result.success(true)
                         }
-                        "requestExactAlarmPermission" -> {
-                            result.success(canScheduleExactAlarms(context))
-                        }
                         "hasExactAlarmPermission" -> {
                             result.success(canScheduleExactAlarms(context))
+                        }
+                        "requestExactAlarmPermission" -> {
+                            requestExactAlarmPermission(context)
+                            result.success(true)
+                        }
+                        "startForegroundService" -> {
+                            val requestCode = call.argument<Int>("requestCode") ?: REQUEST_CODE_TIMED_END
+                            startForegroundService(context, requestCode)
+                            result.success(true)
+                        }
+                        "stopForegroundService" -> {
+                            stopForegroundService(context)
+                            result.success(true)
                         }
                         else -> result.notImplemented()
                     }
@@ -96,6 +120,19 @@ class AlarmSchedulerPlugin {
                     Log.e(TAG, "Error handling method ${call.method}", e)
                     result.error("ALARM_ERROR", e.message, null)
                 }
+            }
+        }
+
+        private fun registerPermissionReceiver(context: Context) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                permissionReceiver = ExactAlarmPermissionReceiver()
+                val filter = IntentFilter(AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    context.registerReceiver(permissionReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+                } else {
+                    context.registerReceiver(permissionReceiver, filter)
+                }
+                Log.d(TAG, "Registered exact alarm permission receiver")
             }
         }
 
@@ -129,7 +166,43 @@ class AlarmSchedulerPlugin {
             return true
         }
 
+        private fun requestExactAlarmPermission(context: Context) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+                Log.d(TAG, "Requested exact alarm permission via Settings intent")
+            }
+        }
+
+        fun startForegroundService(context: Context, requestCode: Int) {
+            val serviceIntent = Intent(context, TimerForegroundService::class.java).apply {
+                putExtra("requestCode", requestCode)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
+            Log.d(TAG, "Started foreground service for requestCode=$requestCode")
+        }
+
+        fun stopForegroundService(context: Context) {
+            val serviceIntent = Intent(context, TimerForegroundService::class.java)
+            context.stopService(serviceIntent)
+            Log.d(TAG, "Stopped foreground service")
+        }
+
         private fun scheduleEndAlarm(context: Context, delaySeconds: Int, endTimeMillis: Long, requestCode: Int, soundPath: String = "") {
+            // Check exact alarm permission before scheduling
+            if (!canScheduleExactAlarms(context)) {
+                Log.w(TAG, "Exact alarm permission not granted, requesting...")
+                requestExactAlarmPermission(context)
+                return
+            }
+
             val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val intent = Intent(context, AlarmReceiver::class.java).apply {
                 action = "org.tipitakapali.ekatimer.END_ALARM"
@@ -463,6 +536,34 @@ class AlarmReceiver : BroadcastReceiver() {
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 releaseAlarmWakeLock()
             }, 120000L) // 2 minutes
+        }
+    }
+}
+
+/**
+ * Broadcast receiver that listens for the exact alarm permission state change.
+ * This is triggered when the user grants or revokes the SCHEDULE_EXACT_ALARM permission.
+ * When granted, we notify Flutter via the EventChannel so it can retry scheduling.
+ */
+class ExactAlarmPermissionReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val hasPermission = alarmManager.canScheduleExactAlarms()
+            Log.d(AlarmSchedulerPlugin.TAG, "Exact alarm permission changed: hasPermission=$hasPermission")
+
+            // Notify Flutter via EventChannel
+            val sink = AlarmSchedulerPlugin.eventSink
+            if (sink != null) {
+                val result = mapOf(
+                    "type" to "permission_changed",
+                    "hasPermission" to hasPermission
+                )
+                sink.success(result)
+                Log.d(AlarmSchedulerPlugin.TAG, "Sent permission_changed event to Flutter")
+            } else {
+                Log.w(AlarmSchedulerPlugin.TAG, "No EventChannel sink available to notify Flutter")
+            }
         }
     }
 }

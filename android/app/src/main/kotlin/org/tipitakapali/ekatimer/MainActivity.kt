@@ -1,7 +1,11 @@
 package org.tipitakapali.ekatimer
 
+import android.app.AlarmManager
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -16,6 +20,7 @@ class MainActivity : FlutterActivity() {
     private var widgetAction: String? = null
     private var widgetStatsPeriod: String? = null
     private var methodChannel: MethodChannel? = null
+    private var lastExactAlarmPermissionState: Boolean? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +34,32 @@ class MainActivity : FlutterActivity() {
                 WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
             )
         }
+
+        // Record initial permission state
+        lastExactAlarmPermissionState = canScheduleExactAlarms()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // Check if exact alarm permission state changed while away
+        // (e.g., user went to Settings and granted/revoked permission)
+        val currentPermissionState = canScheduleExactAlarms()
+        if (lastExactAlarmPermissionState != currentPermissionState) {
+            lastExactAlarmPermissionState = currentPermissionState
+            Log.d(TAG, "Exact alarm permission changed in onResume: $currentPermissionState")
+
+            // Notify Flutter via MethodChannel
+            methodChannel?.invokeMethod("onExactAlarmPermissionChanged", currentPermissionState)
+        }
+    }
+
+    private fun canScheduleExactAlarms(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            return alarmManager.canScheduleExactAlarms()
+        }
+        return true
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -91,5 +122,9 @@ class MainActivity : FlutterActivity() {
             widgetAction = it.getStringExtra("widget_action")
             widgetStatsPeriod = it.getStringExtra("widget_stats_period")
         }
+    }
+
+    companion object {
+        private const val TAG = "MainActivity"
     }
 }

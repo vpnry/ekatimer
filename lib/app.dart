@@ -175,6 +175,15 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
       timerProvider.onNativeAlarmFired(requestCode);
     };
 
+    // Listen for exact alarm permission changes (Android 12+)
+    // When user grants permission in Settings, retry scheduling the alarm
+    alarmService.onPermissionChanged = (hasPermission) {
+      if (hasPermission && mounted) {
+        final timerProvider = context.read<TimerProvider>();
+        timerProvider.onExactAlarmPermissionGranted();
+      }
+    };
+
     // Listen for immediate widget action notifications from iOS
     // (triggers even when app is already foregrounded)
     WidgetActionHandler.setupListener(
