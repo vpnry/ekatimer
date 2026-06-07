@@ -86,5 +86,22 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>CSV File</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.comma-separated-values-text</string>
+				<string>public.plain-text</string>
+				<string>public.text</string>
+			</array>
+		</dict>
+	</array>
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
 </dict>
 </plist>

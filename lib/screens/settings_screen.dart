@@ -1,8 +1,12 @@
+// lib/screens/settings_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
+import '../providers/session_provider.dart';
 import '../models/timer_mode.dart';
 import '../services/translation_service.dart';
+import '../services/csv_data_service.dart';
 import '../theme/colors.dart';
 import '../theme/app_theme.dart';
 import '../widgets/sound_picker.dart';
@@ -305,6 +309,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const Divider(),
 
+            _buildSectionHeader(
+              context,
+              t.translate('settings.dataManagement'),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: isDark
+                        ? Colors.white.withAlpha(25)
+                        : Colors.black.withAlpha(12),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 20,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildDataButton(
+                          context,
+                          icon: Icons.file_download_outlined,
+                          label: t.translate('settings.importCSV'),
+                          onTap: () => _importCsv(context),
+                          isDark: isDark,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildDataButton(
+                          context,
+                          icon: Icons.file_upload_outlined,
+                          label: t.translate('settings.exportCSV'),
+                          onTap: () => _exportCsv(context),
+                          isDark: isDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const Divider(),
+
             _buildSectionHeader(context, t.translate('settings.about')),
             _buildListTile(
               context,
@@ -423,6 +477,150 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildDataButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: isDark
+            ? Colors.white.withAlpha(12)
+            : AppColors.primary.withAlpha(15),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: primaryColor, size: 24),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: primaryColor,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportCsv(BuildContext context) async {
+    final scaffold = ScaffoldMessenger.of(context);
+
+    try {
+      await CsvDataService.exportToCsv();
+      if (context.mounted) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text('Data exported successfully'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _importCsv(BuildContext context) async {
+    final scaffold = ScaffoldMessenger.of(context);
+
+    try {
+      final sessions = await CsvDataService.pickAndParseCsv();
+
+      if (!context.mounted) return;
+
+      if (sessions == null) {
+        // User cancelled file picker
+        return;
+      }
+
+      if (sessions.isEmpty) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: const Text('No valid session data found in CSV.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      // Show confirmation dialog
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Import Sessions'),
+          content: Text(
+            'Found ${sessions.length} session${sessions.length == 1 ? '' : 's'} in the CSV file.\n\n'
+            'Import them into ekaTimer?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Import'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true || !context.mounted) return;
+
+      final count = await CsvDataService.importSessions(sessions);
+
+      if (!context.mounted) return;
+
+      // Refresh session data so stats update immediately
+      if (count > 0) {
+        context.read<SessionProvider>().loadSessions();
+      }
+
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text('$count session${count == 1 ? '' : 's'} imported'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text('Import failed: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _showLicenseAttributionDialog(BuildContext context) {
     final t = TranslationService.of(context);
     showDialog(
@@ -486,6 +684,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // ── Audio Attributions ────────────────────────────────
               _buildSectionLabel(context, 'Audio Attributions'),
               const SizedBox(height: 16),
+              _buildSectionLabel(context, 'Free Dhamma Distribution'),
+              const SizedBox(height: 8),
+              const Text(
+                'Sadhu.wav',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const Text('Author: Ven. Pa-Auk Tawya Sayadaw'),
+              const Text(
+                'Adapted from the Pa-Auk Forest Monastery\'s Chanting Audio - Free Distribution.',
+                style: TextStyle(fontSize: 12),
+              ),
 
               _buildSectionLabel(context, 'CC0 1.0 Universal (Public Domain)'),
               const SizedBox(height: 8),
@@ -523,18 +732,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Text('Author: reinsamba'),
               const Text(
                 'https://freesound.org/s/46062/',
-                style: TextStyle(fontSize: 12),
-              ),
-
-              _buildSectionLabel(context, 'Buddha Dhamma'),
-              const SizedBox(height: 8),
-              const Text(
-                'Sadhu.wav',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const Text('Author: Ven. Pa-Auk Tawya Sayadaw'),
-              const Text(
-                'Adapted from the Pa-Auk Forest Monastery’s Chanting Audio - Freely available.',
                 style: TextStyle(fontSize: 12),
               ),
             ],

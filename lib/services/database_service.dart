@@ -1,3 +1,5 @@
+// lib/services/database_service.dart
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import '../utils/constants.dart';
@@ -181,6 +183,19 @@ class DatabaseService {
   static Future<void> deleteAllSessions() async {
     final db = await database;
     await db.delete('sessions');
+  }
+
+  static Future<void> batchInsertSessions(List<MeditationSession> sessions) async {
+    final db = await database;
+    final batch = db.batch();
+    for (final session in sessions) {
+      batch.insert(
+        'sessions',
+        session.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   static Future<int> getTotalSessionCount() async {
