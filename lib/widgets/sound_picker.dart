@@ -23,14 +23,14 @@ class SoundPicker extends StatefulWidget {
 String _soundLabel(BuildContext context, String sound) {
   final t = TranslationService.of(context);
   switch (sound) {
-    case 'Gong':
-      return t.translate('sound.gong');
-    case 'ThreeBowl':
-      return t.translate('sound.threeBowl');
     case 'Bowl':
       return t.translate('sound.bowl');
+    case 'ThreeBowl':
+      return t.translate('sound.threeBowl');
     case 'BowlStrong':
       return t.translate('sound.bowlStrong');
+    case 'Gong':
+      return t.translate('sound.gong');
     case 'GardenBird':
       return t.translate('sound.gardenBird');
     case 'Bell':
