@@ -281,8 +281,13 @@ class AlarmSchedulerPlugin {
                     if (soundPath.startsWith("assets/")) {
                         // Flutter assets are stored under "flutter_assets/" in the APK.
                         // Use AssetManager to open them directly rather than looking for raw resources.
+                        //
+                        // NOTE: $soundPath is "assets/sounds/X.wav" (from _nativeSoundPath).
+                        // Flutter places assets at flutter_assets/sounds/X.wav, NOT
+                        // flutter_assets/assets/sounds/X.wav, so we must strip the "assets/" prefix.
                         try {
-                            val assetPath = "flutter_assets/$soundPath"
+                            val relativePath = soundPath.removePrefix("assets/")
+                            val assetPath = "flutter_assets/$relativePath"
                             val afd = context.assets.openFd(assetPath)
                             mediaPlayer = MediaPlayer().apply {
                                 setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK)

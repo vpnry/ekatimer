@@ -114,6 +114,25 @@ fileprivate var _widgetActionData: [String: Any]? = nil
     withCompletionHandler completionHandler: @escaping () -> Void
   ) {
     print("AppDelegate: didReceive notification response – \(response.notification.request.identifier)")
+    // Play the app's configured end sound when the user acts on the
+    // notification (screen-off delivery).  The system UNNotification plays the
+    // default sound on lock-screen delivery because UNNotificationSound(named:)
+    // doesn't find the custom .wav — playing via AVAudioPlayer here ensures the
+    // user hears the app sound when they tap the notification.
+    //
+    // Only play when the notification was delivered to the background — when
+    // the app is in the foreground, willPresent already played the sound.
+    // Only play when the notification was delivered to the background
+    // (willPresent handles foreground delivery — it already played the
+    // sound via AVAudioPlayer).  Users interacting with a notification
+    // from the lock screen or background never heard the app sound, so
+    // we play it here.
+    if UIApplication.shared.applicationState != .active {
+      let userInfo = response.notification.request.content.userInfo
+      if let soundName = userInfo["soundPath"] as? String {
+        playEndSound(soundPath: soundName)
+      }
+    }
     completionHandler()
   }
 
