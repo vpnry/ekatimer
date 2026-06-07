@@ -111,6 +111,14 @@ class TimerProvider extends ChangeNotifier {
             return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
           }
           return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+        } else if (_timerMode == TimerMode.endAt) {
+          final hours = _remainingSeconds ~/ 3600;
+          final minutes = (_remainingSeconds % 3600) ~/ 60;
+          final seconds = _remainingSeconds % 60;
+          if (hours > 0) {
+            return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+          }
+          return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
         } else {
           final hours = _elapsedSeconds ~/ 3600;
           final minutes = (_elapsedSeconds % 3600) ~/ 60;
@@ -286,8 +294,12 @@ class TimerProvider extends ChangeNotifier {
     _elapsedSeconds = _calculateElapsedSeconds(now);
     _state = TimerState.completed;
 
-    await _audioService.playSound(endSound);
-    await _vibrationService.vibrate(endVibration);
+    // When user stops early (completed: false), skip end sound/vibration
+    // so they can leave quietly (e.g., in a group meditation).
+    if (completed) {
+      await _audioService.playSound(endSound);
+      await _vibrationService.vibrate(endVibration);
+    }
 
     final session = MeditationSession(
       id: _currentSessionId ?? const Uuid().v4(),

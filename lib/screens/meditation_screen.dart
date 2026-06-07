@@ -87,13 +87,15 @@ class _MeditationScreenState extends State<MeditationScreen>
     final t = TranslationService.of(context);
     final timerProvider = context.watch<TimerProvider>();
     final settingsProvider = context.watch<SettingsProvider>();
+    final sessionProvider = context.read<SessionProvider>();
 
     if (_currentScreenControl != settingsProvider.screenControl) {
       _currentScreenControl = settingsProvider.screenControl;
       _applyWakelock(_currentScreenControl);
     }
 
-    final isDark = settingsProvider.themeMode == 'dark' ||
+    final isDark =
+        settingsProvider.themeMode == 'dark' ||
         (settingsProvider.themeMode == 'system' &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final theme = isDark ? AppTheme.darkTheme : AppTheme.lightTheme;
@@ -106,7 +108,8 @@ class _MeditationScreenState extends State<MeditationScreen>
       );
     }
 
-    if (timerProvider.state == TimerState.completed && !_hasNavigatedToComplete) {
+    if (timerProvider.state == TimerState.completed &&
+        !_hasNavigatedToComplete) {
       _hasNavigatedToComplete = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _navigateToComplete(context);
@@ -115,7 +118,8 @@ class _MeditationScreenState extends State<MeditationScreen>
 
     double progress = 1.0;
     if (timerProvider.totalDurationSeconds > 0) {
-      progress = timerProvider.remainingSeconds / timerProvider.totalDurationSeconds;
+      progress =
+          timerProvider.remainingSeconds / timerProvider.totalDurationSeconds;
       progress = progress.clamp(0.0, 1.0);
     }
 
@@ -124,235 +128,274 @@ class _MeditationScreenState extends State<MeditationScreen>
       child: Scaffold(
         backgroundColor: theme.colorScheme.surface,
         body: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withAlpha(30),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          _modeLabel(t, timerProvider.timerMode).toUpperCase(),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1,
+          children: [
+            SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
                           ),
-                        ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _currentScreenControl == 'on'
-                                ? Icons.brightness_high
-                                : _currentScreenControl == 'dim'
-                                    ? Icons.brightness_low
-                                    : Icons.brightness_auto,
-                            color: Theme.of(context).colorScheme.onSurface.withAlpha(120),
-                            size: 16,
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withAlpha(30),
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            TimeUtils.formatTimeOfDay(DateTime.now()),
+                          child: Text(
+                            _modeLabel(
+                              t,
+                              timerProvider.timerMode,
+                            ).toUpperCase(),
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
-                              fontSize: 14,
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1,
                             ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const Spacer(),
-
-                AnimatedBuilder(
-                  animation: _pulseAnimation,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _pulseAnimation.value,
-                      child: child,
-                    );
-                  },
-                  child: TimerDisplay(
-                    timeText: timerProvider.displayTime,
-                    subtitleLabel: timerProvider.timerMode == TimerMode.endAt
-                        ? t.translate('meditation.remaining')
-                        : timerProvider.timerMode == TimerMode.unlimited
-                            ? t.translate('meditation.elapsed')
-                            : null,
-                    subtitleValue: timerProvider.timerMode == TimerMode.endAt
-                        ? TimeUtils.formatDuration(timerProvider.remainingSeconds)
-                        : timerProvider.timerMode == TimerMode.unlimited
-                            ? timerProvider.elapsedDisplay
-                            : null,
-                    isPaused: timerProvider.state == TimerState.paused,
-                    progress: progress,
-                  ),
-                ),
-
-                // Show "End at: {time}" below the circle for End At mode
-                if (timerProvider.timerMode == TimerMode.endAt && timerProvider.endTime != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      '${t.translate('meditation.endAt')} ${TimeUtils.formatTimeOfDay(timerProvider.endTime!, amLabel: t.translate('time.am'), pmLabel: t.translate('time.pm'))}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
-                      ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _currentScreenControl == 'on'
+                                  ? Icons.brightness_high
+                                  : _currentScreenControl == 'dim'
+                                  ? Icons.brightness_low
+                                  : Icons.brightness_auto,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withAlpha(120),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              TimeUtils.formatTimeOfDay(DateTime.now()),
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withAlpha(180),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
 
-                const Spacer(),
+                  const Spacer(),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildControlButton(
-                        icon: timerProvider.state == TimerState.paused
-                            ? Icons.play_arrow_rounded
-                            : Icons.pause_rounded,
-                        label: timerProvider.state == TimerState.paused
-                            ? t.translate('meditation.resume')
-                            : t.translate('meditation.pause'),
-                        onTap: () {
-                          if (timerProvider.state == TimerState.paused) {
-                            timerProvider.resumeSession();
-                          } else {
-                            timerProvider.pauseSession();
-                          }
-                        },
-                      ),
-                      const SizedBox(width: 24),
-                      _buildControlButton(
-                        icon: Icons.stop_rounded,
-                        label: t.translate('meditation.stop'),
-                        onTap: () => setState(() => _showStopConfirm = true),
-                        isDestructive: true,
-                      ),
-                    ],
+                  AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _pulseAnimation.value,
+                        child: child,
+                      );
+                    },
+                    child: TimerDisplay(
+                      timeText: timerProvider.displayTime,
+                      subtitleLabel: timerProvider.timerMode == TimerMode.endAt
+                          ? t.translate('meditation.elapsed')
+                          : timerProvider.timerMode == TimerMode.unlimited
+                          ? t.translate('stats.thisWeek')
+                          : t.translate('meditation.elapsed'),
+                      subtitleValue: timerProvider.timerMode == TimerMode.endAt
+                          ? timerProvider.elapsedDisplay
+                          : timerProvider.timerMode == TimerMode.unlimited
+                          ? TimeUtils.formatDurationReadable(
+                              sessionProvider.thisWeekDurationSeconds,
+                            )
+                          : timerProvider.elapsedDisplay,
+                      isPaused: timerProvider.state == TimerState.paused,
+                      progress: progress,
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
+                  // Show "End at: {time}" below the circle for End At mode
+                  if (timerProvider.timerMode == TimerMode.endAt &&
+                      timerProvider.endTime != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        '${t.translate('meditation.endAt')} ${TimeUtils.formatTimeOfDay(timerProvider.endTime!, amLabel: t.translate('time.am'), pmLabel: t.translate('time.pm'))}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withAlpha(180),
+                        ),
+                      ),
+                    ),
 
-          if (_showDimOverlay)
-            IgnorePointer(
-              child: AnimatedOpacity(
-                opacity: 0.45,
-                duration: const Duration(milliseconds: 800),
-                child: Container(color: Colors.black),
+                  const Spacer(),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 24,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildControlButton(
+                          icon: timerProvider.state == TimerState.paused
+                              ? Icons.play_arrow_rounded
+                              : Icons.pause_rounded,
+                          label: timerProvider.state == TimerState.paused
+                              ? t.translate('meditation.resume')
+                              : t.translate('meditation.pause'),
+                          onTap: () {
+                            if (timerProvider.state == TimerState.paused) {
+                              timerProvider.resumeSession();
+                            } else {
+                              timerProvider.pauseSession();
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 24),
+                        _buildControlButton(
+                          icon: Icons.stop_rounded,
+                          label: t.translate('meditation.stop'),
+                          onTap: () => setState(() => _showStopConfirm = true),
+                          isDestructive: true,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
 
-          if (_showStopConfirm)
-            Container(
-              color: Colors.black54,
-              child: Center(
-                child: Container(
-                  margin: const EdgeInsets.all(32),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.shadow.withAlpha(40),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.info_outline_rounded,
-                        size: 48,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        t.translate('meditation.endSession'),
-                        style:
-                            Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        t.translate('meditation.meditatingFor', args: {'duration': TimeUtils.formatDurationReadable(timerProvider.elapsedSeconds)}),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextButton(
-                              onPressed: () {
-                                setState(() => _showStopConfirm = false);
-                              },
-                              child: Text(
-                                t.translate('meditation.continue'),
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
+            if (_showDimOverlay)
+              IgnorePointer(
+                child: AnimatedOpacity(
+                  opacity: 0.45,
+                  duration: const Duration(milliseconds: 800),
+                  child: Container(color: Colors.black),
+                ),
+              ),
+
+            if (_showStopConfirm)
+              Container(
+                color: Colors.black54,
+                child: Center(
+                  child: Container(
+                    margin: const EdgeInsets.all(32),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.shadow.withAlpha(40),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.info_outline_rounded,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          t.translate('meditation.endSession'),
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          t.translate(
+                            'meditation.meditatingFor',
+                            args: {
+                              'duration': TimeUtils.formatDurationReadable(
+                                timerProvider.elapsedSeconds,
+                              ),
+                            },
+                          ),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () {
+                                  setState(() => _showStopConfirm = false);
+                                },
+                                child: Text(
+                                  t.translate('meditation.continue'),
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                setState(() => _showStopConfirm = false);
-                                await timerProvider.stopSession(completed: false);
-                                if (context.mounted) {
-                                  _navigateToComplete(context);
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.error,
-                                foregroundColor: Theme.of(context).colorScheme.onError,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  setState(() => _showStopConfirm = false);
+                                  await timerProvider.stopSession(
+                                    completed: false,
+                                  );
+                                  if (context.mounted) {
+                                    _navigateToComplete(context);
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.error,
+                                  foregroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.onError,
+                                ),
+                                child: Text(t.translate('meditation.end')),
                               ),
-                              child: Text(t.translate('meditation.end')),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
 
   /// Builds the delay countdown screen shown before the session starts.
   Widget _buildDelayScreen(
-      BuildContext context, TimerProvider timerProvider, TranslationService t) {
+    BuildContext context,
+    TimerProvider timerProvider,
+    TranslationService t,
+  ) {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -361,59 +404,59 @@ class _MeditationScreenState extends State<MeditationScreen>
         child: SafeArea(
           child: Center(
             child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                t.translate('meditation.startingIn'),
-                style: TextStyle(
-                  fontSize: 18,
-                  color: theme.colorScheme.onSurface.withAlpha(180),
-                ),
-              ),
-              const SizedBox(height: 24),
-              AnimatedBuilder(
-                animation: _pulseAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _pulseAnimation.value,
-                    child: child,
-                  );
-                },
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: theme.colorScheme.primary.withAlpha(30),
-                    border: Border.all(
-                      color: theme.colorScheme.primary.withAlpha(100),
-                      width: 3,
-                    ),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  t.translate('meditation.startingIn'),
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: theme.colorScheme.onSurface.withAlpha(180),
                   ),
-                  child: Center(
-                    child: Text(
-                      '${timerProvider.delayRemainingSeconds}',
-                      style: TextStyle(
-                        fontSize: 80,
-                        fontWeight: FontWeight.w200,
-                        color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 24),
+                AnimatedBuilder(
+                  animation: _pulseAnimation,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _pulseAnimation.value,
+                      child: child,
+                    );
+                  },
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: theme.colorScheme.primary.withAlpha(30),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withAlpha(100),
+                        width: 3,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${timerProvider.delayRemainingSeconds}',
+                        style: TextStyle(
+                          fontSize: 80,
+                          fontWeight: FontWeight.w200,
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                t.translate('meditation.tapToSkip'),
-                style: TextStyle(
-                  fontSize: 14,
-                  color: theme.colorScheme.onSurface.withAlpha(120),
+                const SizedBox(height: 24),
+                Text(
+                  t.translate('meditation.tapToSkip'),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: theme.colorScheme.onSurface.withAlpha(120),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -447,16 +490,9 @@ class _MeditationScreenState extends State<MeditationScreen>
             decoration: BoxDecoration(
               color: bgColor,
               shape: BoxShape.circle,
-              border: Border.all(
-                color: borderColor,
-                width: 2,
-              ),
+              border: Border.all(color: borderColor, width: 2),
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 28,
-            ),
+            child: Icon(icon, color: iconColor, size: 28),
           ),
           const SizedBox(height: 8),
           Text(
