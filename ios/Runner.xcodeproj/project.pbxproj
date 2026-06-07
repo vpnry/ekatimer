@@ -10,6 +10,7 @@
 		0C12E2292FD28D7200A74D49 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C12E2282FD28D7200A74D49 /* WidgetKit.framework */; };
 		0C12E22B2FD28D7200A74D49 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C12E22A2FD28D7200A74D49 /* SwiftUI.framework */; };
 		0C12E2362FD28D7300A74D49 /* MeditationWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0C12E2262FD28D7200A74D49 /* MeditationWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		0C4775462FD4F81F00738305 /* Sadhu.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0C4775452FD4F81F00738305 /* Sadhu.wav */; };
 		0C95E34E2FD262CC00B70FC9 /* med.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0C95E34D2FD262CC00B70FC9 /* med.icon */; };
 		0CA72F442FD48A1A002AE5E1 /* Watch.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0CA72F432FD48A1A002AE5E1 /* Watch.wav */; };
 		0CA72F452FD48A1A002AE5E1 /* ThreeBowl.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0CA72F422FD48A1A002AE5E1 /* ThreeBowl.wav */; };
@@ -76,6 +77,7 @@
 		0C12E22A2FD28D7200A74D49 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		0C12E23D2FD28DE800A74D49 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		0C12E23E2FD28E4700A74D49 /* MeditationWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeditationWidgetExtension.entitlements; sourceTree = "<group>"; };
+		0C4775452FD4F81F00738305 /* Sadhu.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Sadhu.wav; sourceTree = "<group>"; };
 		0C95E34D2FD262CC00B70FC9 /* med.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = med.icon; sourceTree = "<group>"; };
 		0CA72F3D2FD48A1A002AE5E1 /* Bell.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Bell.wav; sourceTree = "<group>"; };
 		0CA72F3E2FD48A1A002AE5E1 /* Bowl.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Bowl.wav; sourceTree = "<group>"; };
@@ -211,6 +213,7 @@
 				0CA72F412FD48A1A002AE5E1 /* Gong.wav */,
 				0CA72F422FD48A1A002AE5E1 /* ThreeBowl.wav */,
 				0CA72F432FD48A1A002AE5E1 /* Watch.wav */,
+				0C4775452FD4F81F00738305 /* Sadhu.wav */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -353,6 +356,7 @@
 				0CA72F442FD48A1A002AE5E1 /* Watch.wav in Resources */,
 				0CA72F452FD48A1A002AE5E1 /* ThreeBowl.wav in Resources */,
 				0CA72F462FD48A1A002AE5E1 /* Bell.wav in Resources */,
+				0C4775462FD4F81F00738305 /* Sadhu.wav in Resources */,
 				0CA72F472FD48A1A002AE5E1 /* Gong.wav in Resources */,
 				0CA72F482FD48A1A002AE5E1 /* GardenBird.wav in Resources */,
 				0CA72F492FD48A1A002AE5E1 /* BowlStrong.wav in Resources */,

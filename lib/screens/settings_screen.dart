@@ -525,6 +525,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'https://freesound.org/s/46062/',
                 style: TextStyle(fontSize: 12),
               ),
+
+              _buildSectionLabel(context, 'Buddha Dhamma'),
+              const SizedBox(height: 8),
+              const Text(
+                'Sadhu.wav',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const Text('Author: Ven. Pa-Auk Tawya Sayadaw'),
+              const Text(
+                'Adapted from the Pa-Auk Forest Monastery’s Chanting Audio - Freely available.',
+                style: TextStyle(fontSize: 12),
+              ),
             ],
           ),
         ),
