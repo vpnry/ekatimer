@@ -317,7 +317,7 @@
     "license.free": "ekaTimer là phần mềm miễn phí theo giấy phép GPLv3.",
     "license.inspired": "Lấy cảm hứng từ",
     "license.source": "Mã nguồn",
-    "editPresets.title": "Sửa thời gian sẵn có",
+    "editPresets.title": "Sửa nút thời gian thường dùng",
     "editPresets.desc": "Thiết lập thời gian cho 4 nút (phút):",
     "editPresets.fillAll": "Vui lòng điền cả 4 ô.",
     "editPresets.invalidRange": "Giá trị phải từ 1 đến 100800.",
