@@ -316,15 +316,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               icon: Icons.gavel_outlined,
               title: t.translate('settings.licenseAttribution'),
-              subtitle: 'GNU GPL v3.0',
-              onTap: () => _showLicenseDialog(context),
-            ),
-            _buildListTile(
-              context,
-              icon: Icons.music_note_outlined,
-              title: t.translate('settings.soundCredits'),
-              subtitle: 'CC0 1.0 Universal',
-              onTap: () => _showSoundCreditsDialog(context),
+              onTap: () => _showLicenseAttributionDialog(context),
             ),
 
             const SizedBox(height: 32),
@@ -431,74 +423,107 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showSoundCreditsDialog(BuildContext context) {
+  void _showLicenseAttributionDialog(BuildContext context) {
     final t = TranslationService.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(t.translate('settings.soundCredits')),
+        title: Text(t.translate('settings.licenseAttribution')),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // CC0
-              const Text(
-                'CC0 1.0 Universal (Public Domain)',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              // ── ekaTimer ─────────────────────────────────────────
+              _buildSectionLabel(context, 'ekaTimer'),
+              const SizedBox(height: 8),
+              _LicenseBox(
+                'This program is distributed in the hope that it will be useful, '
+                'but WITHOUT ANY WARRANTY; without even the implied warranty of '
+                'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.',
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 12),
               const Text(
+                'While ekaTimer is not a fork of Meditation Assistant, many of its '
+                'features and behaviours were derived from studying and '
+                're-implementing concepts found in that project.',
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Accordingly, ekaTimer is distributed under the GNU General Public '
+                'License v3 (GPLv3), in recognition of the GPLv3 licence applied to '
+                'Meditation Assistant by Trevor Slocum.',
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Source code: https://github.com/vpnry/ekatimer',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+
+              const SizedBox(height: 20),
+              const Divider(),
+              const SizedBox(height: 12),
+
+              // ── Meditation Assistant ──────────────────────────────
+              _buildSectionLabel(context, 'Meditation Assistant'),
+              const SizedBox(height: 8),
+              const Text(
+                'ekaTimer is a Dart/Flutter reimplementation inspired by '
+                'Meditation Assistant, originally authored by Trevor Slocum.',
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Author: Trevor Slocum',
+                style: TextStyle(fontSize: 13),
+              ),
+              const Text(
+                'Source: https://codeberg.org/tslocum/meditationassistant',
+                style: TextStyle(fontSize: 13),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Audio Attributions ────────────────────────────────
+              _buildSectionLabel(context, 'Audio Attributions'),
+              const SizedBox(height: 16),
+
+              _buildSectionLabel(context, 'CC0 1.0 Universal (Public Domain)'),
+              const SizedBox(height: 8),
+              _LicenseBox(
                 'bell.wav\n'
                 'gardenbird.wav\n'
                 'bowl.wav\n'
                 'bowlstrong.wav\n'
                 'watch.wav',
-                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 8),
               const Text(
-                'Source: Joseph SARDIN (BigSoundBank.com)',
-                style: TextStyle(fontSize: 12),
+                'Source: Joseph Sardin (BigSoundBank.com)',
+                style: TextStyle(fontSize: 13),
               ),
 
               const SizedBox(height: 20),
 
-              // Attribution 4.0
-              const Divider(),
-
-              const SizedBox(height: 12),
-
-              const Text(
-                'Creative Commons Attribution 4.0',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-
+              _buildSectionLabel(context, 'Creative Commons Attribution 4.0'),
               const SizedBox(height: 8),
-
               const Text(
                 'ThreeBowl.wav',
-                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              const Text(
-                'Author: naturenotesuk',
-                style: TextStyle(fontSize: 12),
-              ),
+              const Text('Author: naturenotesuk'),
               const Text(
                 'https://freesound.org/s/667491/',
-                style: TextStyle(fontSize: 11),
+                style: TextStyle(fontSize: 12),
               ),
-
-              const SizedBox(height: 12),
-
+              const SizedBox(height: 10),
               const Text(
                 'gong.wav',
-                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              const Text('Author: reinsamba', style: TextStyle(fontSize: 12)),
+              const Text('Author: reinsamba'),
               const Text(
                 'https://freesound.org/s/46062/',
-                style: TextStyle(fontSize: 11),
+                style: TextStyle(fontSize: 12),
               ),
             ],
           ),
@@ -513,58 +538,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showLicenseDialog(BuildContext context) {
-    final t = TranslationService.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(t.translate('settings.licenseAttribution')),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'GNU General Public License v3.0 (GPLv3)',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Text('ekaTimer is free software licensed under GPLv3.'),
-              const SizedBox(height: 16),
-              const Text(
-                'Inspired by',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Meditation Assistant\n'
-                'Author: Trevor Slocum\n'
-                'https://codeberg.org/tslocum/meditationassistant',
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Source Code',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              const Text('https://github.com/vpnry/ekatimer'),
-              const SizedBox(height: 16),
-              const Text(
-                'This program is distributed in the hope that it will be useful, '
-                'but WITHOUT ANY WARRANTY; without even the implied warranty of '
-                'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.',
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: Navigator.of(context).pop,
-            child: Text(t.translate('settings.close')),
-          ),
-        ],
-      ),
+  Widget _buildSectionLabel(BuildContext context, String text) {
+    return Text(
+      text,
+      style: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 
@@ -597,5 +576,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (picked != null) {
       settings.setReminderTime(picked.hour, picked.minute);
     }
+  }
+}
+
+class _LicenseBox extends StatelessWidget {
+  final String text;
+  const _LicenseBox(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          fontFamily: 'monospace',
+          height: 1.5,
+          color: Colors.black,
+        ),
+      ),
+    );
   }
 }
