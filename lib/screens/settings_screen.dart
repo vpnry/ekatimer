@@ -693,9 +693,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Text('Author: Ven. Pa-Auk Tawya Sayadaw'),
               const Text(
                 'Adapted from the Pa-Auk Forest Monastery\'s Chanting Audio - Free Distribution.',
-                style: TextStyle(fontSize: 12),
+                style: TextStyle(fontSize: 13),
               ),
-
+              const SizedBox(height: 20),
               _buildSectionLabel(context, 'CC0 1.0 Universal (Public Domain)'),
               const SizedBox(height: 8),
               _LicenseBox(
