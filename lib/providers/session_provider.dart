@@ -14,6 +14,7 @@ class SessionProvider extends ChangeNotifier {
   int _todayDurationSeconds = 0;
   int _thisWeekDurationSeconds = 0;
   int _thisMonthDurationSeconds = 0;
+  int _thisYearDurationSeconds = 0;
 
   List<MeditationSession> get sessions => _sessions;
   bool get isLoading => _isLoading;
@@ -25,6 +26,7 @@ class SessionProvider extends ChangeNotifier {
   int get todayDurationSeconds => _todayDurationSeconds;
   int get thisWeekDurationSeconds => _thisWeekDurationSeconds;
   int get thisMonthDurationSeconds => _thisMonthDurationSeconds;
+  int get thisYearDurationSeconds => _thisYearDurationSeconds;
 
   Future<void> loadSessions() async {
     _isLoading = true;
@@ -62,6 +64,12 @@ class SessionProvider extends ChangeNotifier {
     _thisMonthDurationSeconds = await DatabaseService.getTotalDurationInRange(
       startOfMonth,
       startOfMonth.add(const Duration(days: 32)),
+    );
+
+    final startOfYear = DateTime(now.year, 1, 1);
+    _thisYearDurationSeconds = await DatabaseService.getTotalDurationInRange(
+      startOfYear,
+      startOfYear.add(const Duration(days: 366)),
     );
   }
 
@@ -139,6 +147,24 @@ class SessionProvider extends ChangeNotifier {
 
     return data;
   }
+
+  Future<List<YearlyDataPoint>> getYearlyData({int years = 5}) async {
+    final now = DateTime.now();
+    final data = <YearlyDataPoint>[];
+
+    for (int i = years - 1; i >= 0; i--) {
+      final year = now.year - i;
+      final yearStart = DateTime(year, 1, 1);
+      final yearEnd = DateTime(year + 1, 1, 1);
+      final duration = await DatabaseService.getTotalDurationInRange(yearStart, yearEnd);
+      data.add(YearlyDataPoint(
+        label: '$year',
+        durationSeconds: duration,
+      ));
+    }
+
+    return data;
+  }
 }
 
 class WeeklyDataPoint {
@@ -162,4 +188,10 @@ class MonthlyDataPoint {
   final String label;
   final int durationSeconds;
   MonthlyDataPoint({required this.label, required this.durationSeconds});
+}
+
+class YearlyDataPoint {
+  final String label;
+  final int durationSeconds;
+  YearlyDataPoint({required this.label, required this.durationSeconds});
 }

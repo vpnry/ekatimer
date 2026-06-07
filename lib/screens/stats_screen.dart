@@ -21,11 +21,12 @@ class _StatsScreenState extends State<StatsScreen>
   // Make futures nullable to avoid LateInitializationError during first build.
   Future<List<dynamic>>? _weeklyDataFuture;
   Future<List<dynamic>>? _monthlyDataFuture;
+  Future<List<dynamic>>? _yearlyDataFuture;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
 
     // Safely load the data after the initial widget build frame completes.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -40,6 +41,7 @@ class _StatsScreenState extends State<StatsScreen>
     setState(() {
       _weeklyDataFuture = loadFuture.then((_) => provider.getWeeklyData());
       _monthlyDataFuture = loadFuture.then((_) => provider.getMonthlyData());
+      _yearlyDataFuture = loadFuture.then((_) => provider.getYearlyData());
     });
   }
 
@@ -88,6 +90,7 @@ class _StatsScreenState extends State<StatsScreen>
               Tab(text: t.translate('stats.overview')),
               Tab(text: t.translate('stats.weekly')),
               Tab(text: t.translate('stats.monthly')),
+              Tab(text: t.translate('stats.yearly')),
             ],
           ),
         ),
@@ -97,6 +100,7 @@ class _StatsScreenState extends State<StatsScreen>
             _buildOverviewTab(context, sessionProvider),
             _buildWeeklyTab(context, sessionProvider),
             _buildMonthlyTab(context, sessionProvider),
+            _buildYearlyTab(context, sessionProvider),
           ],
         ),
       ),
@@ -220,6 +224,11 @@ class _StatsScreenState extends State<StatsScreen>
             context,
             t.translate('stats.thisMonth'),
             provider.thisMonthDurationSeconds,
+          ),
+          _buildPeriodRow(
+            context,
+            t.translate('stats.thisYear'),
+            provider.thisYearDurationSeconds,
           ),
         ],
       ),
@@ -347,6 +356,44 @@ class _StatsScreenState extends State<StatsScreen>
                   context,
                   data: snapshot.data!,
                   barColor: AppColors.primaryLight,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildYearlyTab(BuildContext context, SessionProvider provider) {
+    final t = TranslationService.of(context);
+    if (_yearlyDataFuture == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return FutureBuilder<List<dynamic>>(
+      future: _yearlyDataFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                t.translate('stats.yearlyTitle'),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 260,
+                child: _buildBarChart(
+                  context,
+                  data: snapshot.data!,
+                  barColor: AppColors.primary.withAlpha(180),
                 ),
               ),
             ],
