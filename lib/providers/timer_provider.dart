@@ -426,7 +426,11 @@ class TimerProvider extends ChangeNotifier {
           final remaining = _endTime!.difference(now).inSeconds;
           _remainingSeconds = remaining < 0 ? 0 : remaining;
           if (_remainingSeconds <= 0) {
-            _onSessionComplete();
+            // Check if we missed the exact end time because device was sleeping
+            // (e.g., late by > 1.5 seconds). If so, the native OS alarm already
+            // handled the notification/sound. Complete silently.
+            final bool missedBySleep = now.difference(_endTime!).inMilliseconds > 1500;
+            _onSessionComplete(silent: missedBySleep);
             return;
           }
         }
@@ -436,7 +440,9 @@ class TimerProvider extends ChangeNotifier {
           final remaining = _endTime!.difference(now).inSeconds;
           _remainingSeconds = remaining < 0 ? 0 : remaining;
           if (_remainingSeconds <= 0) {
-            _onSessionComplete();
+            // Same logic for "endAt" mode
+            final bool missedBySleep = now.difference(_endTime!).inMilliseconds > 1500;
+            _onSessionComplete(silent: missedBySleep);
             return;
           }
         }
