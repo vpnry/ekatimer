@@ -94,7 +94,7 @@ fileprivate var _widgetActionData: [String: Any]? = nil
     willPresent notification: UNNotification,
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
   ) {
-    let userInfo = notification.request.content.userInfo
+    _ = notification.request.content.userInfo
     print("AppDelegate: willPresent notification – \(notification.request.identifier)")
 
     // Dart handles playing the sound in the foreground via _onTick,
