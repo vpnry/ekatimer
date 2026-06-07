@@ -525,7 +525,9 @@ class _MeditationScreenState extends State<MeditationScreen>
     await sessionProvider.loadSessions();
 
     if (context.mounted) {
-      Navigator.of(context).pushReplacement(
+      // Use push instead of pushReplacement to ensure the root _AppEntry route
+      // remains safely preserved at the bottom of the navigation stack.
+      Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => CompleteScreen(
             durationSeconds: timerProvider.elapsedSeconds,

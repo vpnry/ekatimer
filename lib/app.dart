@@ -237,12 +237,12 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       try {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (_) => const MeditationScreen(),
-          ),
-          (route) => false,
-        );
+        // Pop all pushed screens (stale completion screens, settings, etc.)
+        // back to the root route (_AppEntry).
+        // Since _hasActiveSession is set to true, the root route will automatically
+        // rebuild and render the MeditationScreen. This keeps _AppEntry alive,
+        // preserving your app lifecycle and widget listeners.
+        Navigator.of(context).popUntil((route) => route.isFirst);
       } catch (_) {}
     });
   }
@@ -271,6 +271,15 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
       if (handled && mounted) {
         setState(() => _hasActiveSession = true);
         _ensureMeditationScreen();
+      } else if (!handled && WidgetActionHandler.selectedWidgetMode != null && mounted) {
+        // Defer the pop operation to the next post-frame callback.
+        // This ensures the Navigator stack is fully stable and unlocked,
+        // safely popping sub-screens like Statistics, Settings, or History.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+        });
       }
     } catch (e) {
       debugPrint('_handleResumeWidgetAction error: $e');

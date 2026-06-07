@@ -125,6 +125,9 @@ class WidgetActionHandler {
 
       final mode = TimerMode.fromString(timerMode);
 
+      // Reset the timer state machine to ensure it is clean before configuration.
+      timerProvider.reset();
+
       if (mode == TimerMode.endAt) {
         final endAtTs = result['endAt'] as int?;
         final nowSecs = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -174,6 +177,9 @@ class WidgetActionHandler {
       if (timerMode == null) return false;
 
       final mode = TimerMode.fromString(timerMode);
+
+      // Reset the timer state machine to ensure it is clean before configuration.
+      timerProvider.reset();
 
       if (mode == TimerMode.endAt) {
         timerProvider.configure(mode: mode, durationMinutes: timerDuration);

@@ -55,16 +55,6 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
     _initEndAtTime();
     _loadRecentDurations();
     _loadFixedHourPresets();
-
-    // If the app was opened by tapping the "End At" widget, pre-select
-    // the End At mode so the user sees the time picker immediately.
-    // Also mark _initializedMode as true so build() doesn't override this
-    // with the saved defaultTimerMode from settings.
-    if (WidgetActionHandler.selectedWidgetMode == 'endAt') {
-      WidgetActionHandler.selectedWidgetMode = null; // consume once
-      _selectedMode = TimerMode.endAt;
-      _initializedMode = true;
-    }
   }
 
   Future<void> _loadRecentDurations() async {
@@ -164,7 +154,12 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
         settingsProvider.sessionDelaySeconds;
     timerProvider.volume = settingsProvider.soundConfig.volume;
 
-    if (!_initializedMode) {
+    // Consume selectedWidgetMode here to support both cold starts and warm-start resumes.
+    if (WidgetActionHandler.selectedWidgetMode != null) {
+      _selectedMode = TimerMode.fromString(WidgetActionHandler.selectedWidgetMode!);
+      WidgetActionHandler.selectedWidgetMode = null; // consume once
+      _initializedMode = true;
+    } else if (!_initializedMode) {
       _selectedMode = settingsProvider.defaultTimerMode;
       _initializedMode = true;
     }

@@ -93,6 +93,21 @@ class MainActivity : FlutterActivity() {
                     if (intent?.getIntExtra("from_alarm", -1) != -1) {
                         data["fromAlarm"] = true
                     }
+
+                    // Clear cached variables after sending them to Flutter.
+                    // This prevents re-triggering the widget action on normal app resume.
+                    widgetTimerMode = null
+                    widgetTimerDuration = null
+                    widgetAction = null
+                    widgetStatsPeriod = null
+
+                    // Clear consumed intent extras.
+                    intent?.removeExtra("widget_timer_mode")
+                    intent?.removeExtra("widget_timer_duration")
+                    intent?.removeExtra("widget_action")
+                    intent?.removeExtra("widget_stats_period")
+                    intent?.removeExtra("from_alarm")
+
                     result.success(data.ifEmpty { null })
                 }
                 else -> result.notImplemented()
@@ -108,6 +123,11 @@ class MainActivity : FlutterActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // Update the current intent of the activity.
+        // Without this call, getIntent() or the intent property retains
+        // stale parameters from the original launch.
+        setIntent(intent)
+
         // Re-read intent extras when app is brought to foreground (singleTop)
         // The Flutter side checks for actions on app resume via
         // WidgetsBindingObserver (doesChangeAppLifecycleState).
@@ -126,7 +146,11 @@ class MainActivity : FlutterActivity() {
     private fun readWidgetIntent(intent: Intent?) {
         intent?.let {
             widgetTimerMode = it.getStringExtra("widget_timer_mode")
-            widgetTimerDuration = it.getIntExtra("widget_timer_duration", 0)
+            widgetTimerDuration = if (it.hasExtra("widget_timer_duration")) {
+                it.getIntExtra("widget_timer_duration", 0)
+            } else {
+                null
+            }
             widgetAction = it.getStringExtra("widget_action")
             widgetStatsPeriod = it.getStringExtra("widget_stats_period")
         }

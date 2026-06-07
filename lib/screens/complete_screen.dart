@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/session_provider.dart';
 import '../services/translation_service.dart';
-import 'home_screen.dart';
 import '../providers/timer_provider.dart';
 import '../providers/settings_provider.dart';
 import '../theme/colors.dart';
@@ -114,22 +113,15 @@ class _CompleteScreenState extends State<CompleteScreen>
                   FadeTransition(
                     opacity: _opacityAnimation,
                     child: Column(
-                      children: [
-                        SizedBox(
+                      children: [                          SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              // Timer is already reset (done in initState).
-                              // Just navigate home — _AppEntry's
-                              // _onTimerStateChanged has already marked the
-                              // app as reset, so the next widget tap will
-                              // start a fresh session.
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder: (_) => const MeditationHomeScreen(),
-                                ),
-                                (route) => false,
-                              );
+                              // Timer has already been reset in initState.
+                              // Pop back to the root route (_AppEntry). Since _hasActiveSession
+                              // was cleared when the timer became idle, _AppEntry will
+                              // naturally rebuild and render MeditationHomeScreen.
+                              Navigator.of(context).popUntil((route) => route.isFirst);
                             },
                             child: Text(t.translate('complete.backToHome')),
                           ),
