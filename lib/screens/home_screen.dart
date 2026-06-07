@@ -150,13 +150,14 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
     timerProvider.endVibration = settingsProvider.vibrationConfig.endVibration;
     timerProvider.intervalVibration =
         settingsProvider.vibrationConfig.intervalVibration;
-    timerProvider.sessionDelaySeconds =
-        settingsProvider.sessionDelaySeconds;
+    timerProvider.sessionDelaySeconds = settingsProvider.sessionDelaySeconds;
     timerProvider.volume = settingsProvider.soundConfig.volume;
 
     // Consume selectedWidgetMode here to support both cold starts and warm-start resumes.
     if (WidgetActionHandler.selectedWidgetMode != null) {
-      _selectedMode = TimerMode.fromString(WidgetActionHandler.selectedWidgetMode!);
+      _selectedMode = TimerMode.fromString(
+        WidgetActionHandler.selectedWidgetMode!,
+      );
       WidgetActionHandler.selectedWidgetMode = null; // consume once
       _initializedMode = true;
     } else if (!_initializedMode) {
@@ -217,6 +218,26 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
                   ],
                 ),
 
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 12, bottom: 4),
+                    child: Column(
+                      children: [
+                        _buildModeSelector(context),
+                        const SizedBox(height: 24),
+                        if (_selectedMode == TimerMode.timed)
+                          _buildDurationPicker(context)
+                        else if (_selectedMode == TimerMode.endAt)
+                          _buildEndAtPicker(context)
+                        else
+                          _buildUnlimitedInfo(context),
+                        const SizedBox(height: 24),
+                        _buildStartButton(context),
+                      ],
+                    ),
+                  ),
+                ),
+
                 if (!sessionProvider.isLoading)
                   SliverToBoxAdapter(
                     child: StatsSummary(
@@ -231,30 +252,17 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
 
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Column(
-                      children: [
-                        _buildModeSelector(context),
-                        const SizedBox(height: 32),
-                        if (_selectedMode == TimerMode.timed)
-                          _buildDurationPicker(context)
-                        else if (_selectedMode == TimerMode.endAt)
-                          _buildEndAtPicker(context)
-                        else
-                          _buildUnlimitedInfo(context),
-                        const SizedBox(height: 32),
-                        _buildStartButton(context),
-                        const SizedBox(height: 16),
-                        TextButton.icon(
-                          onPressed: () =>
-                              _navigateTo(context, const HistoryScreen()),
-                          icon: const Icon(Icons.history_rounded, size: 20),
-                          label: Text(t.translate('home.viewHistory')),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.textSecondaryLight,
-                          ),
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Center(
+                      child: TextButton.icon(
+                        onPressed: () =>
+                            _navigateTo(context, const HistoryScreen()),
+                        icon: const Icon(Icons.history_rounded, size: 20),
+                        label: Text(t.translate('home.viewHistory')),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.textSecondaryLight,
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -398,7 +406,7 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
           }),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 24),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -596,7 +604,9 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
               ),
               const SizedBox(width: 8),
               Text(
-                _endAtHour >= 12 ? t.translate('time.pm') : t.translate('time.am'),
+                _endAtHour >= 12
+                    ? t.translate('time.pm')
+                    : t.translate('time.am'),
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.textSecondaryLight,
                 ),
