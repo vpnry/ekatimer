@@ -81,8 +81,8 @@ class AlarmSchedulerPlugin {
                             val endTimeMillis = call.argument<Long>("endTimeMillis") ?: 0L
                             val requestCode = call.argument<Int>("requestCode") ?: REQUEST_CODE_TIMED_END
                             val soundPath = call.argument<String>("soundPath") ?: ""
-                            scheduleEndAlarm(context, delaySeconds, endTimeMillis, requestCode, soundPath)
-                            result.success(true)
+                            val success = scheduleEndAlarm(context, delaySeconds, endTimeMillis, requestCode, soundPath)
+                            result.success(success)
                         }
                         "cancelEndAlarm" -> {
                             val requestCode = call.argument<Int>("requestCode") ?: REQUEST_CODE_TIMED_END
@@ -168,12 +168,12 @@ class AlarmSchedulerPlugin {
             }
         }
 
-        private fun scheduleEndAlarm(context: Context, delaySeconds: Int, endTimeMillis: Long, requestCode: Int, soundPath: String = "") {
+        private fun scheduleEndAlarm(context: Context, delaySeconds: Int, endTimeMillis: Long, requestCode: Int, soundPath: String = ""): Boolean {
             // Check exact alarm permission before scheduling
             if (!canScheduleExactAlarms(context)) {
                 Log.w(TAG, "Exact alarm permission not granted, requesting...")
                 requestExactAlarmPermission(context)
-                return
+                return false
             }
 
             val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -189,19 +189,14 @@ class AlarmSchedulerPlugin {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            val triggerTime: Long
-            if (endTimeMillis > 0) {
-                triggerTime = endTimeMillis
+            val triggerTime: Long = if (endTimeMillis > 0) {
+                endTimeMillis
             } else {
-                triggerTime = System.currentTimeMillis() + (delaySeconds * 1000L)
+                System.currentTimeMillis() + (delaySeconds * 1000L)
             }
 
             Log.d(TAG, "Scheduling alarm: requestCode=$requestCode, triggerTime=$triggerTime, delaySec=$delaySeconds")
 
-            // Use setAlarmClock on API 21+ for most reliable doze wake.
-            // Unlike setExactAndAllowWhileIdle, AlarmManager.AlarmClockInfo is
-            // guaranteed by Android to fire on time—it is treated as a user-facing
-            // alarm clock and always wakes the device from deep doze.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 val showIntent = Intent(context, AlarmReceiver::class.java).apply {
                     action = "org.tipitakapali.ekatimer.ALARM_SHOW"
@@ -222,9 +217,7 @@ class AlarmSchedulerPlugin {
                 am.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
             }
 
-            // The Flutter side manages the CPU wake lock lifecycle via
-            // acquireCpuWakeLock / releaseCpuWakeLock MethodChannel calls.
-            // We do NOT acquire one here to avoid duplication.
+            return true
         }
 
         private fun cancelEndAlarm(context: Context, requestCode: Int) {

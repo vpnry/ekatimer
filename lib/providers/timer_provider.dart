@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/timer_mode.dart';
@@ -52,6 +53,7 @@ class TimerProvider extends ChangeNotifier {
 
   Timer? _tickTimer;
   bool _alarmFired = false;
+  bool _nativeAlarmScheduled = false;
 
   TimerState get state => _state;
   TimerMode get timerMode => _timerMode;
@@ -201,11 +203,11 @@ class TimerProvider extends ChangeNotifier {
     // Acquire CPU wake lock to keep Dart timer running when screen is off
     await _alarmService.acquireCpuWakeLock();
 
-    // Schedule a native AlarmManager alarm as a backup (wakes from doze)
+    _nativeAlarmScheduled = false;
     if (_endTime != null) {
       final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
       final remainingMs = _endTime!.millisecondsSinceEpoch;
-      await _alarmService.scheduleEndAlarm(
+      _nativeAlarmScheduled = await _alarmService.scheduleEndAlarm(
         endTimeMillis: remainingMs,
         requestCode: requestCode,
         soundPath: _nativeSoundPath(endSound),
@@ -250,6 +252,7 @@ class TimerProvider extends ChangeNotifier {
     await _alarmService.cancelEndAlarm(
       requestCode: _timerMode == TimerMode.timed ? 1001 : 1002,
     );
+    _nativeAlarmScheduled = false;
     await _alarmService.releaseCpuWakeLock();
     await _persistSessionState();
     notifyListeners();
@@ -271,7 +274,7 @@ class TimerProvider extends ChangeNotifier {
     await _alarmService.acquireCpuWakeLock();
     if (_endTime != null) {
       final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
-      await _alarmService.scheduleEndAlarm(
+      _nativeAlarmScheduled = await _alarmService.scheduleEndAlarm(
         endTimeMillis: _endTime!.millisecondsSinceEpoch,
         requestCode: requestCode,
         soundPath: _nativeSoundPath(endSound),
@@ -380,7 +383,7 @@ class TimerProvider extends ChangeNotifier {
         }
 
         final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
-        await _alarmService.scheduleEndAlarm(
+        _nativeAlarmScheduled = await _alarmService.scheduleEndAlarm(
           endTimeMillis: _endTime!.millisecondsSinceEpoch,
           requestCode: requestCode,
           soundPath: _nativeSoundPath(endSound),
@@ -489,8 +492,12 @@ class TimerProvider extends ChangeNotifier {
   Future<void> _onSessionComplete({bool silent = false}) async {
     _stopTick();
     
-    // Cancel native alarm (already triggered but clean up) and release wake lock
-    await _alarmService.cancelAllAlarms();
+    // On Android, if the native alarm is scheduled, do NOT cancel it.
+    // Allow the native AlarmReceiver to fire, wake the screen, and play the sound natively.
+    if (!(Platform.isAndroid && _nativeAlarmScheduled)) {
+      await _alarmService.cancelAllAlarms();
+    }
+    
     await _alarmService.releaseCpuWakeLock();
 
     _state = TimerState.completed;
@@ -498,10 +505,15 @@ class TimerProvider extends ChangeNotifier {
     final now = DateTime.now();
     _elapsedSeconds = _totalDurationSeconds;
 
-    // Only play sound/vibration if this isn't a silent complete
-    // (e.g. restoring an already-expired session where the alarm already played)
     if (!silent) {
-      await _audioService.playSound(endSound);
+      bool playSoundFromDart = true;
+      if (Platform.isAndroid && _nativeAlarmScheduled) {
+        playSoundFromDart = false; // Native AlarmReceiver will securely handle the audio playback
+      }
+
+      if (playSoundFromDart) {
+        await _audioService.playSound(endSound);
+      }
       await _vibrationService.vibrate(endVibration);
     }
 
@@ -542,6 +554,7 @@ class TimerProvider extends ChangeNotifier {
     _lastIntervalMinute = -1;
     _lastBellMinute = -1;
     _alarmFired = false;
+    _nativeAlarmScheduled = false;
     notifyListeners();
   }
 
@@ -552,11 +565,8 @@ class TimerProvider extends ChangeNotifier {
 
     debugPrint('TimerProvider: Native alarm fired with code $requestCode');
 
-    // The native alarm fired while in doze - complete the session
     if (_state == TimerState.running) {
-      // Play end sound via native side as a backup (works even in deep sleep)
-      _alarmService.playEndSound(soundPath: _nativeSoundPath(endSound));
-      // Pass silent: true since the native layer already played the sound
+      // AlarmReceiver natively plays the sound already, no need to instruct Dart to play it.
       _onSessionComplete(silent: true);
     }
   }
@@ -568,7 +578,7 @@ class TimerProvider extends ChangeNotifier {
     
     if (_state == TimerState.running && _endTime != null) {
       final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
-      await _alarmService.scheduleEndAlarm(
+      _nativeAlarmScheduled = await _alarmService.scheduleEndAlarm(
         endTimeMillis: _endTime!.millisecondsSinceEpoch,
         requestCode: requestCode,
         soundPath: _nativeSoundPath(endSound),

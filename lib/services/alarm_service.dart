@@ -110,13 +110,13 @@ class AlarmService {
     String soundPath = '',
   }) async {
     try {
-      await _channel.invokeMethod('scheduleEndAlarm', {
+      final result = await _channel.invokeMethod<bool>('scheduleEndAlarm', {
         'delaySeconds': delaySeconds ?? 0,
         'endTimeMillis': endTimeMillis ?? 0,
         'requestCode': requestCode,
         'soundPath': soundPath,
       });
-      return true;
+      return result ?? false;
     } catch (e) {
       debugPrint('AlarmService: scheduleEndAlarm failed: $e');
       return false;
