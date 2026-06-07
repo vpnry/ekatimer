@@ -107,6 +107,7 @@ class WidgetActionHandler {
   }
 
   static Future<bool> _handleIos(BuildContext context) async {
+    if (!context.mounted) return false;
     final timerProvider = context.read<TimerProvider>();
 
     try {
@@ -114,6 +115,9 @@ class WidgetActionHandler {
         'getWidgetAction',
       );
       if (result == null || result.isEmpty) return false;
+
+      // If launched from an alarm, don't start a new session.
+      if (result['fromAlarm'] == true) return false;
 
       final timerMode = result['timerMode'] as String?;
       final timerDuration = result['timerDuration'] as int?;
@@ -153,6 +157,7 @@ class WidgetActionHandler {
   }
 
   static Future<bool> _handleAndroid(BuildContext context) async {
+    if (!context.mounted) return false;
     final timerProvider = context.read<TimerProvider>();
 
     try {
@@ -160,6 +165,9 @@ class WidgetActionHandler {
         'getWidgetAction',
       );
       if (result == null || result.isEmpty) return false;
+
+      // If launched from an alarm, don't start a new session.
+      if (result['fromAlarm'] == true) return false;
 
       final timerMode = result['timerMode'] as String?;
       final timerDuration = result['timerDuration'] as int?;
