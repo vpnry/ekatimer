@@ -272,10 +272,10 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
         setState(() => _hasActiveSession = true);
         _ensureMeditationScreen();
       } else if (!handled && WidgetActionHandler.selectedWidgetMode != null && mounted) {
-        // Defer the pop operation to the next post-frame callback.
-        // This ensures the Navigator stack is fully stable and unlocked,
-        // safely popping sub-screens like Statistics, Settings, or History.
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Defer the pop using Future.delayed(Duration.zero) instead of addPostFrameCallback.
+        // This executes the pop immediately in a new event loop turn, without waiting
+        // for a rendering frame to be scheduled (since no setState was called here).
+        Future.delayed(Duration.zero, () {
           if (mounted) {
             Navigator.of(context).popUntil((route) => route.isFirst);
           }
