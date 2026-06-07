@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convert to ekaTimer CSV</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+    background: #f5f7fa;
+    color: #1a1a2e;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.08);
+    width: 100%;
+    max-width: 640px;
+    padding: 2rem;
+  }
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: .5rem;
+    color: #16213e;
+  }
+  p.sub { color: #555; margin-bottom: 1.25rem; font-size: .9rem; line-height: 1.5; }
+  label {
+    display: block;
+    margin-bottom: .5rem;
+    font-weight: 500;
+    font-size: .9rem;
+    color: #333;
+  }
+  input[type="file"] {
+    display: block;
+    width: 100%;
+    padding: .6rem .8rem;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    background: #fafbfc;
+    font-size: .9rem;
+    cursor: pointer;
+    transition: border-color .2s;
+  }
+  input[type="file"]:hover { border-color: #0f3460; }
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: .75rem;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: .8rem;
+    resize: vertical;
+    margin-top: 1rem;
+    background: #fafbfc;
+  }
+  .stats {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0 .5rem;
+    font-size: .85rem;
+    color: #555;
+  }
+  .stats span { font-weight: 600; color: #0f3460; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .7rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font-size: .95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary {
+    background: #0f3460;
+    color: #fff;
+  }
+  .btn-primary:hover { background: #16213e; }
+  .btn-primary:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+  }
+  .btn-success {
+    background: #27ae60;
+    color: #fff;
+    margin-left: .75rem;
+  }
+  .btn-success:hover { background: #1e8449; }
+  .actions { margin-top: 1rem; display: flex; align-items: center; flex-wrap: wrap; }
+  .error {
+    margin-top: .75rem;
+    padding: .6rem .8rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #b91c1c;
+    font-size: .85rem;
+  }
+  .success {
+    margin-top: .75rem;
+    padding: .6rem .8rem;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    color: #166534;
+    font-size: .85rem;
+  }
+  .hidden { display: none; }
+  pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
+  .info-box {
+    margin: 1rem 0;
+    padding: .8rem 1rem;
+    background: #f0f4ff;
+    border: 1px solid #d0daff;
+    border-radius: 10px;
+    font-size: .82rem;
+    color: #1e3a5f;
+    line-height: 1.6;
+  }
+  .info-box code {
+    background: #e6ecf7;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: .78rem;
+  }
+  .info-box strong { color: #0f3460; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>📄 Convert to ekaTimer CSV</h1>
+  <p class="sub">
+    Upload a CSV that contains at least <strong>M_DATE</strong> (Unix timestamp in milliseconds) and
+    <strong>M_DURATION</strong> (duration in milliseconds) columns. The app converts it to the
+    <strong>ekatimer_sessions.csv</strong> format so you can import your sessions into ekaTimer.
+  </p>
+
+  <p style="margin-bottom: 1.25rem; font-size: .9rem; color: #555;">
+    Upload your source CSV, click <strong>Convert</strong>, then <strong>Download</strong> to save the converted file and import it into ekaTimer.
+  </p>
+
+  <label for="fileInput">Choose your source CSV file</label>
+  <input type="file" id="fileInput" accept=".csv">
+
+  <div class="stats hidden" id="stats">
+    Rows: <span id="rowCount">0</span>
+    &nbsp;·&nbsp;
+    Duration: <span id="totalDuration">0</span>s
+  </div>
+
+  <textarea id="outputArea" readonly placeholder="Converted CSV will appear here…"></textarea>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="convertBtn" disabled>🔄 Convert</button>
+    <button class="btn btn-success hidden" id="downloadBtn">⬇️ Download ekatimer_sessions.csv</button>
+  </div>
+
+  <div id="message" class="hidden"></div>
+
+  <div class="info-box">
+    <strong>DIY: Convert your session data to ekaTimer format (ekatimer_sessions.csv):</strong><br><br>
+    <code>id</code> — Auto-generated UUID for each session<br>
+    <code>startTime</code> — Session start time (ISO 8601)<br>
+    <code>endTime</code> — Session end time (ISO 8601)<br>
+    <code>durationSeconds</code> — Actual duration in seconds<br>
+    <code>targetDurationSeconds</code> — Planned duration in seconds (same as <code>durationSeconds</code>)<br>
+    <code>timerMode</code> — Timer mode: <code>timed</code> | <code>endAt</code> | <code>unlimited</code><br>
+    <code>completed</code> — <strong>1</strong> session completed as planned | <strong>0</strong> stopped early<br>
+    <code>notes</code> — Optional session notes
+  </div>
+</div>
+
+<script>
+(function() {
+  const fileInput     = document.getElementById('fileInput');
+  const convertBtn    = document.getElementById('convertBtn');
+  const downloadBtn   = document.getElementById('downloadBtn');
+  const outputArea    = document.getElementById('outputArea');
+  const stats         = document.getElementById('stats');
+  const rowCount      = document.getElementById('rowCount');
+  const totalDuration = document.getElementById('totalDuration');
+  const message       = document.getElementById('message');
+
+  let latestCsv = '';
+
+  // ---------- helpers ----------
+  function uuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  function msToIso(ms) {
+    const d = new Date(Number(ms));
+    return d.toISOString().replace('Z', '');
+  }
+
+  // ---------- CSV parse / stringify ----------
+  function parseLine(line) {
+    const fields = [];
+    let cur = '', inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuote && i + 1 < line.length && line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuote = !inQuote;
+        }
+      } else if (ch === ',' && !inQuote) {
+        fields.push(cur);
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    fields.push(cur);
+    return fields;
+  }
+
+  function toCsvRow(arr) {
+    return arr.map(v => {
+      if (v == null) return '';
+      const s = String(v);
+      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }).join(',');
+  }
+
+  // ---------- conversion ----------
+  function convertRows(data, header) {
+    const colMap = {};
+    header.forEach((h, i) => {
+      const key = h.replace(/^"(.*)"$/, '$1').trim().toUpperCase();
+      colMap[key] = i;
+    });
+
+    const required = ['M_DATE', 'M_DURATION'];
+    for (const r of required) {
+      if (!(r in colMap)) {
+        throw new Error(`Missing required column: ${r}`);
+      }
+    }
+
+    const outHeader = ['id','startTime','endTime','durationSeconds','targetDurationSeconds','timerMode','completed','notes'];
+    const rows = [outHeader];
+
+    let totalSec = 0;
+
+    for (const row of data) {
+      if (!row || row.length === 0) continue;
+      if (row.every(f => f.trim() === '')) continue;
+
+      const rawDate   = row[colMap['M_DATE']].replace(/^"(.*)"$/, '$1').trim();
+      const rawDur    = row[colMap['M_DURATION']].replace(/^"(.*)"$/, '$1').trim();
+      const rawNote   = (colMap['M_NOTE'] !== undefined)
+        ? row[colMap['M_NOTE']].replace(/^"(.*)"$/, '$1').trim()
+        : '';
+
+      const startMs   = Number(rawDate);
+      const durMs     = Number(rawDur);
+      const durSec    = Math.round(durMs / 1000);
+
+      if (isNaN(startMs) || isNaN(durMs)) continue;
+
+      const startIso  = msToIso(startMs);
+      const endIso    = msToIso(startMs + durMs);
+
+      totalSec += durSec;
+
+      rows.push([
+        uuid(),
+        startIso,
+        endIso,
+        durSec,
+        durSec,
+        'timed',
+        1,  // always 1 — old format means time spent, so session was completed
+        rawNote
+      ]);
+    }
+
+    return { rows, totalSec, rowCount: rows.length - 1 };
+  }
+
+  // ---------- UI ----------
+  function showMessage(text, type) {
+    message.className = type;
+    message.textContent = text;
+    message.classList.remove('hidden');
+  }
+
+  function hideMessage() {
+    message.classList.add('hidden');
+  }
+
+  function processFile(file) {
+    hideMessage();
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text = e.target.result;
+      const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+      if (lines.length < 2) {
+        showMessage('File must have a header row and at least one data row.', 'error');
+        convertBtn.disabled = true;
+        return;
+      }
+
+      const header = parseLine(lines[0]);
+      const data   = lines.slice(1).map(parseLine);
+
+      convertBtn._header = header;
+      convertBtn._data   = data;
+      convertBtn.disabled = false;
+
+      stats.classList.remove('hidden');
+      rowCount.textContent = data.length;
+      totalDuration.textContent = '?';
+    };
+    reader.onerror = function() {
+      showMessage('Failed to read file.', 'error');
+    };
+    reader.readAsText(file);
+  }
+
+  fileInput.addEventListener('change', function() {
+    if (this.files.length === 0) return;
+    downloadBtn.classList.add('hidden');
+    outputArea.value = '';
+    processFile(this.files[0]);
+  });
+
+  convertBtn.addEventListener('click', function() {
+    hideMessage();
+    if (!this._header || !this._data) {
+      showMessage('No data loaded. Please select a file first.', 'error');
+      return;
+    }
+
+    try {
+      const result = convertRows(this._data, this._header);
+      latestCsv = result.rows.map(toCsvRow).join('\n');
+      outputArea.value = latestCsv;
+      rowCount.textContent = result.rowCount;
+      totalDuration.textContent = result.totalSec;
+      downloadBtn.classList.remove('hidden');
+      showMessage(`✅ Converted ${result.rowCount} rows successfully.`, 'success');
+    } catch (err) {
+      showMessage('Conversion error: ' + err.message, 'error');
+    }
+  });
+
+  downloadBtn.addEventListener('click', function() {
+    if (!latestCsv) return;
+    const blob = new Blob([latestCsv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'ekatimer_sessions.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // drag-and-drop convenience
+  fileInput.addEventListener('dragover', e => { e.preventDefault(); });
+  fileInput.addEventListener('drop', e => {
+    e.preventDefault();
+    if (e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      fileInput.dispatchEvent(new Event('change'));
+    }
+  });
+})();
+</script>
+</body>
+</html>
