@@ -13,10 +13,6 @@ fileprivate var _widgetActionData: [String: Any]? = nil
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
-    
-    // FIX 1: Adopt delegate so we can
-                                                              // intercept foreground notification
-                                                              // delivery and play AVAudioPlayer.
 
   // Background task ID for keep-alive
   private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
@@ -27,11 +23,20 @@ fileprivate var _widgetActionData: [String: Any]? = nil
     _widgetActionData = data
   }
 
-  /// Read and clear the stored widget action data (one-shot consumption).
+  /// Read and CLEAR the stored widget action data (one-shot consumption).
+  /// Called by the "getWidgetAction" channel method.
   func getAndClearWidgetActionData() -> [String: Any]? {
     let data = _widgetActionData
     _widgetActionData = nil
     return data
+  }
+
+  /// Read the stored widget action data WITHOUT clearing it.
+  /// Called by the "peekWidgetAction" channel method — lets Dart inspect
+  /// flags (e.g. fromAlarm) before the full handleWidgetAction call
+  /// consumes the payload via getWidgetAction.
+  func peekWidgetActionData() -> [String: Any]? {
+    return _widgetActionData
   }
 
   override func application(
@@ -39,12 +44,8 @@ fileprivate var _widgetActionData: [String: Any]? = nil
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
 
-    // FIX 2: Assign ourselves as the UNUserNotificationCenter delegate BEFORE
-    // super.application(...) so we receive willPresent and didReceive callbacks.
-    // Without this the system shows the banner but your code never runs.
     UNUserNotificationCenter.current().delegate = self
 
-    // Request notification permissions for alarm scheduling
     UNUserNotificationCenter.current().requestAuthorization(
       options: [.alert, .sound, .badge]
     ) { granted, error in
@@ -55,7 +56,6 @@ fileprivate var _widgetActionData: [String: Any]? = nil
       }
     }
 
-    // Set up audio session for background playback
     do {
       try AVAudioSession.sharedInstance().setCategory(
         .playback,
@@ -67,7 +67,6 @@ fileprivate var _widgetActionData: [String: Any]? = nil
       print("AppDelegate: Failed to set up audio session: \(error)")
     }
 
-    // Register for background tasks
     if #available(iOS 13.0, *) {
       BGTaskScheduler.shared.register(
         forTaskWithIdentifier: "org.tipitakapali.ekatimer.timerend",
@@ -83,35 +82,25 @@ fileprivate var _widgetActionData: [String: Any]? = nil
   // MARK: - FlutterImplicitEngineDelegate
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
-    // Register all Flutter plugins (audioplayers, provider, etc.)
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
-    // Set up our custom alarm channel
     setupAlarmChannel(binaryMessenger: engineBridge.applicationRegistrar.messenger())
-    // Set up widget action channel so Flutter can retrieve widget tap data
     setupWidgetChannel(binaryMessenger: engineBridge.applicationRegistrar.messenger())
   }
 
   // MARK: - UNUserNotificationCenterDelegate
 
-  // FIX 3: willPresent fires when a notification arrives while the app IS in the
-  // foreground (screen on, app visible).  Without this iOS suppresses the
-  // banner AND the sound.  We play the sound ourselves via AVAudioPlayer so
-  // the in-app experience is identical to the background/screen-off path.
-override func userNotificationCenter(
+  override func userNotificationCenter(
     _ center: UNUserNotificationCenter,
     willPresent notification: UNNotification,
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-) {
+  ) {
     let userInfo = notification.request.content.userInfo
     print("AppDelegate: willPresent notification – \(notification.request.identifier)")
 
-    // Play the end sound ourselves so AVAudioPlayer fires (not just the system beep).
-    // Extract the soundPath that was stashed in userInfo when we scheduled the notification.
     if let soundName = userInfo["soundPath"] as? String {
       playEndSound(soundPath: soundName)
     }
 
-    // Still show the banner/badge but suppress the system sound (we already played it).
     if #available(iOS 14.0, *) {
       completionHandler([.banner, .badge])
     } else {
@@ -119,14 +108,11 @@ override func userNotificationCenter(
     }
   }
 
-  // FIX 4: didReceive fires when the user TAPS the notification (foreground or
-  // background).  We do NOT replay the sound here because the system already
-  // played content.sound on delivery.  We just hand off to Flutter if needed.
-override func userNotificationCenter(
+  override func userNotificationCenter(
     _ center: UNUserNotificationCenter,
     didReceive response: UNNotificationResponse,
     withCompletionHandler completionHandler: @escaping () -> Void
-) {
+  ) {
     print("AppDelegate: didReceive notification response – \(response.notification.request.identifier)")
     completionHandler()
   }
@@ -134,7 +120,6 @@ override func userNotificationCenter(
   // MARK: - Method Channel Setup
 
   private func setupAlarmChannel(binaryMessenger: FlutterBinaryMessenger) {
-    // Register the alarm_events EventChannel (stub for iOS).
     let alarmEventChannel = FlutterEventChannel(
       name: "org.tipitakapali.ekatimer/alarm_events",
       binaryMessenger: binaryMessenger
@@ -201,6 +186,31 @@ override func userNotificationCenter(
     }
   }
 
+  private func setupWidgetChannel(binaryMessenger: FlutterBinaryMessenger) {
+    let widgetChannel = FlutterMethodChannel(
+      name:            "org.ekatimer.ios.gmlpub/widget",
+      binaryMessenger: binaryMessenger
+    )
+
+    widgetChannel.setMethodCallHandler { (call, result) in
+      switch call.method {
+
+      case "getWidgetAction":
+        // Returns data AND clears it from the store.
+        let data = _widgetActionData
+        _widgetActionData = nil
+        result((data?.isEmpty == false) ? data : nil)
+
+      case "peekWidgetAction":
+        // Returns data WITHOUT clearing it — safe to call before getWidgetAction.
+        result((_widgetActionData?.isEmpty == false) ? _widgetActionData : nil)
+
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
   // MARK: - Background Task Support
 
   private func startBackgroundTask() {
@@ -233,7 +243,7 @@ override func userNotificationCenter(
     task.setTaskCompleted(success: true)
   }
 
-  // MARK: - Local Notification (iOS Alarm Backup)
+  // MARK: - Local Notification
 
   private func scheduleLocalNotification(
     delaySeconds: Int,
@@ -244,24 +254,11 @@ override func userNotificationCenter(
     let content = UNMutableNotificationContent()
     content.title = "Meditation Complete"
     content.body  = "Your meditation session has ended."
-
-    // FIX 5: Stash the soundPath in userInfo so willPresent can re-play it
-    // via AVAudioPlayer when the app IS in the foreground.
     content.userInfo = [
       "requestCode": requestCode,
-      "soundPath":   soundPath          // ← new
+      "soundPath":   soundPath,
     ]
 
-    // FIX 6: The notification sound MUST reference a file that lives in the
-    // ROOT of the app bundle (Runner target → Build Phases → Copy Bundle
-    // Resources).  Flutter asset paths (assets/sounds/…) are bundled under
-    // Frameworks/App.framework/flutter_assets/ which iOS CANNOT reach for
-    // UNNotificationSound.  Add the .wav files directly to the Xcode target.
-    //
-    // Naming convention expected here: bare name, e.g. "BowlStrong"
-    // → iOS will look for BowlStrong.wav (or .aiff / .caf) in the bundle root.
-    //
-    // If soundPath looks like "assets/sounds/Bell.wav" we strip to "Bell".
     let resolvedSoundName = resolveNotificationSoundName(from: soundPath)
 
     if resolvedSoundName.isEmpty || resolvedSoundName == "none" {
@@ -274,7 +271,6 @@ override func userNotificationCenter(
 
     content.categoryIdentifier = "timer_end"
 
-    // Build trigger
     let trigger: UNNotificationTrigger
 
     if endTimeMillis > 0 {
@@ -285,7 +281,6 @@ override func userNotificationCenter(
       )
       trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
     } else {
-      // Guard: UNTimeIntervalNotificationTrigger requires interval > 0
       let interval = max(TimeInterval(delaySeconds), 1)
       trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
     }
@@ -305,21 +300,12 @@ override func userNotificationCenter(
     }
   }
 
-  // FIX 7: Centralise sound-name extraction so both scheduleLocalNotification
-  // and playEndSound use identical logic, and neither passes a bad path to iOS.
-  //
-  //   "assets/sounds/Bell.wav"  →  "Bell"
-  //   "BowlStrong"              →  "BowlStrong"
-  //   ""  /  "none"             →  ""
   private func resolveNotificationSoundName(from soundPath: String) -> String {
     guard !soundPath.isEmpty, soundPath != "none" else { return "" }
-
     if soundPath.hasPrefix("assets/") {
-      // Strip directory and extension:  "assets/sounds/Bell.wav" → "Bell"
-      let fileName = (soundPath as NSString).lastPathComponent           // "Bell.wav"
-      return (fileName as NSString).deletingPathExtension                // "Bell"
+      let fileName = (soundPath as NSString).lastPathComponent
+      return (fileName as NSString).deletingPathExtension
     }
-    // Already a bare name: "BowlStrong"
     return soundPath
   }
 
@@ -335,56 +321,24 @@ override func userNotificationCenter(
     print("AppDelegate: All notifications cancelled")
   }
 
-  // MARK: - Widget Channel (for quick-start widget taps)
-
-  private func setupWidgetChannel(binaryMessenger: FlutterBinaryMessenger) {
-    let widgetChannel = FlutterMethodChannel(
-      name:            "org.ekatimer.ios.gmlpub/widget",
-      binaryMessenger: binaryMessenger
-    )
-
-    widgetChannel.setMethodCallHandler { (call, result) in
-      switch call.method {
-      case "getWidgetAction":
-        let data = _widgetActionData
-        _widgetActionData = nil
-        if let data = data, !data.isEmpty {
-          result(data)
-        } else {
-          result(nil)
-        }
-      default:
-        result(FlutterMethodNotImplemented)
-      }
-    }
-  }
-
   // MARK: - End Sound Playback
 
-  // FIX 8: Uses resolveNotificationSoundName for consistent path handling,
-  // and always falls back to BowlStrong → system sound in that order so
-  // something always plays.
   private func playEndSound(soundPath: String) {
     var soundURL: URL?
 
     let name = resolveNotificationSoundName(from: soundPath)
 
     if !name.isEmpty {
-      // Look for <name>.wav in the native bundle root (where Xcode-copied
-      // resources live). Flutter asset paths do NOT work here.
       soundURL = Bundle.main.url(forResource: name, withExtension: "wav")
-
       if soundURL == nil {
         print("AppDelegate: '\(name).wav' not found in bundle root – check Xcode Copy Bundle Resources")
       }
     }
 
-    // Fallback 1: BowlStrong.wav (must be in Xcode target resources)
     if soundURL == nil {
       soundURL = Bundle.main.url(forResource: "BowlStrong", withExtension: "wav")
     }
 
-    // Fallback 2: system alert
     guard let url = soundURL else {
       print("AppDelegate: No sound file found, playing system alert sound")
       AudioServicesPlaySystemSound(1005)
@@ -392,8 +346,6 @@ override func userNotificationCenter(
     }
 
     do {
-      // FIX 9: Re-activate audio session before playing in case it was
-      // deactivated by another app or a phone call.
       try AVAudioSession.sharedInstance().setActive(true)
       audioPlayer = try AVAudioPlayer(contentsOf: url)
       audioPlayer?.volume        = 1.0

@@ -241,7 +241,7 @@ struct MeditationEndAtWidget: Widget {
     let kind: String = "MeditationEndAtWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: QuickStartProvider(label: "End", timerMode: "endAt", durationMinutes: 0)) { entry in
+        StaticConfiguration(kind: kind, provider: QuickStartProvider(label: "End at", timerMode: "endAt", durationMinutes: 0)) { entry in
             QuickStartWidgetView(entry: entry)
         }
         .configurationDisplayName("End At Meditation")

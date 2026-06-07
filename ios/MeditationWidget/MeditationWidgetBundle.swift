@@ -10,6 +10,7 @@ import SwiftUI
 struct MeditationWidgetBundle: WidgetBundle {
     var body: some Widget {
         Meditation1HWidget()       // default (first in list = shown by default in picker)
+        MeditationEndAtWidget()
         Meditation15mWidget()
         Meditation30mWidget()
         Meditation1_5HWidget()
@@ -18,7 +19,6 @@ struct MeditationWidgetBundle: WidgetBundle {
         Meditation3HWidget()
         Meditation3_5HWidget()
         Meditation4HWidget()
-        MeditationEndAtWidget()
         MeditationUnlimitedWidget()
     }
 }

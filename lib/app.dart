@@ -1,3 +1,5 @@
+// lib/app.dart
+
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -35,7 +37,6 @@ class _MeditationTimerAppState extends State<MeditationTimerApp> {
   Future<void> _initialize() async {
     if (!mounted) return;
 
-    // Load translations first
     try {
       _translations = await TranslationService.loadTranslations();
     } catch (_) {
@@ -95,7 +96,7 @@ class _MeditationTimerAppState extends State<MeditationTimerApp> {
           _locale = settings.locale;
         }
 
-        final t = TranslationService(
+        return TranslationService(
           translations: _translations,
           locale: _locale,
           child: MaterialApp(
@@ -108,8 +109,6 @@ class _MeditationTimerAppState extends State<MeditationTimerApp> {
             home: const _AppEntry(),
           ),
         );
-
-        return t;
       },
     );
   }
@@ -134,9 +133,10 @@ class _SplashScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'ekaTimer',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w300),
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineLarge
+                  ?.copyWith(fontWeight: FontWeight.w300),
             ),
             const SizedBox(height: 24),
             const CircularProgressIndicator(
@@ -161,22 +161,24 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
   bool _checkingSession = true;
   bool _hasActiveSession = false;
 
+  // True while _checkForActiveSession() is running.  The setupListener
+  // callback skips acting during this window so the two paths never race
+  // to call getWidgetAction at the same time.
+  bool _initialCheckInProgress = true;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _checkForActiveSession();
 
-    // Wire up native alarm fired callback to handle timer completion
-    // even when phone was in deep sleep (doze mode)
+    // Wire up native alarm callback.
     final alarmService = AlarmService();
     alarmService.onAlarmFired = (requestCode) {
       final timerProvider = context.read<TimerProvider>();
       timerProvider.onNativeAlarmFired(requestCode);
     };
 
-    // Listen for exact alarm permission changes (Android 12+)
-    // When user grants permission in Settings, retry scheduling the alarm
+    // Listen for exact alarm permission changes (Android 12+).
     alarmService.onPermissionChanged = (hasPermission) {
       if (hasPermission && mounted) {
         final timerProvider = context.read<TimerProvider>();
@@ -184,13 +186,33 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
       }
     };
 
-    // Listen for immediate widget action notifications from iOS
-    // (triggers even when app is already foregrounded)
+    // Register the iOS push-notification listener BEFORE starting the async
+    // check.  The listener skips acting while _initialCheckInProgress is true
+    // so it never races with _checkForActiveSession on cold launch.
+    // On warm launches (app already running, user taps widget) the initial
+    // check is long finished and the listener is the sole consumer.
     WidgetActionHandler.setupListener(
       context,
       onSessionStarted: () {
         if (mounted) setState(() => _hasActiveSession = true);
       },
+      // Provide a gate so the listener knows when it is safe to act.
+      isInitialCheckInProgress: () => _initialCheckInProgress,
+    );
+
+    _checkForActiveSession();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AppEntry oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Keep the stored context reference fresh across rebuilds.
+    WidgetActionHandler.updateContext(
+      context,
+      onSessionStarted: () {
+        if (mounted) setState(() => _hasActiveSession = true);
+      },
+      isInitialCheckInProgress: () => _initialCheckInProgress,
     );
   }
 
@@ -202,9 +224,14 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && !_checkingSession && mounted) {
-      // Re-check for widget actions when app returns to foreground
-      // (e.g. user tapped a quick-start widget while app was backgrounded)
+    if (state == AppLifecycleState.resumed &&
+        !_initialCheckInProgress &&
+        !_checkingSession &&
+        mounted) {
+      // Poll for widget actions when app returns to foreground.
+      // The iOS native side also fires widgetActionAvailable here, so this
+      // is a belt-and-suspenders fallback (harmless double-call: native
+      // clears data on first successful read, second call returns null).
       WidgetActionHandler.handleWidgetAction(context).then((handled) {
         if (handled && mounted) {
           setState(() => _hasActiveSession = true);
@@ -214,51 +241,57 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
   }
 
   Future<void> _checkForActiveSession() async {
-    // Capture provider references before any async gaps
     final timerProvider = context.read<TimerProvider>();
 
-    // Check if app was launched by an alarm. If so, skip session restore
-    // entirely — the alarm handler (onNativeAlarmFired via EventChannel)
-    // already completed the session and cleared persistence. Re-checking
-    // here would race with the async clear and restore an expired session.
-    final widgetData = await WidgetActionHandler.getWidgetActionData(context);
+    // ── 1. Skip restore if launched from an alarm ─────────────────────────
+    // getWidgetActionData peeks without clearing, so the data is still
+    // available for handleWidgetAction below if needed.
+    final widgetData = await WidgetActionHandler.getWidgetActionData();
     if (widgetData?['fromAlarm'] == true) {
       if (mounted) {
-        setState(() => _checkingSession = false);
+        setState(() {
+          _initialCheckInProgress = false;
+          _checkingSession = false;
+        });
       }
       return;
     }
 
+    // ── 2. Restore an interrupted session ─────────────────────────────────
     final hasSession = await timerProvider.hasActiveSession();
-
     if (hasSession && mounted) {
       final sessionData = await PersistenceService.loadActiveSession();
       if (sessionData != null && mounted) {
         await timerProvider.restoreSession(sessionData);
         setState(() {
           _hasActiveSession = true;
+          _initialCheckInProgress = false;
           _checkingSession = false;
         });
         return;
       }
     }
 
+    // ── 3. Handle widget-tap quick-start ──────────────────────────────────
     if (mounted) {
-      // Check if app was launched by a widget tap (quick-start action)
-      final handledWidgetAction = await WidgetActionHandler.handleWidgetAction(
-        context,
-      );
-      if (handledWidgetAction) {
+      final handledWidgetAction =
+          await WidgetActionHandler.handleWidgetAction(context);
+      if (handledWidgetAction && mounted) {
         setState(() {
           _hasActiveSession = true;
+          _initialCheckInProgress = false;
           _checkingSession = false;
         });
         return;
       }
     }
 
+    // ── 4. Normal home screen ─────────────────────────────────────────────
     if (mounted) {
-      setState(() => _checkingSession = false);
+      setState(() {
+        _initialCheckInProgress = false;
+        _checkingSession = false;
+      });
     }
   }
 

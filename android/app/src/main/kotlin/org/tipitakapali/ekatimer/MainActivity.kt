@@ -1,3 +1,5 @@
+// android/app/src/main/kotlin/org/tipitakapali/ekatimer/MainActivity.kt
+
 package org.tipitakapali.ekatimer
 
 import android.app.AlarmManager
