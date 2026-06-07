@@ -46,15 +46,15 @@ fileprivate var _widgetActionData: [String: Any]? = nil
 
     UNUserNotificationCenter.current().delegate = self
 
-    UNUserNotificationCenter.current().requestAuthorization(
-      options: [.alert, .sound, .badge]
-    ) { granted, error in
-      if granted {
-        print("AppDelegate: Notification permission granted")
-      } else if let error = error {
-        print("AppDelegate: Notification permission denied: \(error)")
-      }
-    }
+    // UNUserNotificationCenter.current().requestAuthorization(
+    //   options: [.alert, .sound, .badge]
+    // ) { granted, error in
+    //   if granted {
+    //     print("AppDelegate: Notification permission granted")
+    //   } else if let error = error {
+    //     print("AppDelegate: Notification permission denied: \(error)")
+    //   }
+    // }
 
     do {
       try AVAudioSession.sharedInstance().setCategory(
