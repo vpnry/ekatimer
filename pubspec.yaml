@@ -43,7 +43,7 @@ flutter:
     - assets/translations/
 
 # dart run flutter_launcher_icons to generate Android app icons
-# for iOS, use Icon Composer better
+# for iOS, use Icon Composer better.
 
 flutter_launcher_icons:
   android: true
