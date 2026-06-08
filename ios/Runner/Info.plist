@@ -103,6 +103,8 @@
 	</array>
 	<key>UISupportsDocumentBrowser</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>For user to browse and select CSV files for meditation records import/export - not to do with Camera.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
