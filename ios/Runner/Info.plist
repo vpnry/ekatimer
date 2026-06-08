@@ -103,5 +103,11 @@
 	</array>
 	<key>UISupportsDocumentBrowser</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>For user to browse and select CSV files for meditation records import - nothing to do with Camera.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>For user to browse and select CSV files for meditation session data import/export - nothing to do with Photos.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>For user to browse and select CSV files for meditation session data import/export - nothing to do with Location.</string>
 </dict>
 </plist>

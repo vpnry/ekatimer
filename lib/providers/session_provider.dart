@@ -148,11 +148,19 @@ class SessionProvider extends ChangeNotifier {
     return data;
   }
 
-  Future<List<YearlyDataPoint>> getYearlyData({int years = 5}) async {
+  Future<List<YearlyDataPoint>> getYearlyData() async {
     final now = DateTime.now();
     final data = <YearlyDataPoint>[];
 
-    for (int i = years - 1; i >= 0; i--) {
+    // Determine the oldest year with session data.
+    final oldestTimestamp = await DatabaseService.getOldestSessionTimestamp();
+    final oldestYear = oldestTimestamp != null
+        ? DateTime.fromMillisecondsSinceEpoch(oldestTimestamp).year
+        : now.year;
+
+    final yearsCount = now.year - oldestYear + 1;
+
+    for (int i = 0; i < yearsCount; i++) {
       final year = now.year - i;
       final yearStart = DateTime(year, 1, 1);
       final yearEnd = DateTime(year + 1, 1, 1);

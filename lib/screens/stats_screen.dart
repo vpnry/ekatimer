@@ -378,6 +378,12 @@ class _StatsScreenState extends State<StatsScreen>
           return const Center(child: CircularProgressIndicator());
         }
 
+        final data = snapshot.data!;
+        const itemsPerRow = 6;
+        final rowCount = (data.length + itemsPerRow - 1) ~/ itemsPerRow;
+        const rowHeight = 160.0;
+        final chartHeight = rowCount * rowHeight;
+
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -389,17 +395,126 @@ class _StatsScreenState extends State<StatsScreen>
               ),
               const SizedBox(height: 24),
               SizedBox(
-                height: 260,
-                child: _buildBarChart(
+                height: chartHeight,
+                child: _buildYearlyChart(
                   context,
-                  data: snapshot.data!,
+                  data: data,
                   barColor: AppColors.primary.withAlpha(180),
+                  itemsPerRow: itemsPerRow,
                 ),
               ),
             ],
           ),
         );
       },
+    );
+  }
+
+  /// Yearly bar chart that splits years into multiple rows (e.g., 6 per row)
+  /// so all years are visible without being squished.
+  Widget _buildYearlyChart(
+    BuildContext context, {
+    required List<dynamic> data,
+    required Color barColor,
+    int itemsPerRow = 6,
+  }) {
+    final t = TranslationService.of(context);
+    if (data.isEmpty) {
+      return Center(
+        child: Text(
+          t.translate('stats.noData'),
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+      );
+    }
+
+    // Group data into rows of itemsPerRow each.
+    final rows = <List<dynamic>>[];
+    for (int i = 0; i < data.length; i += itemsPerRow) {
+      final end = (i + itemsPerRow < data.length) ? i + itemsPerRow : data.length;
+      rows.add(data.sublist(i, end));
+    }
+
+    return Column(
+      children: rows.map((rowData) {
+        final maxSeconds = rowData.fold<int>(
+          0,
+          (max, d) => d.durationSeconds > max ? d.durationSeconds : max,
+        );
+
+        return Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Real data bars.
+              ...rowData.map((point) {
+                final int seconds = point.durationSeconds;
+                final bool hasValue = seconds > 0;
+                final height = maxSeconds > 0 ? (seconds / maxSeconds) * 100.0 : 0.0;
+
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SizedBox(
+                          height: 14,
+                          child: hasValue
+                              ? FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    _formatShortDuration(seconds),
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: height.clamp(4.0, 100.0),
+                          decoration: BoxDecoration(
+                            color: hasValue
+                                ? barColor
+                                : Theme.of(context).dividerColor.withValues(
+                                    alpha: 0.15,
+                                  ),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(6),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        SizedBox(
+                          height: 14,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              point.label,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              // Invisible spacers for partial last row so bar widths stay consistent.
+              if (rowData.length < itemsPerRow)
+                ...List.generate(itemsPerRow - rowData.length, (_) => const Expanded(child: SizedBox.shrink())),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 

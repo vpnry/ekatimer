@@ -215,4 +215,12 @@ class DatabaseService {
     final result = await db.rawQuery('SELECT AVG(durationSeconds) as avg FROM sessions');
     return (result.first['avg'] as double?) ?? 0.0;
   }
+
+  /// Returns the timestamp (milliseconds since epoch) of the oldest session,
+  /// or null if there are no sessions.
+  static Future<int?> getOldestSessionTimestamp() async {
+    final db = await database;
+    final result = await db.rawQuery('SELECT MIN(startTime) as minTime FROM sessions');
+    return result.first['minTime'] as int?;
+  }
 }
