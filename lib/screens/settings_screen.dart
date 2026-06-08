@@ -60,27 +60,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
             ),
-            _buildListTile(
-              context,
-              icon: Icons.timelapse_outlined,
-              title: t.translate('settings.defaultDuration'),
-              subtitle: t.translate(
-                'settings.defaultDurationSubtitle',
-                args: {'minutes': '${settings.defaultDurationMinutes}'},
-              ),
-              trailing: SizedBox(
-                width: 120,
-                child: Slider(
-                  value: settings.defaultDurationMinutes.toDouble(),
-                  min: AppConstants.minTimerDurationMinutes.toDouble(),
-                  max: AppConstants.maxTimerDurationMinutes.toDouble(),
-                  divisions: 20,
-                  label: '${settings.defaultDurationMinutes}',
-                  onChanged: (value) =>
-                      settings.setTimerDuration(value.round()),
-                ),
-              ),
-            ),
 
             const Divider(),
 
@@ -434,6 +413,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required ValueChanged<int> onMinutesChanged,
     required ValueChanged<String> onSoundChanged,
   }) {
+    final controller = TextEditingController(text: value > 0 ? '$value' : '');
     return ExpansionTile(
       leading: Icon(icon),
       title: Text(title),
@@ -444,22 +424,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Row(
             children: [
               const Text('Every'),
-              Expanded(
-                child: Slider(
-                  value: value.toDouble(),
-                  min: 0,
-                  max: maxValue.toDouble(),
-                  divisions: maxValue ~/ 5,
-                  label: value > 0 ? '$value min' : 'Off',
-                  onChanged: (v) => onMinutesChanged(v.round()),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 64,
+                child: TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    hintText: 'Off',
+                    hintStyle: const TextStyle(fontSize: 14),
+                  ),
+                  style: const TextStyle(fontSize: 14),
+                  onSubmitted: (text) {
+                    final parsed = int.tryParse(text);
+                    if (parsed != null && parsed > 0) {
+                      onMinutesChanged(parsed.clamp(1, maxValue));
+                    } else {
+                      onMinutesChanged(0);
+                    }
+                  },
                 ),
               ),
-              SizedBox(
-                width: 40,
-                child: Text(
-                  value > 0 ? '$value min' : 'Off',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+              const SizedBox(width: 4),
+              const Text('min'),
+              const Spacer(),
+              TextButton(
+                onPressed: () => onMinutesChanged(0),
+                child: const Text('Off'),
               ),
             ],
           ),

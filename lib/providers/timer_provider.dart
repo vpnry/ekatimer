@@ -469,6 +469,11 @@ class TimerProvider extends ChangeNotifier {
   void _checkIntervalSounds(DateTime now) {
     final currentMinute = (_elapsedSeconds ~/ 60);
 
+    // Do not play interval or bell sounds at the very start (minute 0).
+    // They should only play after the configured interval has elapsed
+    // (e.g., a 3-minute interval first plays at minute 3, not minute 0).
+    if (currentMinute == 0) return;
+
     if (intervalMinutes > 0) {
       final interval = currentMinute ~/ intervalMinutes;
       if (interval > _lastIntervalMinute &&
