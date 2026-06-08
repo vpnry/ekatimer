@@ -5,6 +5,7 @@ import '../models/sound_config.dart';
 import '../models/vibration_config.dart';
 import '../services/persistence_service.dart';
 import '../services/notification_service.dart';
+import '../services/widget_action_handler.dart';
 
 class SettingsProvider extends ChangeNotifier {
   AppSettings _settings = const AppSettings();
@@ -18,6 +19,7 @@ class SettingsProvider extends ChangeNotifier {
   SoundConfig get soundConfig => _settings.soundConfig;
   VibrationConfig get vibrationConfig => _settings.vibrationConfig;
   int get sessionDelaySeconds => _settings.sessionDelaySeconds;
+  bool get transparentWidget => _settings.transparentWidget;
   bool get reminderEnabled => _settings.reminderEnabled;
   int get reminderHour => _settings.reminderHour;
   int get reminderMinute => _settings.reminderMinute;
@@ -144,6 +146,14 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setSessionDelay(int seconds) async {
     _settings = _settings.copyWith(sessionDelaySeconds: seconds);
     await PersistenceService.setSessionDelay(seconds);
+    notifyListeners();
+  }
+
+  Future<void> setTransparentWidget(bool enabled) async {
+    _settings = _settings.copyWith(transparentWidget: enabled);
+    await PersistenceService.setTransparentWidget(enabled);
+    // Trigger Android widget refresh directly with the current value
+    await WidgetActionHandler.updateAllWidgets(transparent: enabled);
     notifyListeners();
   }
 

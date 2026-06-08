@@ -77,6 +77,14 @@ class MainActivity : FlutterActivity() {
         )
         methodChannel?.setMethodCallHandler { call, result ->
             when (call.method) {
+                "updateAllWidgets" -> {
+                    val transparent = call.argument<Boolean>("transparent") ?: false
+                    MeditationTimerWidget.updateAllWidgets(
+                        applicationContext,
+                        transparent
+                    )
+                    result.success(null)
+                }
                 "getWidgetAction" -> {
                     val data = mutableMapOf<String, Any>()
                     if (widgetTimerMode != null) {

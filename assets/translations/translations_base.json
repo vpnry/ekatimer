@@ -111,6 +111,7 @@
     "settings.system": "System",
     "settings.light": "Light",
     "settings.dark": "Dark",
+    "settings.transparentWidget": "Transparent Widget",
     "settings.delayBeforeStart": "Delay Before Start",
     "settings.delaySeconds": "Delay (seconds)",
     "settings.delayCount": "{seconds} seconds",

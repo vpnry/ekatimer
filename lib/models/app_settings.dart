@@ -10,6 +10,7 @@ class AppSettings {
   final String locale;
   final SoundConfig soundConfig;
   final VibrationConfig vibrationConfig;
+  final bool transparentWidget;
   final int sessionDelaySeconds;
   final bool reminderEnabled;
   final int reminderHour;
@@ -23,6 +24,7 @@ class AppSettings {
     this.locale = 'en',
     this.soundConfig = const SoundConfig(),
     this.vibrationConfig = const VibrationConfig(),
+    this.transparentWidget = false,
     this.sessionDelaySeconds = 0,
     this.reminderEnabled = false,
     this.reminderHour = 19,
@@ -37,6 +39,7 @@ class AppSettings {
     String? locale,
     SoundConfig? soundConfig,
     VibrationConfig? vibrationConfig,
+    bool? transparentWidget,
     int? sessionDelaySeconds,
     bool? reminderEnabled,
     int? reminderHour,
@@ -51,6 +54,7 @@ class AppSettings {
       locale: locale ?? this.locale,
       soundConfig: soundConfig ?? this.soundConfig,
       vibrationConfig: vibrationConfig ?? this.vibrationConfig,
+      transparentWidget: transparentWidget ?? this.transparentWidget,
       sessionDelaySeconds: sessionDelaySeconds ?? this.sessionDelaySeconds,
       reminderEnabled: reminderEnabled ?? this.reminderEnabled,
       reminderHour: reminderHour ?? this.reminderHour,

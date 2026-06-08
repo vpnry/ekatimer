@@ -1,5 +1,7 @@
 // lib/screens/settings_screen.dart
 
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
@@ -265,6 +267,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
             ),
+            // Transparent Widget toggle – Android only
+            if (!Platform.isIOS)
+              SwitchListTile(
+                secondary: const Icon(Icons.widgets_outlined),
+                title: Text(t.translate('settings.transparentWidget')),
+                // subtitle: Text(
+                //   t.translate('settings.transparentWidgetDesc'),
+                //   style: const TextStyle(fontSize: 13),
+                // ),
+                value: settings.transparentWidget,
+                onChanged: (value) => settings.setTransparentWidget(value),
+              ),
 
             const Divider(),
 

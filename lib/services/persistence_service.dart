@@ -43,6 +43,8 @@ class PersistenceService {
         intervalVibration:
             p.getString(AppConstants.prefIntervalVibration) ?? 'none',
       ),
+      transparentWidget:
+          p.getBool(AppConstants.prefTransparentWidget) ?? false,
       sessionDelaySeconds:
           p.getInt(AppConstants.prefSessionDelay) ?? 0,
       locale: p.getString(AppConstants.prefLocale) ?? _detectDeviceLocale(),
@@ -124,6 +126,9 @@ class PersistenceService {
     } catch (_) {}
     return 'en';
   }
+
+  static Future<void> setTransparentWidget(bool enabled) async =>
+      saveBool(AppConstants.prefTransparentWidget, enabled);
 
   static Future<void> setLocale(String locale) async =>
       saveString(AppConstants.prefLocale, locale);

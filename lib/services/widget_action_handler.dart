@@ -200,6 +200,25 @@ class WidgetActionHandler {
 
   // ── Raw data peek (non-clearing) ─────────────────────────────────────────
 
+  /// Force all Android widgets to refresh so they pick up the latest
+  /// transparency preference.
+  ///
+  /// [transparent] is passed directly to native so it doesn't rely on
+  /// SharedPreferences file compatibility between Flutter and native.
+  static Future<void> updateAllWidgets({required bool transparent}) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _channel.invokeMethod<void>(
+        'updateAllWidgets',
+        {'transparent': transparent},
+      );
+    } on MissingPluginException {
+      // ignore – method not registered on older native side
+    } catch (e) {
+      debugPrint('WidgetActionHandler.updateAllWidgets error: $e');
+    }
+  }
+
   /// Fetch widget action data for inspection (e.g. checking `fromAlarm`).
   ///
   /// IMPORTANT: on iOS this calls getWidgetAction which CLEARS the native

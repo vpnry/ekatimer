@@ -3,15 +3,18 @@
   Static preview layout for the widget picker.
 -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg"
-    android:gravity="center">
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="8dp">
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:gravity="center"
         android:fontFamily="sans-serif-medium"
         android:text="4H"
@@ -19,4 +22,13 @@
         android:textSize="24sp"
         android:textStyle="bold" />
 
-</FrameLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingTop="4dp"
+        android:text="@string/widget_desc_4h"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="11sp" />
+
+</LinearLayout>

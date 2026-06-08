@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.widget.RemoteViews
-import org.json.JSONObject
 
 /**
  * Base widget provider for meditation timer widgets.
@@ -27,8 +26,17 @@ open class MeditationTimerWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
+        // Read saved transparency from native SharedPreferences for cold-start updates
+        val prefs = context.getSharedPreferences(
+            context.packageName + "_preferences",
+            Context.MODE_PRIVATE
+        )
+        val transparent = prefs.getBoolean(
+            COMPANION_PREFS_TRANSPARENT,
+            false
+        )
         for (appWidgetId in appWidgetIds) {
-            val views = buildWidgetViews(context, widgetConfig)
+            val views = buildWidgetViews(context, widgetConfig, transparent)
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
     }
@@ -39,7 +47,15 @@ open class MeditationTimerWidget : AppWidgetProvider() {
         appWidgetId: Int,
         newOptions: android.os.Bundle?,
     ) {
-        val views = buildWidgetViews(context, widgetConfig)
+        val prefs = context.getSharedPreferences(
+            context.packageName + "_preferences",
+            Context.MODE_PRIVATE
+        )
+        val transparent = prefs.getBoolean(
+            COMPANION_PREFS_TRANSPARENT,
+            false
+        )
+        val views = buildWidgetViews(context, widgetConfig, transparent)
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
@@ -109,16 +125,97 @@ open class MeditationTimerWidget : AppWidgetProvider() {
         );
     }
 
-    // ── Build Views ───────────────────────────────────────────────────
+    // ── Transparent Widget Support & View Building ───────────────────
 
-    private fun buildWidgetViews(
-        context: Context,
-        config: WidgetConfig,
-    ): RemoteViews {
+    companion object {
+        // Key used for native-side SharedPreferences persistence
+        private const val COMPANION_PREFS_TRANSPARENT = "transparent_widget"
+
+        /// Force-update all widget types with the given transparency value.
+        ///
+        /// The [transparent] flag is passed directly from Flutter and also
+        /// persisted to the app's native SharedPreferences so that cold-start
+        /// widget updates (e.g. after a reboot) can still read it.
+        fun updateAllWidgets(context: Context, transparent: Boolean) {
+            // Persist to native SharedPreferences (same file the widget reads on cold start)
+            val prefs = context.getSharedPreferences(
+                context.packageName + "_preferences",
+                Context.MODE_PRIVATE
+            )
+            prefs.edit().putBoolean(COMPANION_PREFS_TRANSPARENT, transparent).apply()
+
+            // Update all widget instances
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val providers = listOf(
+                Meditation15mWidget::class.java,
+                Meditation30mWidget::class.java,
+                Meditation1HWidget::class.java,
+                Meditation1_5HWidget::class.java,
+                Meditation2HWidget::class.java,
+                Meditation2_5HWidget::class.java,
+                Meditation3HWidget::class.java,
+                Meditation3_5HWidget::class.java,
+                Meditation4HWidget::class.java,
+                MeditationEndAtWidget::class.java,
+                MeditationUnlimitedWidget::class.java,
+            )
+            providers.forEach { providerClass ->
+                val ids = appWidgetManager.getAppWidgetIds(
+                    ComponentName(context, providerClass)
+                )
+                if (ids.isNotEmpty()) {
+                    for (appWidgetId in ids) {
+                        val config = when (providerClass) {
+                            Meditation15mWidget::class.java -> WidgetConfig.QUICK_START_15M
+                            Meditation30mWidget::class.java -> WidgetConfig.QUICK_START_30M
+                            Meditation1HWidget::class.java -> WidgetConfig.QUICK_START_1H
+                            Meditation1_5HWidget::class.java -> WidgetConfig.QUICK_START_1_5H
+                            Meditation2HWidget::class.java -> WidgetConfig.QUICK_START_2H
+                            Meditation2_5HWidget::class.java -> WidgetConfig.QUICK_START_2_5H
+                            Meditation3HWidget::class.java -> WidgetConfig.QUICK_START_3H
+                            Meditation3_5HWidget::class.java -> WidgetConfig.QUICK_START_3_5H
+                            Meditation4HWidget::class.java -> WidgetConfig.QUICK_START_4H
+                            MeditationEndAtWidget::class.java -> WidgetConfig.QUICK_START_END_AT
+                            MeditationUnlimitedWidget::class.java -> WidgetConfig.QUICK_START_UNTIMED
+                            else -> return@forEach
+                        }
+                        val views = buildWidgetViews(context, config, transparent)
+                        appWidgetManager.updateAppWidget(appWidgetId, views)
+                    }
+                }
+            }
+        }
+
+        /// Build a RemoteViews instance for the given widget configuration.
+        ///
+        /// When [transparent] is true, the widget background is set to fully
+        /// transparent so it blends with the user's wallpaper.
+        fun buildWidgetViews(
+            context: Context,
+            config: WidgetConfig,
+            transparent: Boolean = false,
+        ): RemoteViews {
         val views = RemoteViews(context.packageName, config.layoutRes)
 
         // Set the label on the shared quick-start layout
         views.setTextViewText(R.id.widget_action_label, config.actionLabel)
+
+        // Apply transparency – use android.R.color.transparent for the
+        // background so the widget blends with the user's wallpaper.
+        if (transparent) {
+            views.setInt(
+                R.id.widget_container,
+                "setBackgroundResource",
+                android.R.color.transparent
+            )
+        } else {
+            // Restore the normal styled background drawable
+            views.setInt(
+                R.id.widget_container,
+                "setBackgroundResource",
+                R.drawable.widget_bg
+            )
+        }
 
         // Open app on widget tap via launch intent with extras
         val intent = context.packageManager.getLaunchIntentForPackage(
@@ -147,6 +244,7 @@ open class MeditationTimerWidget : AppWidgetProvider() {
         views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
 
         return views
+    }
     }
 }
 
