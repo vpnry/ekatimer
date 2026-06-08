@@ -34,14 +34,11 @@ class TimerProvider extends ChangeNotifier {
   String? _currentSessionId;
 
   int _lastIntervalMinute = -1;
-  int _lastBellMinute = -1;
 
   int intervalMinutes = 0;
-  int bellIntervalMinutes = 0;
   String startSound = 'none';
   String endSound = 'ThreeBowl';
   String intervalSound = 'Bowl';
-  String bellSound = 'Bowl';
   String startVibration = 'none';
   String endVibration = 'none';
   String intervalVibration = 'none';
@@ -149,7 +146,6 @@ class TimerProvider extends ChangeNotifier {
     _elapsedSeconds = 0;
     _pauseDurationSeconds = 0;
     _lastIntervalMinute = -1;
-    _lastBellMinute = -1;
     _alarmFired = false;
 
     switch (_timerMode) {
@@ -329,11 +325,9 @@ class TimerProvider extends ChangeNotifier {
     final settings = await PersistenceService.loadSettings();
     sessionDelaySeconds = settings.sessionDelaySeconds;
     intervalMinutes = settings.soundConfig.intervalMinutes;
-    bellIntervalMinutes = settings.soundConfig.bellIntervalMinutes;
     startSound = settings.soundConfig.startSound;
     endSound = settings.soundConfig.endSound;
     intervalSound = settings.soundConfig.intervalSound;
-    bellSound = settings.soundConfig.bellSound;
     startVibration = settings.vibrationConfig.startVibration;
     endVibration = settings.vibrationConfig.endVibration;
     intervalVibration = settings.vibrationConfig.intervalVibration;
@@ -367,7 +361,6 @@ class TimerProvider extends ChangeNotifier {
     }
 
     _lastIntervalMinute = -1;
-    _lastBellMinute = -1;
 
     if (!isPaused) {
       // Re-acquire CPU wake lock and reschedule alarm on restore
@@ -469,7 +462,7 @@ class TimerProvider extends ChangeNotifier {
   void _checkIntervalSounds(DateTime now) {
     final currentMinute = (_elapsedSeconds ~/ 60);
 
-    // Do not play interval or bell sounds at the very start (minute 0).
+    // Do not play interval sounds at the very start (minute 0).
     // They should only play after the configured interval has elapsed
     // (e.g., a 3-minute interval first plays at minute 3, not minute 0).
     if (currentMinute == 0) return;
@@ -481,15 +474,6 @@ class TimerProvider extends ChangeNotifier {
         _lastIntervalMinute = interval;
         _audioService.playSound(intervalSound);
         _vibrationService.vibrate(intervalVibration);
-      }
-    }
-
-    if (bellIntervalMinutes > 0) {
-      final bellInterval = currentMinute ~/ bellIntervalMinutes;
-      if (bellInterval > _lastBellMinute &&
-          currentMinute % bellIntervalMinutes == 0) {
-        _lastBellMinute = bellInterval;
-        _audioService.playSound(bellSound);
       }
     }
   }
@@ -557,7 +541,6 @@ class TimerProvider extends ChangeNotifier {
     _delayRemainingSeconds = 0;
     _currentSessionId = null;
     _lastIntervalMinute = -1;
-    _lastBellMinute = -1;
     _alarmFired = false;
     _nativeAlarmScheduled = false;
     notifyListeners();

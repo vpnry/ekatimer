@@ -146,30 +146,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     )
                   : t.translate('settings.disabled'),
               value: settings.soundConfig.intervalMinutes,
-              maxValue: 60,
               soundValue: settings.soundConfig.intervalSound,
               onMinutesChanged: (m) => settings.setIntervalMinutes(m),
               onSoundChanged: (s) => settings.setIntervalSound(s),
             ),
-            _buildIntervalTile(
-              context,
-              icon: Icons.notifications_outlined,
-              title: t.translate('settings.mindfulnessBell'),
-              subtitle: settings.soundConfig.bellIntervalMinutes > 0
-                  ? t.translate(
-                      'settings.everyMin',
-                      args: {
-                        'minutes':
-                            '${settings.soundConfig.bellIntervalMinutes}',
-                      },
-                    )
-                  : t.translate('settings.disabled'),
-              value: settings.soundConfig.bellIntervalMinutes,
-              maxValue: 60,
-              soundValue: settings.soundConfig.bellSound,
-              onMinutesChanged: (m) => settings.setBellIntervalMinutes(m),
-              onSoundChanged: (s) => settings.setBellSound(s),
-            ),
+            // _buildIntervalTile(
+            //   context,
+            //   icon: Icons.notifications_outlined,
+            //   title: t.translate('settings.mindfulnessBell'),
+            //   subtitle: settings.soundConfig.bellIntervalMinutes > 0
+            //       ? t.translate(
+            //           'settings.everyMin',
+            //           args: {
+            //             'minutes':
+            //                 '${settings.soundConfig.bellIntervalMinutes}',
+            //           },
+            //         )
+            //       : t.translate('settings.disabled'),
+            //   value: settings.soundConfig.bellIntervalMinutes,
+            //   maxValue: 60,
+            //   soundValue: settings.soundConfig.bellSound,
+            //   onMinutesChanged: (m) => settings.setBellIntervalMinutes(m),
+            //   onSoundChanged: (s) => settings.setBellSound(s),
+            // ),
 
             const Divider(),
 
@@ -422,7 +421,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required String subtitle,
     required int value,
-    required int maxValue,
     required String soundValue,
     required ValueChanged<int> onMinutesChanged,
     required ValueChanged<String> onSoundChanged,
@@ -461,7 +459,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onSubmitted: (text) {
                     final parsed = int.tryParse(text);
                     if (parsed != null && parsed > 0) {
-                      onMinutesChanged(parsed.clamp(1, maxValue));
+                      onMinutesChanged(parsed);
                     } else {
                       onMinutesChanged(0);
                     }

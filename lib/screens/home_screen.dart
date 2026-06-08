@@ -139,12 +139,9 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
 
     timerProvider.intervalMinutes =
         settingsProvider.soundConfig.intervalMinutes;
-    timerProvider.bellIntervalMinutes =
-        settingsProvider.soundConfig.bellIntervalMinutes;
     timerProvider.startSound = settingsProvider.soundConfig.startSound;
     timerProvider.endSound = settingsProvider.soundConfig.endSound;
     timerProvider.intervalSound = settingsProvider.soundConfig.intervalSound;
-    timerProvider.bellSound = settingsProvider.soundConfig.bellSound;
     timerProvider.startVibration =
         settingsProvider.vibrationConfig.startVibration;
     timerProvider.endVibration = settingsProvider.vibrationConfig.endVibration;

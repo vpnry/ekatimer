@@ -75,24 +75,10 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setBellSound(String sound) async {
-    final updated = _settings.soundConfig.copyWith(bellSound: sound);
-    _settings = _settings.copyWith(soundConfig: updated);
-    await PersistenceService.setBellSound(sound);
-    notifyListeners();
-  }
-
   Future<void> setIntervalMinutes(int minutes) async {
     final updated = _settings.soundConfig.copyWith(intervalMinutes: minutes);
     _settings = _settings.copyWith(soundConfig: updated);
     await PersistenceService.setIntervalMinutes(minutes);
-    notifyListeners();
-  }
-
-  Future<void> setBellIntervalMinutes(int minutes) async {
-    final updated = _settings.soundConfig.copyWith(bellIntervalMinutes: minutes);
-    _settings = _settings.copyWith(soundConfig: updated);
-    await PersistenceService.setBellIntervalMinutes(minutes);
     notifyListeners();
   }
 

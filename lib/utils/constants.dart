@@ -20,8 +20,6 @@ class AppConstants {
   static const String prefEndSound = 'end_sound';
   static const String prefIntervalSound = 'interval_sound';
   static const String prefIntervalMinutes = 'interval_minutes';
-  static const String prefBellSound = 'bell_sound';
-  static const String prefBellIntervalMinutes = 'bell_interval_minutes';
   static const String prefStartVibration = 'start_vibration';
   static const String prefEndVibration = 'end_vibration';
   static const String prefIntervalVibration = 'interval_vibration';

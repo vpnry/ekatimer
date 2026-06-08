@@ -31,10 +31,7 @@ class PersistenceService {
         startSound: p.getString(AppConstants.prefStartSound) ?? 'none',
         endSound: p.getString(AppConstants.prefEndSound) ?? 'ThreeBowl',
         intervalSound: p.getString(AppConstants.prefIntervalSound) ?? 'Bowl',
-        bellSound: p.getString(AppConstants.prefBellSound) ?? 'Bowl',
         intervalMinutes: p.getInt(AppConstants.prefIntervalMinutes) ?? 0,
-        bellIntervalMinutes:
-            p.getInt(AppConstants.prefBellIntervalMinutes) ?? 0,
         volume: p.getInt(AppConstants.prefSessionVolume) ?? 80,
       ),
       vibrationConfig: VibrationConfig(
@@ -93,14 +90,8 @@ class PersistenceService {
   static Future<void> setIntervalSound(String sound) async =>
       saveString(AppConstants.prefIntervalSound, sound);
 
-  static Future<void> setBellSound(String sound) async =>
-      saveString(AppConstants.prefBellSound, sound);
-
   static Future<void> setIntervalMinutes(int minutes) async =>
       saveInt(AppConstants.prefIntervalMinutes, minutes);
-
-  static Future<void> setBellIntervalMinutes(int minutes) async =>
-      saveInt(AppConstants.prefBellIntervalMinutes, minutes);
 
   static Future<void> setVolume(int volume) async =>
       saveInt(AppConstants.prefSessionVolume, volume);
