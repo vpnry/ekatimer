@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/session_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/translation_service.dart';
+import '../services/csv_data_service.dart';
 import '../theme/colors.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
@@ -20,6 +22,9 @@ class _StatsScreenState extends State<StatsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  late DateTime _sessionStartDate;
+  late DateTime _sessionEndDate;
+
   // Make futures nullable to avoid LateInitializationError during first build.
   Future<List<dynamic>>? _weeklyDataFuture;
   Future<List<dynamic>>? _monthlyDataFuture;
@@ -28,6 +33,9 @@ class _StatsScreenState extends State<StatsScreen>
   @override
   void initState() {
     super.initState();
+    final now = DateTime.now();
+    _sessionEndDate = DateTime(now.year, now.month, now.day);
+    _sessionStartDate = _sessionEndDate.subtract(const Duration(days: 6));
     _tabController = TabController(length: 5, vsync: this);
 
     // Safely load the data after the initial widget build frame completes.
@@ -86,14 +94,7 @@ class _StatsScreenState extends State<StatsScreen>
       child: Scaffold(
         appBar: AppBar(
           title: Text(t.translate('stats.title')),
-          actions: [
-            if (sessionProvider.sessions.isNotEmpty)
-              IconButton(
-                icon: const Icon(Icons.delete_sweep_outlined),
-                onPressed: () => _confirmClearAll(context),
-                tooltip: t.translate('history.clearAll'),
-              ),
-          ],
+          // Delete-all button is inside the Sessions tab
           bottom: TabBar(
             controller: _tabController,
             tabs: [
@@ -234,6 +235,11 @@ class _StatsScreenState extends State<StatsScreen>
           ),
           _buildPeriodRow(
             context,
+            t.translate('stats.last14Days'),
+            provider.last14DaysDurationSeconds,
+          ),
+          _buildPeriodRow(
+            context,
             t.translate('stats.thisMonth'),
             provider.thisMonthDurationSeconds,
           ),
@@ -307,7 +313,21 @@ class _StatsScreenState extends State<StatsScreen>
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (provider.sessions.isEmpty) {
+    // Filter sessions by date range
+    final filteredSessions = provider.sessions
+        .where((s) {
+          final d = DateTime(s.startTime.year, s.startTime.month, s.startTime.day);
+          return d.isAtSameMomentAs(_sessionStartDate) ||
+                 d.isAfter(_sessionStartDate);
+        })
+        .where((s) {
+          final d = DateTime(s.startTime.year, s.startTime.month, s.startTime.day);
+          return d.isAtSameMomentAs(_sessionEndDate) ||
+                 d.isBefore(_sessionEndDate);
+        })
+        .toList();
+
+    if (filteredSessions.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -337,7 +357,7 @@ class _StatsScreenState extends State<StatsScreen>
     }
 
     final groupedSessions = <String, List<MeditationSession>>{};
-    for (final session in provider.sessions) {
+    for (final session in filteredSessions) {
       final dateKey =
           '${session.startTime.year}-${session.startTime.month.toString().padLeft(2, '0')}-${session.startTime.day.toString().padLeft(2, '0')}';
       groupedSessions.putIfAbsent(dateKey, () => []);
@@ -347,70 +367,316 @@ class _StatsScreenState extends State<StatsScreen>
     final sortedDates = groupedSessions.keys.toList()
       ..sort((a, b) => b.compareTo(a));
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 8, bottom: 24),
-      itemCount: sortedDates.length,
-      itemBuilder: (context, index) {
-        final dateKey = sortedDates[index];
-        final sessions = groupedSessions[dateKey]!;
-        final date = DateTime.parse(dateKey);
+    return Column(
+      children: [
+        // ─── Action bar ──────────────────────────────────────────
+        _buildSessionsActionBar(context, provider, filteredSessions),
+        const Divider(height: 1),
+        // ─── Session list ────────────────────────────────────────
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 8, bottom: 24),
+            itemCount: sortedDates.length,
+            itemBuilder: (context, index) {
+              final dateKey = sortedDates[index];
+              final sessions = groupedSessions[dateKey]!;
+              final date = DateTime.parse(dateKey);
 
-        final totalSeconds =
-            sessions.fold(0, (sum, s) => sum + s.durationSeconds);
+              final totalSeconds =
+                  sessions.fold(0, (sum, s) => sum + s.durationSeconds);
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Row(
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    TimeUtils.formatDate(date),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                    child: Row(
+                      children: [
+                        Text(
+                          TimeUtils.formatDate(date),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(20),
-                      borderRadius: BorderRadius.circular(8),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withAlpha(20),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${sessions.length} ${sessions.length == 1 ? t.translate('history.session') : t.translate('history.sessions')}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          TimeUtils.formatDurationReadable(totalSeconds),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondaryLight,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      '${sessions.length} ${sessions.length == 1 ? t.translate('history.session') : t.translate('history.sessions')}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
                   ),
-                  const Spacer(),
-                  Text(
-                    TimeUtils.formatDurationReadable(totalSeconds),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondaryLight,
-                      fontWeight: FontWeight.w500,
+                  ...sessions.map(
+                    (session) => SessionCard(
+                      id: session.id,
+                      startTime: session.startTime,
+                      durationSeconds: session.durationSeconds,
+                      completed: session.completed,
+                      onDelete: () => _confirmDelete(context, session.id),
                     ),
                   ),
                 ],
-              ),
-            ),
-            ...sessions.map((session) => SessionCard(
-                  id: session.id,
-                  startTime: session.startTime,
-                  durationSeconds: session.durationSeconds,
-                  completed: session.completed,
-                  onDelete: () => _confirmDelete(context, session.id),
-                )),
-          ],
-        );
-      },
+              );
+            },
+          ),
+        ),
+      ],
     );
+  }
+
+  Widget _buildSessionsActionBar(
+    BuildContext context,
+    SessionProvider provider,
+    List<MeditationSession> filteredSessions,
+  ) {
+    final t = TranslationService.of(context);
+    final theme = Theme.of(context);
+
+    final filteredTotalSeconds =
+        filteredSessions.fold(0, (sum, s) => sum + s.durationSeconds);
+    final sessionCount = filteredSessions.length;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 12, 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── Row 1: From / To date pickers ──
+          Row(
+            children: [
+              _buildDateChip(
+                context,
+                label: t.translate('stats.from'),
+                date: _sessionStartDate,
+                onTap: () => _pickDate(isStart: true),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6),
+                child: Icon(Icons.arrow_forward, size: 16, color: AppColors.textSecondaryLight),
+              ),
+              _buildDateChip(
+                context,
+                label: t.translate('stats.to'),
+                date: _sessionEndDate,
+                onTap: () => _pickDate(isStart: false),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // ── Row 2: Summary + action buttons ──
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '$sessionCount ${sessionCount == 1 ? t.translate('history.session') : t.translate('history.sessions')} — ${TimeUtils.formatDurationReadable(filteredTotalSeconds)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondaryLight,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // ── Copy button ──
+              IconButton(
+                icon: const Icon(Icons.copy_rounded, size: 20),
+                tooltip: t.translate('stats.copy'),
+                onPressed: () => _copySessionsToClipboard(
+                    context, filteredSessions, _sessionStartDate, _sessionEndDate),
+                visualDensity: VisualDensity.compact,
+              ),
+              // ── Export button ──
+              IconButton(
+                icon: const Icon(Icons.file_upload_outlined, size: 20),
+                tooltip: t.translate('stats.exportFiltered'),
+                onPressed:
+                    () => _exportFilteredSessions(context, filteredSessions, _sessionStartDate, _sessionEndDate),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateChip(
+    BuildContext context, {
+    required String label,
+    required DateTime date,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: theme.dividerColor),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondaryLight),
+            const SizedBox(width: 4),
+            Text(
+              '$label ${_formatShortDate(date)}',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatShortDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _pickDate({required bool isStart}) async {
+    final initial = isStart ? _sessionStartDate : _sessionEndDate;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2015),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isStart) {
+          _sessionStartDate = DateTime(picked.year, picked.month, picked.day);
+          // Ensure start is not after end
+          if (_sessionStartDate.isAfter(_sessionEndDate)) {
+            _sessionEndDate = _sessionStartDate;
+          }
+        } else {
+          _sessionEndDate = DateTime(picked.year, picked.month, picked.day);
+          // Ensure end is not before start
+          if (_sessionEndDate.isBefore(_sessionStartDate)) {
+            _sessionStartDate = _sessionEndDate;
+          }
+        }
+      });
+    }
+  }
+
+  void _copySessionsToClipboard(
+    BuildContext context,
+    List<MeditationSession> sessions,
+    DateTime startDate,
+    DateTime endDate,
+  ) {
+    final t = TranslationService.of(context);
+
+    final buffer = StringBuffer();
+    final rangeLabel =
+        '${_formatShortDate(startDate)} — ${_formatShortDate(endDate)}';
+    buffer.writeln('${t.translate('stats.title')} — $rangeLabel');
+    buffer.writeln('─' * 32);
+    buffer.writeln();
+
+    // Group by date
+    final grouped = <String, List<MeditationSession>>{};
+    for (final session in sessions) {
+      final key =
+          '${session.startTime.year}-${session.startTime.month.toString().padLeft(2, '0')}-${session.startTime.day.toString().padLeft(2, '0')}';
+      grouped.putIfAbsent(key, () => []);
+      grouped[key]!.add(session);
+    }
+
+    final sortedDates = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+
+    int totalSeconds = 0;
+    for (final dateKey in sortedDates) {
+      final daySessions = grouped[dateKey]!;
+      final dayTotal =
+          daySessions.fold(0, (sum, s) => sum + s.durationSeconds);
+      totalSeconds += dayTotal;
+
+      buffer.writeln(
+        '$dateKey — ${TimeUtils.formatDurationReadable(dayTotal)} (${daySessions.length} ${daySessions.length == 1 ? t.translate('history.session') : t.translate('history.sessions')})',
+      );
+      for (final session in daySessions) {
+        final status = session.completed ? '✓' : '✗';
+        buffer.writeln(
+          '  $status ${TimeUtils.formatDurationReadable(session.durationSeconds)} ${session.notes != null ? '- ${session.notes}' : ''}',
+        );
+      }
+    }
+
+    buffer.writeln();
+    buffer.writeln('─' * 32);
+    final count = sessions.length;
+    buffer.writeln(
+      '${t.translate('stats.totalTime')}: ${TimeUtils.formatDurationReadable(totalSeconds)} — $count ${count == 1 ? t.translate('history.session') : t.translate('history.sessions')}',
+    );
+
+    Clipboard.setData(ClipboardData(text: buffer.toString()));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(t.translate('stats.copied')),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _exportFilteredSessions(
+    BuildContext context,
+    List<MeditationSession> sessions,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    if (sessions.isEmpty) return;
+
+    try {
+      final filename = 'ekatimer_${_formatShortDate(startDate)}_${_formatShortDate(endDate)}.csv';
+      await CsvDataService.exportSessionsToCsv(sessions, filename: filename);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              TranslationService.of(context).translate('stats.exported'),
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${TranslationService.of(context).translate('stats.exportFailed')}: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   void _confirmDelete(BuildContext context, String id) {
@@ -432,31 +698,6 @@ class _StatsScreenState extends State<StatsScreen>
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: Text(t.translate('history.delete')),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmClearAll(BuildContext context) {
-    final t = TranslationService.of(context);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(t.translate('history.clearAllTitle')),
-        content: Text(t.translate('history.clearAllConfirm')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(t.translate('history.cancel')),
-          ),
-          TextButton(
-            onPressed: () {
-              context.read<SessionProvider>().deleteAllSessions();
-              Navigator.of(ctx).pop();
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: Text(t.translate('history.clearAllBtn')),
           ),
         ],
       ),

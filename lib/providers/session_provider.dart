@@ -13,6 +13,7 @@ class SessionProvider extends ChangeNotifier {
   int _longestStreak = 0;
   int _todayDurationSeconds = 0;
   int _thisWeekDurationSeconds = 0;
+  int _last14DaysDurationSeconds = 0;
   int _thisMonthDurationSeconds = 0;
   int _thisYearDurationSeconds = 0;
 
@@ -25,6 +26,7 @@ class SessionProvider extends ChangeNotifier {
   int get longestStreak => _longestStreak;
   int get todayDurationSeconds => _todayDurationSeconds;
   int get thisWeekDurationSeconds => _thisWeekDurationSeconds;
+  int get last14DaysDurationSeconds => _last14DaysDurationSeconds;
   int get thisMonthDurationSeconds => _thisMonthDurationSeconds;
   int get thisYearDurationSeconds => _thisYearDurationSeconds;
 
@@ -58,6 +60,12 @@ class SessionProvider extends ChangeNotifier {
     _thisWeekDurationSeconds = await DatabaseService.getTotalDurationInRange(
       startOfWeekDt,
       startOfWeekDt.add(const Duration(days: 7)),
+    );
+
+    final startOf14Days = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 13));
+    _last14DaysDurationSeconds = await DatabaseService.getTotalDurationInRange(
+      startOf14Days,
+      startOf14Days.add(const Duration(days: 14)),
     );
 
     final startOfMonth = DateTime(now.year, now.month, 1);

@@ -13,6 +13,7 @@ import '../widgets/edit_fixed_presets_dialog.dart';
 import 'meditation_screen.dart';
 import 'stats_screen.dart';
 import 'settings_screen.dart';
+import 'alarm_help_screen.dart';
 
 class MeditationHomeScreen extends StatefulWidget {
   const MeditationHomeScreen({super.key});
@@ -173,6 +174,12 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
               slivers: [
                 SliverAppBar(
                   floating: true,
+                  leading: IconButton(
+                    icon: const Icon(Icons.info_outline_rounded),
+                    onPressed: () =>
+                        _navigateTo(context, const AlarmHelpScreen()),
+                    tooltip: t.translate('alarmHelp.title'),
+                  ),
                   title: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

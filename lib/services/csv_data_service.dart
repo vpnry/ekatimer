@@ -24,7 +24,12 @@ class CsvDataService {
   /// Exports all sessions to a CSV file and opens the share sheet.
   static Future<String> exportToCsv() async {
     final sessions = await DatabaseService.getAllSessions();
+    return exportSessionsToCsv(sessions);
+  }
 
+  /// Exports the given sessions list to a CSV file and opens the share sheet.
+  /// [filename] defaults to 'ekatimer_sessions.csv'.
+  static Future<String> exportSessionsToCsv(List<MeditationSession> sessions, {String filename = 'ekatimer_sessions.csv'}) async {
     final rows = <List<dynamic>>[_headers];
     for (final session in sessions) {
       rows.add([
@@ -42,7 +47,7 @@ class CsvDataService {
     final csvString = Csv().encode(rows);
 
     final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/ekatimer_sessions.csv');
+    final file = File('${dir.path}/$filename');
     await file.writeAsString(csvString);
 
     await SharePlus.instance.share(

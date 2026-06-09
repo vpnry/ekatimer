@@ -24,7 +24,7 @@ class AppSettings {
     this.locale = 'en',
     this.soundConfig = const SoundConfig(),
     this.vibrationConfig = const VibrationConfig(),
-    this.transparentWidget = false,
+    this.transparentWidget = true,
     this.sessionDelaySeconds = 0,
     this.reminderEnabled = false,
     this.reminderHour = 19,
