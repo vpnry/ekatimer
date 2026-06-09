@@ -57,6 +57,7 @@
     "history.stopped": "Stopped",
     "stats.title": "Statistics",
     "stats.overview": "Overview",
+    "stats.sessions": "Sessions",
     "stats.weekly": "Weekly",
     "stats.monthly": "Monthly",
     "stats.totalSessions": "Total Sessions",
@@ -164,6 +165,7 @@
     "editPresets.minutesFor": "Minutes for {hour}h"
   },
   "vi": {
+    "stats.sessions": "Phiên",
     "app.title": "ekaTimer",
     "app.splash.subtitle": "eka",
     "app.splash.timer": "Timer",
@@ -385,6 +387,7 @@
     "history.stopped": "Gestoppt",
     "stats.title": "Statistiken",
     "stats.overview": "Übersicht",
+    "stats.sessions": "Sitzungen",
     "stats.weekly": "Wöchentlich",
     "stats.monthly": "Monatlich",
     "stats.totalSessions": "Alle Einheiten",
@@ -549,6 +552,7 @@
     "history.stopped": "ရပ်ထားသည်",
     "stats.title": "စာရင်းအင်းများ",
     "stats.overview": "အကျဉ်းချုပ်",
+    "stats.sessions": "အကြိမ်များ",
     "stats.weekly": "အပတ်စဉ်",
     "stats.monthly": "လစဉ်",
     "stats.totalSessions": "စုစုပေါင်းအကြိမ်ရေ",
@@ -656,6 +660,7 @@
     "editPresets.minutesFor": "{hour} နာရီအတွက် မိနစ်"
   },
   "si": {
+    "stats.sessions": "වාර",
     "app.title": "ekaTimer",
     "app.splash.subtitle": "eka",
     "app.splash.timer": "Timer",
@@ -877,6 +882,7 @@
     "history.stopped": "Dihentikan",
     "stats.title": "Statistik",
     "stats.overview": "Ringkasan",
+    "stats.sessions": "Sesi",
     "stats.weekly": "Mingguan",
     "stats.monthly": "Bulanan",
     "stats.totalSessions": "Total Sesi",
@@ -984,6 +990,7 @@
     "editPresets.minutesFor": "Menit untuk {hour}j"
   },
   "zh": {
+    "stats.sessions": "次数",
     "app.title": "ekaTimer",
     "app.splash.subtitle": "eka",
     "app.splash.timer": "Timer",
@@ -1148,6 +1155,7 @@
     "editPresets.minutesFor": "{hour}小时的分钟数"
   },
   "th": {
+    "stats.sessions": "เซสชัน",
     "app.title": "ekaTimer",
     "app.splash.subtitle": "eka",
     "app.splash.timer": "Timer",
@@ -1369,6 +1377,7 @@
     "history.stopped": "बंद हुआ",
     "stats.title": "आँकड़े",
     "stats.overview": "अवलोकन",
+    "stats.sessions": "सत्र",
     "stats.weekly": "साप्ताहिक",
     "stats.monthly": "मासिक",
     "stats.totalSessions": "कुल सत्र",
@@ -1476,6 +1485,7 @@
     "editPresets.minutesFor": "{hour} घं के लिए मिनट"
   },
   "ne": {
+    "stats.sessions": "सत्र",
     "app.title": "ekaTimer",
     "app.splash.subtitle": "eka",
     "app.splash.timer": "Timer",
@@ -1697,6 +1707,7 @@
     "history.stopped": "중단됨",
     "stats.title": "통계",
     "stats.overview": "개요",
+    "stats.sessions": "세션",
     "stats.weekly": "주간",
     "stats.monthly": "월간",
     "stats.totalSessions": "총 횟수",
@@ -1861,6 +1872,7 @@
     "history.stopped": "停止",
     "stats.title": "統計",
     "stats.overview": "概要",
+    "stats.sessions": "セッション",
     "stats.weekly": "週間",
     "stats.monthly": "月間",
     "stats.totalSessions": "合計回数",
@@ -1968,6 +1980,7 @@
     "editPresets.minutesFor": "{hour}時間用の分"
   },
   "km": {
+    "stats.sessions": "វគ្គ",
     "app.title": "ekaTimer",
     "app.splash.subtitle": "eka",
     "app.splash.timer": "Timer",
@@ -2132,6 +2145,7 @@
     "editPresets.minutesFor": "នាទីសម្រាប់ {hour}ម៉ោង"
   },
   "ru": {
+    "stats.sessions": "Сеансы",
     "app.title": "ekaTimer",
     "app.splash.subtitle": "eka",
     "app.splash.timer": "Timer",
@@ -2353,6 +2367,7 @@
     "history.stopped": "ຢຸດແລ້ວ",
     "stats.title": "ສະຖິຕິ",
     "stats.overview": "ພາບລວມ",
+    "stats.sessions": "ຮອບ",
     "stats.weekly": "ລາຍອາທິດ",
     "stats.monthly": "ລາຍເດືອນ",
     "stats.totalSessions": "ຈຳນວນຮອບທັງໝົດ",

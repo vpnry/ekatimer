@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/timer_provider.dart';
-import '../providers/session_provider.dart';
 import '../providers/settings_provider.dart';
 import '../models/timer_mode.dart';
 import '../services/translation_service.dart';
@@ -10,10 +9,8 @@ import '../theme/app_theme.dart';
 import '../services/persistence_service.dart';
 import '../services/widget_action_handler.dart';
 
-import '../widgets/stats_summary.dart';
 import '../widgets/edit_fixed_presets_dialog.dart';
 import 'meditation_screen.dart';
-import 'history_screen.dart';
 import 'stats_screen.dart';
 import 'settings_screen.dart';
 
@@ -134,7 +131,6 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
   Widget build(BuildContext context) {
     final t = TranslationService.of(context);
     final timerProvider = context.watch<TimerProvider>();
-    final sessionProvider = context.watch<SessionProvider>();
     final settingsProvider = context.watch<SettingsProvider>();
 
     timerProvider.intervalMinutes =
@@ -231,35 +227,6 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
                         const SizedBox(height: 24),
                         _buildStartButton(context),
                       ],
-                    ),
-                  ),
-                ),
-
-                if (!sessionProvider.isLoading)
-                  SliverToBoxAdapter(
-                    child: StatsSummary(
-                      todayDurationSeconds:
-                          sessionProvider.todayDurationSeconds,
-                      currentStreak: sessionProvider.currentStreak,
-                      totalSessions: sessionProvider.totalSessions,
-                      totalDurationSeconds:
-                          sessionProvider.totalDurationSeconds,
-                    ),
-                  ),
-
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: Center(
-                      child: TextButton.icon(
-                        onPressed: () =>
-                            _navigateTo(context, const HistoryScreen()),
-                        icon: const Icon(Icons.history_rounded, size: 20),
-                        label: Text(t.translate('home.viewHistory')),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.textSecondaryLight,
-                        ),
-                      ),
                     ),
                   ),
                 ),

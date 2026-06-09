@@ -57,6 +57,7 @@
     "history.stopped": "Stopped",
     "stats.title": "Statistics",
     "stats.overview": "Overview",
+    "stats.sessions": "Sessions",
     "stats.weekly": "Weekly",
     "stats.monthly": "Monthly",
     "stats.totalSessions": "Total Sessions",
