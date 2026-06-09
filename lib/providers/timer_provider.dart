@@ -460,6 +460,8 @@ class TimerProvider extends ChangeNotifier {
   }
 
   void _checkIntervalSounds(DateTime now) {
+    if (intervalMinutes <= 0) return;
+
     final currentMinute = (_elapsedSeconds ~/ 60);
 
     // Do not play interval sounds at the very start (minute 0).
@@ -467,14 +469,18 @@ class TimerProvider extends ChangeNotifier {
     // (e.g., a 3-minute interval first plays at minute 3, not minute 0).
     if (currentMinute == 0) return;
 
-    if (intervalMinutes > 0) {
-      final interval = currentMinute ~/ intervalMinutes;
-      if (interval > _lastIntervalMinute &&
-          currentMinute % intervalMinutes == 0) {
-        _lastIntervalMinute = interval;
-        _audioService.playSound(intervalSound);
-        _vibrationService.vibrate(intervalVibration);
-      }
+    // Auto-disable: interval won't fire if it's >= total session duration (timed mode).
+    if (_timerMode == TimerMode.timed && _durationMinutes > 0 &&
+        intervalMinutes >= _durationMinutes) {
+      return;
+    }
+
+    final interval = currentMinute ~/ intervalMinutes;
+    if (interval > _lastIntervalMinute &&
+        currentMinute % intervalMinutes == 0) {
+      _lastIntervalMinute = interval;
+      _audioService.playSound(intervalSound);
+      _vibrationService.vibrate(intervalVibration);
     }
   }
 

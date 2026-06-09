@@ -425,6 +425,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required ValueChanged<int> onMinutesChanged,
     required ValueChanged<String> onSoundChanged,
   }) {
+    final t = TranslationService.of(context);
     final controller = TextEditingController(text: value > 0 ? '$value' : '');
     return ExpansionTile(
       leading: Icon(icon),
@@ -483,6 +484,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
               label: 'Sound',
               currentSound: soundValue,
               onChanged: onSoundChanged,
+            ),
+          ),
+        // Show warning when interval is large (>60 min) — likely to exceed session duration
+        if (value > 60)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 14, color: Colors.orange.shade400),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    t.translate('settings.intervalTooLongWarning'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.orange.shade400,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
       ],

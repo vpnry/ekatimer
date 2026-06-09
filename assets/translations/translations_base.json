@@ -117,6 +117,7 @@
     "settings.delayCount": "{seconds} seconds",
     "settings.disabled": "Disabled",
     "settings.everyMin": "Every {minutes} min",
+    "settings.intervalTooLongWarning": "Interval must be shorter than session to play",
     "settings.startSound": "Start Sound",
     "settings.endSound": "End Sound",
     "settings.startVibration": "Start Vibration",
