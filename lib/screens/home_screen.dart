@@ -183,12 +183,7 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
                   title: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.timer_outlined,
-                        color: AppColors.primary,
-                        size: 28,
-                      ),
-                      const SizedBox(width: 8),
+
                       Text(
                         t.translate('app.splash.subtitle'),
                         style: const TextStyle(fontWeight: FontWeight.w300),

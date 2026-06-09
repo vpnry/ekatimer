@@ -340,6 +340,7 @@ class _StatsScreenState extends State<StatsScreen>
             const SizedBox(height: 16),
             Text(
               t.translate('history.noSessions'),
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w300,
                   ),
@@ -347,6 +348,7 @@ class _StatsScreenState extends State<StatsScreen>
             const SizedBox(height: 8),
             Text(
               t.translate('history.noSessionsDesc'),
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: AppColors.textSecondaryLight,
                   ),
