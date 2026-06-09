@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/timer_mode.dart';
@@ -10,6 +9,7 @@ import '../services/vibration_service.dart';
 import '../services/database_service.dart';
 import '../services/alarm_service.dart';
 import '../utils/constants.dart';
+
 
 enum TimerState { idle, delaying, running, paused, completed }
 
@@ -50,7 +50,6 @@ class TimerProvider extends ChangeNotifier {
 
   Timer? _tickTimer;
   bool _alarmFired = false;
-  bool _nativeAlarmScheduled = false;
 
   TimerState get state => _state;
   TimerMode get timerMode => _timerMode;
@@ -196,17 +195,14 @@ class TimerProvider extends ChangeNotifier {
     await _audioService.playSound(startSound);
     await _vibrationService.vibrate(startVibration);
 
-    // Acquire CPU wake lock to keep Dart timer running when screen is off
-    await _alarmService.acquireCpuWakeLock();
-
-    _nativeAlarmScheduled = false;
     if (_endTime != null) {
-      final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
-      final remainingMs = _endTime!.millisecondsSinceEpoch;
-      _nativeAlarmScheduled = await _alarmService.scheduleEndAlarm(
-        endTimeMillis: remainingMs,
-        requestCode: requestCode,
-        soundPath: _nativeSoundPath(endSound),
+      final alarmId = _timerMode == TimerMode.timed ? 1001 : 1002;
+      await _alarmService.scheduleEndAlarm(
+        id: alarmId,
+        dateTime: _endTime!,
+        assetAudioPath: _assetPath(endSound),
+        vibrate: endVibration != 'none',
+        volume: volume / 100.0,
       );
     }
 
@@ -244,12 +240,8 @@ class TimerProvider extends ChangeNotifier {
     _state = TimerState.paused;
     _pauseStartTime = DateTime.now();
     _stopTick();
-    // Cancel the native alarm while paused - will reschedule on resume
-    await _alarmService.cancelEndAlarm(
-      requestCode: _timerMode == TimerMode.timed ? 1001 : 1002,
-    );
-    _nativeAlarmScheduled = false;
-    await _alarmService.releaseCpuWakeLock();
+    final alarmId = _timerMode == TimerMode.timed ? 1001 : 1002;
+    await _alarmService.cancelAlarm(alarmId);
     await _persistSessionState();
     notifyListeners();
   }
@@ -266,14 +258,14 @@ class TimerProvider extends ChangeNotifier {
     _state = TimerState.running;
     _alarmFired = false;
 
-    // Re-acquire CPU wake lock and reschedule alarm
-    await _alarmService.acquireCpuWakeLock();
     if (_endTime != null) {
-      final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
-      _nativeAlarmScheduled = await _alarmService.scheduleEndAlarm(
-        endTimeMillis: _endTime!.millisecondsSinceEpoch,
-        requestCode: requestCode,
-        soundPath: _nativeSoundPath(endSound),
+      final alarmId = _timerMode == TimerMode.timed ? 1001 : 1002;
+      await _alarmService.scheduleEndAlarm(
+        id: alarmId,
+        dateTime: _endTime!,
+        assetAudioPath: _assetPath(endSound),
+        vibrate: endVibration != 'none',
+        volume: volume / 100.0,
       );
     }
 
@@ -285,9 +277,7 @@ class TimerProvider extends ChangeNotifier {
   Future<void> stopSession({bool completed = true}) async {
     _stopTick();
 
-    // Cancel any pending alarms and release CPU wake lock
     await _alarmService.cancelAllAlarms();
-    await _alarmService.releaseCpuWakeLock();
 
     final now = DateTime.now();
     _elapsedSeconds = _calculateElapsedSeconds(now);
@@ -363,23 +353,19 @@ class TimerProvider extends ChangeNotifier {
     _lastIntervalMinute = -1;
 
     if (!isPaused) {
-      // Re-acquire CPU wake lock and reschedule alarm on restore
-      await _alarmService.acquireCpuWakeLock();
       if (_endTime != null && _endTime!.millisecondsSinceEpoch > 0) {
-        // If the end time is already in the past, the session ended while
-        // we were away. Complete silently — the native alarm already fired
-        // and played the sound. This prevents a double-alarm on unlock.
         if (_endTime!.isBefore(DateTime.now())) {
-          await _alarmService.releaseCpuWakeLock();
           await _onSessionComplete(silent: true);
           return;
         }
 
-        final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
-        _nativeAlarmScheduled = await _alarmService.scheduleEndAlarm(
-          endTimeMillis: _endTime!.millisecondsSinceEpoch,
-          requestCode: requestCode,
-          soundPath: _nativeSoundPath(endSound),
+        final alarmId = _timerMode == TimerMode.timed ? 1001 : 1002;
+        await _alarmService.scheduleEndAlarm(
+          id: alarmId,
+          dateTime: _endTime!,
+          assetAudioPath: _assetPath(endSound),
+          vibrate: endVibration != 'none',
+          volume: volume / 100.0,
         );
       }
       _startTick();
@@ -413,6 +399,8 @@ class TimerProvider extends ChangeNotifier {
   }
 
   void _onTick() {
+    if (_alarmFired) return;
+
     final now = DateTime.now();
     _elapsedSeconds = _calculateElapsedSeconds(now);
 
@@ -422,11 +410,7 @@ class TimerProvider extends ChangeNotifier {
           final remaining = _endTime!.difference(now).inSeconds;
           _remainingSeconds = remaining < 0 ? 0 : remaining;
           if (_remainingSeconds <= 0) {
-            // Check if we missed the exact end time because device was sleeping
-            // (e.g., late by > 1.5 seconds). If so, the native OS alarm already
-            // handled the notification/sound. Complete silently.
-            final bool missedBySleep = now.difference(_endTime!).inMilliseconds > 1500;
-            _onSessionComplete(silent: missedBySleep);
+            _onSessionComplete(silent: false);
             return;
           }
         }
@@ -436,9 +420,7 @@ class TimerProvider extends ChangeNotifier {
           final remaining = _endTime!.difference(now).inSeconds;
           _remainingSeconds = remaining < 0 ? 0 : remaining;
           if (_remainingSeconds <= 0) {
-            // Same logic for "endAt" mode
-            final bool missedBySleep = now.difference(_endTime!).inMilliseconds > 1500;
-            _onSessionComplete(silent: missedBySleep);
+            _onSessionComplete(silent: false);
             return;
           }
         }
@@ -452,10 +434,10 @@ class TimerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Convert a bare sound name (e.g. "ThreeBowl") to the native asset path
-  /// format expected by [AlarmService] and the Android plugin.
-  String _nativeSoundPath(String soundName) {
-    if (soundName.isEmpty || soundName == 'none') return '';
+  /// Convert a bare sound name (e.g. "ThreeBowl") to the asset path
+  /// expected by [AlarmService].
+  String? _assetPath(String soundName) {
+    if (soundName.isEmpty || soundName == 'none') return null;
     return 'assets/sounds/$soundName.wav';
   }
 
@@ -485,15 +467,10 @@ class TimerProvider extends ChangeNotifier {
   }
 
   Future<void> _onSessionComplete({bool silent = false}) async {
+    if (_alarmFired) return;
+    _alarmFired = true;
+
     _stopTick();
-    
-    // On Android, if the native alarm is scheduled, do NOT cancel it.
-    // Allow the native AlarmReceiver to fire, wake the screen, and play the sound natively.
-    if (!(Platform.isAndroid && _nativeAlarmScheduled)) {
-      await _alarmService.cancelAllAlarms();
-    }
-    
-    await _alarmService.releaseCpuWakeLock();
 
     _state = TimerState.completed;
 
@@ -501,15 +478,9 @@ class TimerProvider extends ChangeNotifier {
     _elapsedSeconds = _totalDurationSeconds;
 
     if (!silent) {
-      bool playSoundFromDart = true;
-      if (Platform.isAndroid && _nativeAlarmScheduled) {
-        playSoundFromDart = false; // Native AlarmReceiver will securely handle the audio playback
-      }
-
-      if (playSoundFromDart) {
-        await _audioService.playSound(endSound);
-      }
+      await _audioService.playSound(endSound);
       await _vibrationService.vibrate(endVibration);
+      await _alarmService.cancelAllAlarms();
     }
 
     final session = MeditationSession(
@@ -540,7 +511,6 @@ class TimerProvider extends ChangeNotifier {
     if (cancelAlarms) {
       _alarmService.cancelAllAlarms();
     }
-    _alarmService.releaseCpuWakeLock();
     _state = TimerState.idle;
     _elapsedSeconds = 0;
     _remainingSeconds = 0;
@@ -550,42 +520,21 @@ class TimerProvider extends ChangeNotifier {
     _currentSessionId = null;
     _lastIntervalMinute = -1;
     _alarmFired = false;
-    _nativeAlarmScheduled = false;
     notifyListeners();
   }
 
   Future<void> stopSounds() async {
     await _audioService.stop();
     await _vibrationService.cancel();
-    await _alarmService.stopEndSound();
   }
 
-  /// Called when the native AlarmManager fires (detected via EventChannel).
+  /// Called when the alarm package fires (Alarm.ringing stream).
+  /// The alarm package handles audio & vibration natively — just record completion.
   void onNativeAlarmFired(int requestCode) {
-    if (_alarmFired) return; // Prevent double-fire
-    _alarmFired = true;
-
     debugPrint('TimerProvider: Native alarm fired with code $requestCode');
 
     if (_state == TimerState.running) {
-      // AlarmReceiver natively plays the sound already, no need to instruct Dart to play it.
       _onSessionComplete(silent: true);
-    }
-  }
-
-  /// Called when exact alarm permission is granted by the user.
-  /// Retry scheduling the alarm if timer is currently running.
-  Future<void> onExactAlarmPermissionGranted() async {
-    debugPrint('TimerProvider: Exact alarm permission granted, retrying alarm scheduling');
-    
-    if (_state == TimerState.running && _endTime != null) {
-      final requestCode = _timerMode == TimerMode.timed ? 1001 : 1002;
-      _nativeAlarmScheduled = await _alarmService.scheduleEndAlarm(
-        endTimeMillis: _endTime!.millisecondsSinceEpoch,
-        requestCode: requestCode,
-        soundPath: _nativeSoundPath(endSound),
-      );
-      debugPrint('TimerProvider: Alarm rescheduled after permission granted');
     }
   }
 
@@ -595,7 +544,6 @@ class TimerProvider extends ChangeNotifier {
     _delayTimer = null;
     _stopTick();
     _alarmService.cancelAllAlarms();
-    _alarmService.releaseCpuWakeLock();
     super.dispose();
   }
 }

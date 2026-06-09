@@ -175,13 +175,6 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
       timerProvider.onNativeAlarmFired(requestCode);
     };
 
-    alarmService.onPermissionChanged = (hasPermission) {
-      if (hasPermission && mounted) {
-        final timerProvider = context.read<TimerProvider>();
-        timerProvider.onExactAlarmPermissionGranted();
-      }
-    };
-
     WidgetActionHandler.setupListener(
       context,
       onSessionStarted: () {

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'providers/timer_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/session_provider.dart';
@@ -19,7 +21,7 @@ void main() async {
   await NotificationService().init();
   await AlarmService().init();
 
-  // Request permissions on startup
+  // Request notification permission on startup
   await _requestPermissions();
 
   // Initialize widget data service for home screen / lock screen widgets
@@ -39,16 +41,15 @@ void main() async {
 
 Future<void> _requestPermissions() async {
   try {
-    // Request notification permission for Android 13+
     final notificationService = NotificationService();
     await notificationService.requestPermissions();
 
-    // Check and request exact alarm permission
-    final alarmService = AlarmService();
-    final hasPermission = await alarmService.hasExactAlarmPermission();
-    if (!hasPermission) {
-      debugPrint('main: Exact alarm permission not granted, requesting...');
-      await alarmService.requestExactAlarmPermission();
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      final status = await Permission.scheduleExactAlarm.status;
+      if (status.isDenied) {
+        debugPrint('main: SCHEDULE_EXACT_ALARM not granted, requesting...');
+        await Permission.scheduleExactAlarm.request();
+      }
     }
   } catch (e) {
     debugPrint('main: Failed to request permissions: $e');
