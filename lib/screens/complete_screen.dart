@@ -55,7 +55,7 @@ class _CompleteScreenState extends State<CompleteScreen>
     // comes in (via _ensureMeditationScreen / _resetToHomeScreen).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<TimerProvider>().reset();
+        context.read<TimerProvider>().reset(cancelAlarms: false);
       }
     });
   }
@@ -117,10 +117,7 @@ class _CompleteScreenState extends State<CompleteScreen>
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              // Timer has already been reset in initState.
-                              // Pop back to the root route (_AppEntry). Since _hasActiveSession
-                              // was cleared when the timer became idle, _AppEntry will
-                              // naturally rebuild and render MeditationHomeScreen.
+                              context.read<TimerProvider>().stopSounds();
                               Navigator.of(context).popUntil((route) => route.isFirst);
                             },
                             child: Text(t.translate('complete.backToHome')),

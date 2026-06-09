@@ -533,11 +533,13 @@ class TimerProvider extends ChangeNotifier {
     return session != null;
   }
 
-  void reset() {
+  void reset({bool cancelAlarms = true}) {
     _delayTimer?.cancel();
     _delayTimer = null;
     _stopTick();
-    _alarmService.cancelAllAlarms();
+    if (cancelAlarms) {
+      _alarmService.cancelAllAlarms();
+    }
     _alarmService.releaseCpuWakeLock();
     _state = TimerState.idle;
     _elapsedSeconds = 0;
@@ -550,6 +552,12 @@ class TimerProvider extends ChangeNotifier {
     _alarmFired = false;
     _nativeAlarmScheduled = false;
     notifyListeners();
+  }
+
+  Future<void> stopSounds() async {
+    await _audioService.stop();
+    await _vibrationService.cancel();
+    await _alarmService.stopEndSound();
   }
 
   /// Called when the native AlarmManager fires (detected via EventChannel).

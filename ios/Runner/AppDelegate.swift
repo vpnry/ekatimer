@@ -183,6 +183,10 @@ fileprivate var _widgetActionData: [String: Any]? = nil
         self.endBackgroundTask()
         result(true)
 
+      case "stopEndSound":
+        self.audioPlayer?.stop()
+        result(true)
+
       case "playEndSound":
         if let args = call.arguments as? [String: Any] {
           let soundPath = args["soundPath"] as? String ?? ""

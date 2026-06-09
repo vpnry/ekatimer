@@ -38,8 +38,6 @@ class _MeditationScreenState extends State<MeditationScreen>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    WakelockPlus.enable();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _applyScreenControl();

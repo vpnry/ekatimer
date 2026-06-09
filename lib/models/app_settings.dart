@@ -19,7 +19,7 @@ class AppSettings {
   const AppSettings({
     this.defaultTimerMode = TimerMode.timed,
     this.defaultDurationMinutes = 60,
-    this.screenControl = 'dim',
+    this.screenControl = 'off',
     this.themeMode = 'system',
     this.locale = 'en',
     this.soundConfig = const SoundConfig(),

@@ -93,6 +93,10 @@ class AlarmSchedulerPlugin {
                             cancelAllAlarms(context)
                             result.success(true)
                         }
+                        "stopEndSound" -> {
+                            releaseMediaPlayer()
+                            result.success(true)
+                        }
                         "playEndSound" -> {
                             val soundPath = call.argument<String>("soundPath") ?: ""
                             playEndSound(context, soundPath)
@@ -392,6 +396,7 @@ class AlarmSchedulerPlugin {
                 Log.e(TAG, "Error releasing media player", e)
             }
             mediaPlayer = null
+            releaseCpuWakeLock()
         }
     }
 }

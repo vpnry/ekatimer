@@ -147,6 +147,17 @@ class AlarmService {
     }
   }
 
+  /// Stops the natively playing end sound.
+  Future<bool> stopEndSound() async {
+    try {
+      await _channel.invokeMethod('stopEndSound');
+      return true;
+    } catch (e) {
+      debugPrint('AlarmService: stopEndSound failed: $e');
+      return false;
+    }
+  }
+
   /// Play the end sound natively (works even when app is in background).
   Future<bool> playEndSound({String soundPath = ''}) async {
     try {

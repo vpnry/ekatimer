@@ -25,7 +25,7 @@ class PersistenceService {
       defaultDurationMinutes:
           p.getInt(AppConstants.prefTimerDuration) ??
           AppConstants.defaultTimerDurationMinutes,
-      screenControl: p.getString(AppConstants.prefScreenControl) ?? 'dim',
+      screenControl: p.getString(AppConstants.prefScreenControl) ?? 'off',
       themeMode: p.getString(AppConstants.prefThemeMode) ?? 'system',
       soundConfig: SoundConfig(
         startSound: p.getString(AppConstants.prefStartSound) ?? 'none',
