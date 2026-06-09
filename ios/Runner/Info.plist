@@ -109,6 +109,8 @@
 	<string>For user to browse and select CSV files for meditation records import/export - not to do with Camera.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>For user to browse and select CSV files for meditation session records import/export - nothing to do with Photos.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>For user to browse and select CSV files for meditation session records import/export - nothing to do with actual Location services.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>For user to browse and select CSV files for meditation session records import/export - nothing to do with Location.</string>
 </dict>
