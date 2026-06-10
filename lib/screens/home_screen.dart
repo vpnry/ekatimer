@@ -1,8 +1,11 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/timer_provider.dart';
 import '../providers/settings_provider.dart';
 import '../models/timer_mode.dart';
+import '../services/background_settings_service.dart';
 import '../services/translation_service.dart';
 import '../theme/colors.dart';
 import '../theme/app_theme.dart';
@@ -37,6 +40,7 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
 
   static const int _sliderMin = 1;
   static const int _sliderMax = 600;
+  bool _batteryWarningShown = false;
 
   @override
   void initState() {
@@ -53,6 +57,60 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
     _initEndAtTime();
     _loadRecentDurations();
     _loadFixedHourPresets();
+    _checkBatteryOnStartup();
+  }
+
+  Future<void> _checkBatteryOnStartup() async {
+    if (_batteryWarningShown || !Platform.isAndroid) return;
+    await Future.delayed(Duration.zero);
+    if (!mounted) return;
+
+    try {
+      final ignored = await BackgroundSettingsService
+          .isBatteryOptimizationIgnored();
+      if (!mounted) return;
+      if (!ignored) {
+        _showBatteryWarningDialog();
+      }
+    } catch (_) {}
+    _batteryWarningShown = true;
+  }
+
+  void _showBatteryWarningDialog() {
+    if (!mounted) return;
+    final t = TranslationService.of(context);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.battery_alert,
+                color: AppColors.warning, size: 24),
+            const SizedBox(width: 10),
+            Expanded(child: Text(t.translate('home.batteryWarning.title'))),
+          ],
+        ),
+        content: Text(t.translate('home.batteryWarning.desc')),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: Text(t.translate('home.batteryWarning.later')),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              BackgroundSettingsService
+                  .requestIgnoreBatteryOptimization();
+            },
+            icon: const Icon(Icons.settings_rounded, size: 18),
+            label: Text(t.translate('home.batteryWarning.fixNow')),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadRecentDurations() async {

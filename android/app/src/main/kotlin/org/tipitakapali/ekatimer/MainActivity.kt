@@ -2,8 +2,14 @@
 
 package org.tipitakapali.ekatimer
 
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
@@ -13,6 +19,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
 
     private val WIDGET_CHANNEL = "org.tipitakapali.ekatimer/widget"
+    private val BATTERY_CHANNEL = "org.tipitakapali.ekatimer/background_settings"
     private var widgetTimerMode: String? = null
     private var widgetTimerDuration: Int? = null
     private var widgetAction: String? = null
@@ -76,6 +83,110 @@ class MainActivity : FlutterActivity() {
                     result.success(data.ifEmpty { null })
                 }
                 else -> result.notImplemented()
+            }
+        }
+
+        // ── Battery / Background Settings channel ─────────────────────
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            BATTERY_CHANNEL
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "isBatteryOptimizationIgnored" -> {
+                    val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+                    result.success(pm.isIgnoringBatteryOptimizations(packageName))
+                }
+                "requestIgnoreBatteryOptimization" -> {
+                    try {
+                        val intent = Intent(
+                            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                            Uri.parse("package:$packageName")
+                        )
+                        startActivity(intent)
+                        result.success(null)
+                    } catch (e: Exception) {
+                        // Fallback: open app details page
+                        try {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.parse("package:$packageName")
+                            }
+                            startActivity(intent)
+                            result.success(null)
+                        } catch (e2: Exception) {
+                            result.error("ACTIVITY_NOT_FOUND", e2.message, null)
+                        }
+                    }
+                }
+                "openOemBackgroundSettings" -> {
+                    try {
+                        startActivity(buildOemIntent())
+                        result.success(null)
+                    } catch (e: Exception) {
+                        // Fallback: open app details page
+                        try {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.parse("package:$packageName")
+                            }
+                            startActivity(intent)
+                            result.success(null)
+                        } catch (e2: Exception) {
+                            result.error("ACTIVITY_NOT_FOUND", e2.message, null)
+                        }
+                    }
+                }
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    private fun buildOemIntent(): Intent {
+        val manufacturer = Build.MANUFACTURER.lowercase()
+        return when {
+            manufacturer.contains("xiaomi") -> {
+                Intent().apply {
+                    component = ComponentName(
+                        "com.miui.securitycenter",
+                        "com.miui.securitycenter.backgroundpermission.PermissionsEditorActivity"
+                    )
+                    putExtra("package_name", packageName)
+                }
+            }
+            manufacturer.contains("huawei") || manufacturer.contains("honor") -> {
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+            }
+            manufacturer.contains("oppo") || manufacturer.contains("realme") -> {
+                Intent().apply {
+                    component = ComponentName(
+                        "com.coloros.safecenter",
+                        "com.coloros.safecenter.startupapp.StartupAppListActivity"
+                    )
+                }
+            }
+            manufacturer.contains("vivo") -> {
+                Intent().apply {
+                    component = ComponentName(
+                        "com.vivo.permissionmanager",
+                        "com.vivo.permissionmanager.activity.SoftPermissionDetailActivity"
+                    )
+                    putExtra("packagename", packageName)
+                }
+            }
+            manufacturer.contains("oneplus") -> {
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+            }
+            manufacturer.contains("samsung") -> {
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+            }
+            else -> {
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
             }
         }
     }
