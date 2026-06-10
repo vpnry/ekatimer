@@ -14,7 +14,7 @@ class AppConstants {
 
   static const String prefTimerMode = 'timer_mode';
   static const String prefTimerDuration = 'timer_duration';
-  static const String prefScreenControl = 'screen_control';
+  static const String prefScreenControl = 'screen_controlmode';
   static const String prefThemeMode = 'theme_mode';
   static const String prefStartSound = 'start_sound';
   static const String prefEndSound = 'end_sound';

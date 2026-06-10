@@ -25,7 +25,7 @@ class _MeditationScreenState extends State<MeditationScreen>
   late Animation<double> _pulseAnimation;
   bool _showStopConfirm = false;
   bool _hasNavigatedToComplete = false;
-  String _currentScreenControl = 'dim';
+  String _currentScreenControl = 'off';
 
   @override
   void initState() {
