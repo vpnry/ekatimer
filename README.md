@@ -119,6 +119,25 @@ ekatimer/
     translations/                      # JSON i18n files
 ```
 
+
+```bash 
+ sips -g pixelWidth -
+g pixelHeight android/app/src/main/res/mipmap-nodpi/launch_ima
+ge.png
+
+~/pnry_dev/ekaTimer_Meditation_Timer/android/app/src/main/res/mipmap-nodpi/launch_image.png
+  pixelWidth: 512
+  pixelHeight: 512
+
+➜  ekaTimer_Meditation_Timer git:(main) SRC="android/app/src/m
+ain/res/mipmap-nodpi/launch_image.png" && for pair in "mdpi:10
+8" "hdpi:162" "xhdpi:216" "xxhdpi:324" "xxxhdpi:432"; do den=$
+{pair%%:*} && sz=${pair##*:} && DST="android/app/src/main/res/
+drawable-${den}/ic_launcher_foreground.png" && echo "Generatin
+g ${den} (${sz}×${sz}) -> ${DST}" && sips -z $sz $sz "$SRC" --
+out "$DST" 2>&1; done
+```
+
 ---
 
 ## Attribution
