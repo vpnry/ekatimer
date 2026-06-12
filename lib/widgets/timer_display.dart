@@ -8,6 +8,7 @@ class TimerDisplay extends StatelessWidget {
   final String? subtitleValue;
   final bool isPaused;
   final double progress;
+  final double size;
 
   const TimerDisplay({
     super.key,
@@ -16,22 +17,35 @@ class TimerDisplay extends StatelessWidget {
     this.subtitleValue,
     this.isPaused = false,
     this.progress = 1.0,
+    this.size = 280,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Scale factor relative to the default 280px size, so inner
+    // spacings and fonts shrink proportionally on smaller circles.
+    final double scale = (size / 280).clamp(0.5, 1.0);
+    final double innerPadding = (24 * scale).clamp(12.0, 24.0);
+    final double timeFontSize = (64 * scale).clamp(32.0, 64.0);
+    final double subtitleFontSize = (14 * scale).clamp(10.0, 14.0);
+    final double badgeFontSize = (12 * scale).clamp(10.0, 12.0);
+    final double gapSmall = (8 * scale).clamp(4.0, 8.0);
+    final double gapLarge = (12 * scale).clamp(6.0, 12.0);
+    final double badgeHPadding = (16 * scale).clamp(10.0, 16.0);
+    final double badgeVPadding = (6 * scale).clamp(4.0, 6.0);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 280,
-          height: 280,
+          width: size,
+          height: size,
           child: Stack(
             alignment: Alignment.center,
             children: [
               Container(
-                width: 280,
-                height: 280,
+                width: size,
+                height: size,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Theme.of(context).brightness == Brightness.dark
@@ -41,8 +55,8 @@ class TimerDisplay extends StatelessWidget {
               ),
               if (progress < 1.0)
                 SizedBox(
-                  width: 280,
-                  height: 280,
+                  width: size,
+                  height: size,
                   child: CustomPaint(
                     painter: _ArcPainter(
                       progress: progress,
@@ -55,7 +69,7 @@ class TimerDisplay extends StatelessWidget {
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(innerPadding),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -67,7 +81,7 @@ class TimerDisplay extends StatelessWidget {
                         child: Text(
                           timeText,
                           style: TextStyle(
-                            fontSize: 64,
+                            fontSize: timeFontSize,
                             fontWeight: FontWeight.w200,
                             color: Theme.of(context).colorScheme.onSurface,
                             letterSpacing: 4,
@@ -78,11 +92,11 @@ class TimerDisplay extends StatelessWidget {
                     if (subtitleLabel != null &&
                         subtitleValue != null &&
                         subtitleValue!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
+                      SizedBox(height: gapSmall),
                       Text(
                         '$subtitleLabel: $subtitleValue',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: subtitleFontSize,
                           color: Theme.of(
                             context,
                           ).colorScheme.onSurface.withAlpha(150),
@@ -90,11 +104,11 @@ class TimerDisplay extends StatelessWidget {
                       ),
                     ],
                     if (isPaused) ...[
-                      const SizedBox(height: 12),
+                      SizedBox(height: gapLarge),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 6,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: badgeHPadding,
+                          vertical: badgeVPadding,
                         ),
                         decoration: BoxDecoration(
                           color: Theme.of(
@@ -107,7 +121,7 @@ class TimerDisplay extends StatelessWidget {
                             context,
                           ).translate('meditation.paused'),
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: badgeFontSize,
                             fontWeight: FontWeight.w600,
                             color: Theme.of(context).colorScheme.primary,
                             letterSpacing: 2,

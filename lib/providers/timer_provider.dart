@@ -343,6 +343,10 @@ class TimerProvider extends ChangeNotifier {
     final isPaused = await PersistenceService.loadActiveSessionIsPaused();
     _state = isPaused ? TimerState.paused : TimerState.running;
 
+    if (isPaused) {
+      _pauseStartTime = DateTime.now();
+    }
+
     final now = DateTime.now();
     _elapsedSeconds = _calculateElapsedSeconds(now);
 
