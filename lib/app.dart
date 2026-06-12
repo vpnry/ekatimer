@@ -50,7 +50,7 @@ class _MeditationTimerAppState extends State<MeditationTimerApp> {
 
     if (!mounted) return;
 
-    _locale = settingsProvider.locale;
+    _locale = TranslationService.resolveLocale(settingsProvider.locale);
 
     switch (settingsProvider.themeMode) {
       case 'light':
@@ -93,7 +93,7 @@ class _MeditationTimerAppState extends State<MeditationTimerApp> {
         }
 
         if (settings.locale != _locale && _translations.isNotEmpty) {
-          _locale = settings.locale;
+          _locale = TranslationService.resolveLocale(settings.locale);
         }
 
         return TranslationService(

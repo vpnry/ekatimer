@@ -1,10 +1,8 @@
-import 'dart:ui' as ui;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_settings.dart';
 import '../models/timer_mode.dart';
 import '../models/sound_config.dart';
 import '../models/vibration_config.dart';
-import '../services/translation_service.dart';
 import '../utils/constants.dart';
 
 class PersistenceService {
@@ -44,7 +42,7 @@ class PersistenceService {
           p.getBool(AppConstants.prefTransparentWidget) ?? false,
       sessionDelaySeconds:
           p.getInt(AppConstants.prefSessionDelay) ?? 0,
-      locale: p.getString(AppConstants.prefLocale) ?? _detectDeviceLocale(),
+      locale: p.getString(AppConstants.prefLocale) ?? 'system',
       reminderEnabled: p.getBool(AppConstants.prefReminderEnabled) ?? false,
       reminderHour: p.getInt(AppConstants.prefReminderHour) ?? 19,
       reminderMinute: p.getInt(AppConstants.prefReminderMinute) ?? 0,
@@ -104,19 +102,6 @@ class PersistenceService {
 
   static Future<void> setIntervalVibration(String vib) async =>
       saveString(AppConstants.prefIntervalVibration, vib);
-
-  /// Detect the device locale and return it if it's in the supported list.
-  /// Falls back to 'en' if the device locale is not supported.
-  static String _detectDeviceLocale() {
-    try {
-      final locale = ui.PlatformDispatcher.instance.locale;
-      final lang = locale.languageCode;
-      if (TranslationService.supportedLanguages.containsKey(lang)) {
-        return lang;
-      }
-    } catch (_) {}
-    return 'en';
-  }
 
   static Future<void> setTransparentWidget(bool enabled) async =>
       saveBool(AppConstants.prefTransparentWidget, enabled);

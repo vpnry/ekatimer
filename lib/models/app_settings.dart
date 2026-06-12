@@ -21,7 +21,7 @@ class AppSettings {
     this.defaultDurationMinutes = 60,
     this.screenControl = 'off',
     this.themeMode = 'system',
-    this.locale = 'en',
+    this.locale = 'system',
     this.soundConfig = const SoundConfig(),
     this.vibrationConfig = const VibrationConfig(),
     this.transparentWidget = true,

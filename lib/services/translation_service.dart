@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 
@@ -24,7 +25,9 @@ class TranslationService extends InheritedWidget {
 
   /// All supported language codes mapped to their native display names.
   /// Matches the language list from the upocal_widget project.
+  /// 'system' is a special value meaning "follow iOS device preferred language".
   static const Map<String, String> supportedLanguages = {
+    'system': 'Auto(System)',
     'en': 'English',
     'vi': 'Tiếng Việt',
     'my': 'မြန်မာ',
@@ -41,6 +44,21 @@ class TranslationService extends InheritedWidget {
     'ru': 'Русский',
     'lo': 'ລາວ',
   };
+
+  /// Resolve the effective locale to use for translations.
+  /// If [locale] is 'system', fall back to the device's preferred locale.
+  /// Returns 'en' if the device locale is not supported.
+  static String resolveLocale(String locale) {
+    if (locale != 'system') return locale;
+    try {
+      final deviceLocale = ui.PlatformDispatcher.instance.locale;
+      final lang = deviceLocale.languageCode;
+      if (supportedLanguages.containsKey(lang)) {
+        return lang;
+      }
+    } catch (_) {}
+    return 'en';
+  }
 
   /// Get the current locale code (e.g. 'en', 'vi', 'de').
   String get locale => _currentLocale;
@@ -67,8 +85,8 @@ class TranslationService extends InheritedWidget {
 
   /// Shorthand to get from context.
   static TranslationService of(BuildContext context) {
-    final result =
-        context.dependOnInheritedWidgetOfExactType<TranslationService>();
+    final result = context
+        .dependOnInheritedWidgetOfExactType<TranslationService>();
     assert(result != null, 'No TranslationService found in context');
     return result!;
   }
@@ -90,11 +108,11 @@ class TranslationService extends InheritedWidget {
     final raw = await rootBundle.loadString(path);
     final decoded = json.decode(raw) as Map<String, dynamic>;
 
-    return decoded.map((locale, value) => MapEntry(
-          locale,
-          (value as Map<String, dynamic>)
-              .map((k, v) => MapEntry(k, v as String)),
-        ));
+    return decoded.map(
+      (locale, value) => MapEntry(
+        locale,
+        (value as Map<String, dynamic>).map((k, v) => MapEntry(k, v as String)),
+      ),
+    );
   }
-
 }

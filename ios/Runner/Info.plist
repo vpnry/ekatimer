@@ -10,6 +10,24 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>vi</string>
+		<string>my</string>
+		<string>si</string>
+		<string>de</string>
+		<string>id</string>
+		<string>zh</string>
+		<string>th</string>
+		<string>hi</string>
+		<string>ne</string>
+		<string>ko</string>
+		<string>ja</string>
+		<string>km</string>
+		<string>ru</string>
+		<string>lo</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>ekaTimer</string>
 	<key>CFBundleExecutable</key>
