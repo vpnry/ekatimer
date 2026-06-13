@@ -44,6 +44,7 @@ flutter:
   assets:
     - assets/sounds/
     - assets/translations/
+    - assets/images/launch_image.png
 
 # dart run flutter_launcher_icons to generate Android app icons
 # for iOS, use Icon Composer better.

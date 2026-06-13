@@ -66,8 +66,8 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
     if (!mounted) return;
 
     try {
-      final ignored = await BackgroundSettingsService
-          .isBatteryOptimizationIgnored();
+      final ignored =
+          await BackgroundSettingsService.isBatteryOptimizationIgnored();
       if (!mounted) return;
       if (!ignored) {
         _showBatteryWarningDialog();
@@ -76,39 +76,127 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
     _batteryWarningShown = true;
   }
 
+  // void _showBatteryWarningDialog() {
+  //   if (!mounted) return;
+  //   final t = TranslationService.of(context);
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (ctx) => AlertDialog(
+  //       title: Row(
+  //         children: [
+  //           Icon(Icons.battery_alert,
+  //               color: AppColors.warning, size: 24),
+  //           const SizedBox(width: 10),
+  //           Expanded(child: Text(t.translate('home.batteryWarning.title'))),
+  //         ],
+  //       ),
+  //       content: Text(t.translate('home.batteryWarning.desc')),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () {
+  //             Navigator.of(ctx).pop();
+  //           },
+  //           child: Text(t.translate('home.batteryWarning.later')),
+  //         ),
+  //         FilledButton.icon(
+  //           onPressed: () {
+  //             Navigator.of(ctx).pop();
+  //             BackgroundSettingsService
+  //                 .requestIgnoreBatteryOptimization();
+  //           },
+  //           icon: const Icon(Icons.settings_rounded, size: 18),
+  //           label: Text(t.translate('home.batteryWarning.fixNow')),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   void _showBatteryWarningDialog() {
     if (!mounted) return;
     final t = TranslationService.of(context);
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.battery_alert,
-                color: AppColors.warning, size: 24),
-            const SizedBox(width: 10),
-            Expanded(child: Text(t.translate('home.batteryWarning.title'))),
-          ],
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Launch image in a rounded circle, like Viber
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withAlpha(20),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Image.asset(
+                  'assets/images/launch_image.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Icon(
+                    Icons.nightlight_round,
+                    size: 52,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Title
+              Text(
+                t.translate('home.batteryWarning.title'),
+                textAlign: TextAlign.center,
+                style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Description
+              Text(
+                t.translate('home.batteryWarning.desc'),
+                textAlign: TextAlign.center,
+                style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondaryLight,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 28),
+              // Allow button (full width, filled)
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    BackgroundSettingsService.requestIgnoreBatteryOptimization();
+                  },
+                  icon: const Icon(Icons.settings_rounded, size: 18),
+                  label: Text(t.translate('home.batteryWarning.fixNow')),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Maybe later (text button, centered)
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(
+                  t.translate('home.batteryWarning.later'),
+                  style: TextStyle(color: AppColors.textSecondaryLight),
+                ),
+              ),
+            ],
+          ),
         ),
-        content: Text(t.translate('home.batteryWarning.desc')),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
-            child: Text(t.translate('home.batteryWarning.later')),
-          ),
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              BackgroundSettingsService
-                  .requestIgnoreBatteryOptimization();
-            },
-            icon: const Icon(Icons.settings_rounded, size: 18),
-            label: Text(t.translate('home.batteryWarning.fixNow')),
-          ),
-        ],
       ),
     );
   }
@@ -241,7 +329,6 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
                   title: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-
                       Text(
                         t.translate('app.splash.subtitle'),
                         style: const TextStyle(fontWeight: FontWeight.w300),
