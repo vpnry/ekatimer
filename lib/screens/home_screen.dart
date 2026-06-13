@@ -139,7 +139,7 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
                 child: Image.asset(
                   'assets/images/launch_image.png',
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Icon(
+                  errorBuilder: (context, error, stackTrace) => Icon(
                     Icons.nightlight_round,
                     size: 52,
                     color: AppColors.primary,
