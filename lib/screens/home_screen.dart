@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/timer_provider.dart';
 import '../providers/settings_provider.dart';
@@ -309,6 +310,16 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
         settingsProvider.themeMode == 'dark' ||
         (settingsProvider.themeMode == 'system' &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+
+    SystemChrome.setSystemUIOverlayStyle(
+      isDark
+          ? SystemUiOverlayStyle.light.copyWith(
+              statusBarColor: Colors.transparent,
+            )
+          : SystemUiOverlayStyle.dark.copyWith(
+              statusBarColor: AppTheme.lightTheme.scaffoldBackgroundColor,
+            ),
+    );
 
     return Theme(
       data: isDark ? AppTheme.darkTheme : AppTheme.lightTheme,

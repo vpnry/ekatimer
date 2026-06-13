@@ -58,6 +58,8 @@ class _AlarmHelpScreenState extends State<AlarmHelpScreen>
   @override
   Widget build(BuildContext context) {
     final t = TranslationService.of(context);
+    final isIos = Platform.isIOS;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(t.translate('alarmHelp.title')),
@@ -68,35 +70,64 @@ class _AlarmHelpScreenState extends State<AlarmHelpScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              t.translate('alarmHelp.intro'),
+              isIos
+                  ? t.translate('alarmHelp.intro.ios')
+                  : t.translate('alarmHelp.intro'),
               style: const TextStyle(fontSize: 14, height: 1.5),
             ),
             const SizedBox(height: 24),
-            _buildBatteryCard(t),
-            const SizedBox(height: 24),
-            _InfoPoint(
-              number: '1',
-              title: t.translate('alarmHelp.notifications'),
-              description: t.translate('alarmHelp.notifications.desc'),
-            ),
-            const SizedBox(height: 20),
-            _InfoPoint(
-              number: '2',
-              title: t.translate('alarmHelp.battery'),
-              description: t.translate('alarmHelp.battery.desc'),
-            ),
-            const SizedBox(height: 20),
-            _InfoPoint(
-              number: '3',
-              title: t.translate('alarmHelp.background'),
-              description: t.translate('alarmHelp.background.desc'),
-            ),
-            const SizedBox(height: 20),
-            _InfoPoint(
-              number: '4',
-              title: t.translate('alarmHelp.volume'),
-              description: t.translate('alarmHelp.volume.desc'),
-            ),
+            if (Platform.isAndroid) _buildBatteryCard(t),
+            if (Platform.isAndroid) const SizedBox(height: 24),
+
+            if (isIos) ...[
+              _InfoPoint(
+                number: '1',
+                title: t.translate('alarmHelp.focus'),
+                description: t.translate('alarmHelp.focus.desc'),
+              ),
+              const SizedBox(height: 20),
+              _InfoPoint(
+                number: '2',
+                title: t.translate('alarmHelp.notifications'),
+                description: t.translate('alarmHelp.notifications.ios.desc'),
+              ),
+              const SizedBox(height: 20),
+              _InfoPoint(
+                number: '3',
+                title: t.translate('alarmHelp.backgroundRefresh'),
+                description: t.translate('alarmHelp.backgroundRefresh.desc'),
+              ),
+              const SizedBox(height: 20),
+              _InfoPoint(
+                number: '4',
+                title: t.translate('alarmHelp.volume'),
+                description: t.translate('alarmHelp.volume.ios.desc'),
+              ),
+            ] else ...[
+              _InfoPoint(
+                number: '1',
+                title: t.translate('alarmHelp.notifications'),
+                description: t.translate('alarmHelp.notifications.desc'),
+              ),
+              const SizedBox(height: 20),
+              _InfoPoint(
+                number: '2',
+                title: t.translate('alarmHelp.battery'),
+                description: t.translate('alarmHelp.battery.desc'),
+              ),
+              const SizedBox(height: 20),
+              _InfoPoint(
+                number: '3',
+                title: t.translate('alarmHelp.background'),
+                description: t.translate('alarmHelp.background.desc'),
+              ),
+              const SizedBox(height: 20),
+              _InfoPoint(
+                number: '4',
+                title: t.translate('alarmHelp.volume'),
+                description: t.translate('alarmHelp.volume.desc'),
+              ),
+            ],
           ],
         ),
       ),
