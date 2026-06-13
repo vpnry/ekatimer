@@ -23,8 +23,9 @@ class PersistenceService {
       defaultDurationMinutes:
           p.getInt(AppConstants.prefTimerDuration) ??
           AppConstants.defaultTimerDurationMinutes,
-      screenControl: p.getString(AppConstants.prefScreenControl) ?? 'off',
-      themeMode: p.getString(AppConstants.prefThemeMode) ?? 'system',
+      screenControl:
+          p.getString(AppConstants.prefScreenControl) ?? 'deviceTimeOut',
+      themeMode: p.getString(AppConstants.prefThemeMode) ?? 'deviceTheme',
       soundConfig: SoundConfig(
         startSound: p.getString(AppConstants.prefStartSound) ?? 'none',
         endSound: p.getString(AppConstants.prefEndSound) ?? 'ThreeBowl',
@@ -38,10 +39,8 @@ class PersistenceService {
         intervalVibration:
             p.getString(AppConstants.prefIntervalVibration) ?? 'none',
       ),
-      transparentWidget:
-          p.getBool(AppConstants.prefTransparentWidget) ?? false,
-      sessionDelaySeconds:
-          p.getInt(AppConstants.prefSessionDelay) ?? 0,
+      transparentWidget: p.getBool(AppConstants.prefTransparentWidget) ?? false,
+      sessionDelaySeconds: p.getInt(AppConstants.prefSessionDelay) ?? 0,
       locale: p.getString(AppConstants.prefLocale) ?? 'system',
       reminderEnabled: p.getBool(AppConstants.prefReminderEnabled) ?? false,
       reminderHour: p.getInt(AppConstants.prefReminderHour) ?? 19,

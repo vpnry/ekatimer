@@ -308,7 +308,7 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
 
     final isDark =
         settingsProvider.themeMode == 'dark' ||
-        (settingsProvider.themeMode == 'system' &&
+        (settingsProvider.themeMode == 'deviceTheme' &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
     SystemChrome.setSystemUIOverlayStyle(

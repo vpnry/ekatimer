@@ -14,8 +14,8 @@ class AppConstants {
 
   static const String prefTimerMode = 'timer_mode';
   static const String prefTimerDuration = 'timer_duration';
-  static const String prefScreenControl = 'screen_controlmode';
-  static const String prefThemeMode = 'theme_mode';
+  static const String prefScreenControl = 'screen_control_preference';
+  static const String prefThemeMode = 'theme_mode_preference';
   static const String prefStartSound = 'start_sound';
   static const String prefEndSound = 'end_sound';
   static const String prefIntervalSound = 'interval_sound';
@@ -81,13 +81,13 @@ class AppConstants {
   };
 
   static const Map<String, String> screenControlLabels = {
+    'deviceTimeOut': 'Device Settings',
     'on': 'Stay On',
     'dim': 'Dim',
-    'off': 'Normal',
   };
 
   static const Map<String, String> themeModeLabels = {
-    'system': 'System',
+    'deviceTheme': 'Device Theme',
     'light': 'Light',
     'dark': 'Dark',
   };

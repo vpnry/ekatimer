@@ -27,7 +27,7 @@ class TranslationService extends InheritedWidget {
   /// Matches the language list from the upocal_widget project.
   /// 'system' is a special value meaning "follow iOS device preferred language".
   static const Map<String, String> supportedLanguages = {
-    'system': 'Auto(System)',
+    'system': 'Device Language',
     'en': 'English',
     'vi': 'Tiếng Việt',
     'my': 'မြန်မာ',

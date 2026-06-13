@@ -19,8 +19,8 @@ class AppSettings {
   const AppSettings({
     this.defaultTimerMode = TimerMode.timed,
     this.defaultDurationMinutes = 60,
-    this.screenControl = 'off',
-    this.themeMode = 'system',
+    this.screenControl = 'deviceTimeOut',
+    this.themeMode = 'deviceTheme',
     this.locale = 'system',
     this.soundConfig = const SoundConfig(),
     this.vibrationConfig = const VibrationConfig(),

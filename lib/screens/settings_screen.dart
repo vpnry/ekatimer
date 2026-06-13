@@ -30,7 +30,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     final isDark =
         settings.themeMode == 'dark' ||
-        (settings.themeMode == 'system' &&
+        (settings.themeMode == 'deviceTheme' &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final theme = isDark ? AppTheme.darkTheme : AppTheme.lightTheme;
 
@@ -150,6 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onMinutesChanged: (m) => settings.setIntervalMinutes(m),
               onSoundChanged: (s) => settings.setIntervalSound(s),
             ),
+
             // _buildIntervalTile(
             //   context,
             //   icon: Icons.notifications_outlined,
@@ -169,7 +170,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             //   onMinutesChanged: (m) => settings.setBellIntervalMinutes(m),
             //   onSoundChanged: (s) => settings.setBellSound(s),
             // ),
-
             const Divider(),
 
             _buildSectionHeader(
@@ -228,11 +228,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: t.translate('settings.screenDuring'),
               subtitle:
                   AppConstants.screenControlLabels[settings.screenControl] ??
-                  t.translate('settings.dim'),
+                  t.translate('settings.deviceTimeOut'),
               trailing: DropdownButton<String>(
                 value: settings.screenControl,
                 underline: const SizedBox(),
-                items: ['on', 'dim', 'off'].map((control) {
+                items: ['deviceTimeOut', 'dim', 'on'].map((control) {
                   return DropdownMenuItem(
                     value: control,
                     child: Text(
@@ -251,11 +251,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: t.translate('settings.theme'),
               subtitle:
                   AppConstants.themeModeLabels[settings.themeMode] ??
-                  t.translate('settings.system'),
+                  t.translate('settings.deviceTheme'),
               trailing: DropdownButton<String>(
                 value: settings.themeMode,
                 underline: const SizedBox(),
-                items: ['system', 'light', 'dark'].map((mode) {
+                items: ['deviceTheme', 'light', 'dark'].map((mode) {
                   return DropdownMenuItem(
                     value: mode,
                     child: Text(AppConstants.themeModeLabels[mode] ?? mode),
@@ -492,7 +492,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
             child: Row(
               children: [
-                Icon(Icons.info_outline, size: 14, color: Colors.orange.shade400),
+                Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: Colors.orange.shade400,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(

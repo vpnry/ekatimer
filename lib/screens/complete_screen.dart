@@ -72,8 +72,9 @@ class _CompleteScreenState extends State<CompleteScreen>
     final sessionProvider = context.watch<SessionProvider>();
     final settingsProvider = context.watch<SettingsProvider>();
 
-    final isDark = settingsProvider.themeMode == 'dark' ||
-        (settingsProvider.themeMode == 'system' &&
+    final isDark =
+        settingsProvider.themeMode == 'dark' ||
+        (settingsProvider.themeMode == 'deviceTheme' &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final theme = isDark ? AppTheme.darkTheme : AppTheme.lightTheme;
 
@@ -96,10 +97,7 @@ class _CompleteScreenState extends State<CompleteScreen>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: AppColors.success.withAlpha(30),
-                        border: Border.all(
-                          color: AppColors.success,
-                          width: 3,
-                        ),
+                        border: Border.all(color: AppColors.success, width: 3),
                       ),
                       child: const Icon(
                         Icons.check_rounded,
@@ -113,12 +111,15 @@ class _CompleteScreenState extends State<CompleteScreen>
                   FadeTransition(
                     opacity: _opacityAnimation,
                     child: Column(
-                      children: [                          SizedBox(
+                      children: [
+                        SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
                               context.read<TimerProvider>().stopSounds();
-                              Navigator.of(context).popUntil((route) => route.isFirst);
+                              Navigator.of(
+                                context,
+                              ).popUntil((route) => route.isFirst);
                             },
                             child: Text(t.translate('complete.backToHome')),
                           ),
@@ -132,7 +133,8 @@ class _CompleteScreenState extends State<CompleteScreen>
                             vertical: 20,
                           ),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).brightness == Brightness.dark
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
                                 ? Colors.white.withAlpha(15)
                                 : Colors.black.withAlpha(8),
                             borderRadius: BorderRadius.circular(20),
@@ -141,19 +143,17 @@ class _CompleteScreenState extends State<CompleteScreen>
                             children: [
                               Text(
                                 t.translate('complete.meditationTime'),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
+                                style: Theme.of(context).textTheme.bodyLarge
                                     ?.copyWith(
                                       color: AppColors.textSecondaryLight,
                                     ),
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                TimeUtils.formatDuration(widget.durationSeconds),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineLarge
+                                TimeUtils.formatDuration(
+                                  widget.durationSeconds,
+                                ),
+                                style: Theme.of(context).textTheme.headlineLarge
                                     ?.copyWith(
                                       fontWeight: FontWeight.w300,
                                       fontSize: 48,
@@ -164,10 +164,9 @@ class _CompleteScreenState extends State<CompleteScreen>
                               const SizedBox(height: 4),
                               Text(
                                 TimeUtils.formatDurationReadable(
-                                    widget.durationSeconds),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
+                                  widget.durationSeconds,
+                                ),
+                                style: Theme.of(context).textTheme.bodyLarge
                                     ?.copyWith(
                                       color: AppColors.textSecondaryLight,
                                     ),
@@ -182,9 +181,7 @@ class _CompleteScreenState extends State<CompleteScreen>
                           widget.isTimedOut
                               ? t.translate('complete.sessionComplete')
                               : t.translate('complete.sessionEnded'),
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.w300,
                                 letterSpacing: 1,
@@ -216,15 +213,16 @@ class _CompleteScreenState extends State<CompleteScreen>
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                t.translate('complete.daysStreak', args: {
-                                  'count': '${sessionProvider.currentStreak}',
-                                  'unit': sessionProvider.currentStreak == 1
-                                      ? t.translate('stats.day')
-                                      : t.translate('stats.days'),
-                                }),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
+                                t.translate(
+                                  'complete.daysStreak',
+                                  args: {
+                                    'count': '${sessionProvider.currentStreak}',
+                                    'unit': sessionProvider.currentStreak == 1
+                                        ? t.translate('stats.day')
+                                        : t.translate('stats.days'),
+                                  },
+                                ),
+                                style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(
                                       color: AppColors.accent,
                                       fontWeight: FontWeight.w600,
@@ -249,14 +247,16 @@ class _CompleteScreenState extends State<CompleteScreen>
                               context,
                               label: t.translate('complete.totalTime'),
                               value: TimeUtils.formatDurationReadable(
-                                  sessionProvider.totalDurationSeconds),
+                                sessionProvider.totalDurationSeconds,
+                              ),
                               icon: Icons.access_time,
                             ),
                             const SizedBox(width: 12),
                             _buildMiniStat(
                               context,
                               label: t.translate('complete.bestStreak'),
-                              value: '${sessionProvider.longestStreak} ${t.translate('stats.days')}',
+                              value:
+                                  '${sessionProvider.longestStreak} ${t.translate('stats.days')}',
                               icon: Icons.emoji_events,
                             ),
                           ],
@@ -294,15 +294,15 @@ class _CompleteScreenState extends State<CompleteScreen>
             const SizedBox(height: 6),
             Text(
               value,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 14,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontSize: 14),
             ),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: 11,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontSize: 11),
             ),
           ],
         ),

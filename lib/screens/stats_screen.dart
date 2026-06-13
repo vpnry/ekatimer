@@ -85,7 +85,7 @@ class _StatsScreenState extends State<StatsScreen>
 
     final isDark =
         settingsProvider.themeMode == 'dark' ||
-        (settingsProvider.themeMode == 'system' &&
+        (settingsProvider.themeMode == 'deviceTheme' &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final theme = isDark ? AppTheme.darkTheme : AppTheme.lightTheme;
 
@@ -225,9 +225,16 @@ class _StatsScreenState extends State<StatsScreen>
             ),
           ),
           const SizedBox(height: 24),
-          Text(t.translate('stats.thisPeriod'), style: theme.textTheme.titleLarge),
+          Text(
+            t.translate('stats.thisPeriod'),
+            style: theme.textTheme.titleLarge,
+          ),
           const SizedBox(height: 12),
-          _buildPeriodRow(context, t.translate('stats.today'), provider.todayDurationSeconds),
+          _buildPeriodRow(
+            context,
+            t.translate('stats.today'),
+            provider.todayDurationSeconds,
+          ),
           _buildPeriodRow(
             context,
             t.translate('stats.thisWeek'),
@@ -316,14 +323,22 @@ class _StatsScreenState extends State<StatsScreen>
     // Filter sessions by date range
     final filteredSessions = provider.sessions
         .where((s) {
-          final d = DateTime(s.startTime.year, s.startTime.month, s.startTime.day);
+          final d = DateTime(
+            s.startTime.year,
+            s.startTime.month,
+            s.startTime.day,
+          );
           return d.isAtSameMomentAs(_sessionStartDate) ||
-                 d.isAfter(_sessionStartDate);
+              d.isAfter(_sessionStartDate);
         })
         .where((s) {
-          final d = DateTime(s.startTime.year, s.startTime.month, s.startTime.day);
+          final d = DateTime(
+            s.startTime.year,
+            s.startTime.month,
+            s.startTime.day,
+          );
           return d.isAtSameMomentAs(_sessionEndDate) ||
-                 d.isBefore(_sessionEndDate);
+              d.isBefore(_sessionEndDate);
         })
         .toList();
 
@@ -341,17 +356,17 @@ class _StatsScreenState extends State<StatsScreen>
             Text(
               t.translate('history.noSessions'),
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w300,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300),
             ),
             const SizedBox(height: 8),
             Text(
               t.translate('history.noSessionsDesc'),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textSecondaryLight,
-                  ),
+                color: AppColors.textSecondaryLight,
+              ),
             ),
           ],
         ),
@@ -384,8 +399,10 @@ class _StatsScreenState extends State<StatsScreen>
               final sessions = groupedSessions[dateKey]!;
               final date = DateTime.parse(dateKey);
 
-              final totalSeconds =
-                  sessions.fold(0, (sum, s) => sum + s.durationSeconds);
+              final totalSeconds = sessions.fold(
+                0,
+                (sum, s) => sum + s.durationSeconds,
+              );
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,15 +413,15 @@ class _StatsScreenState extends State<StatsScreen>
                       children: [
                         Text(
                           TimeUtils.formatDate(date),
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withAlpha(20),
                             borderRadius: BorderRadius.circular(8),
@@ -456,8 +473,10 @@ class _StatsScreenState extends State<StatsScreen>
     final t = TranslationService.of(context);
     final theme = Theme.of(context);
 
-    final filteredTotalSeconds =
-        filteredSessions.fold(0, (sum, s) => sum + s.durationSeconds);
+    final filteredTotalSeconds = filteredSessions.fold(
+      0,
+      (sum, s) => sum + s.durationSeconds,
+    );
     final sessionCount = filteredSessions.length;
 
     return Padding(
@@ -477,7 +496,11 @@ class _StatsScreenState extends State<StatsScreen>
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 6),
-                child: Icon(Icons.arrow_forward, size: 16, color: AppColors.textSecondaryLight),
+                child: Icon(
+                  Icons.arrow_forward,
+                  size: 16,
+                  color: AppColors.textSecondaryLight,
+                ),
               ),
               _buildDateChip(
                 context,
@@ -505,15 +528,23 @@ class _StatsScreenState extends State<StatsScreen>
                 icon: const Icon(Icons.copy_rounded, size: 20),
                 tooltip: t.translate('stats.copy'),
                 onPressed: () => _copySessionsToClipboard(
-                    context, filteredSessions, _sessionStartDate, _sessionEndDate),
+                  context,
+                  filteredSessions,
+                  _sessionStartDate,
+                  _sessionEndDate,
+                ),
                 visualDensity: VisualDensity.compact,
               ),
               // ── Export button ──
               IconButton(
                 icon: const Icon(Icons.file_upload_outlined, size: 20),
                 tooltip: t.translate('stats.exportFiltered'),
-                onPressed:
-                    () => _exportFilteredSessions(context, filteredSessions, _sessionStartDate, _sessionEndDate),
+                onPressed: () => _exportFilteredSessions(
+                  context,
+                  filteredSessions,
+                  _sessionStartDate,
+                  _sessionEndDate,
+                ),
                 visualDensity: VisualDensity.compact,
               ),
             ],
@@ -542,7 +573,11 @@ class _StatsScreenState extends State<StatsScreen>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondaryLight),
+            Icon(
+              Icons.calendar_today,
+              size: 14,
+              color: AppColors.textSecondaryLight,
+            ),
             const SizedBox(width: 4),
             Text(
               '$label ${_formatShortDate(date)}',
@@ -614,8 +649,7 @@ class _StatsScreenState extends State<StatsScreen>
     int totalSeconds = 0;
     for (final dateKey in sortedDates) {
       final daySessions = grouped[dateKey]!;
-      final dayTotal =
-          daySessions.fold(0, (sum, s) => sum + s.durationSeconds);
+      final dayTotal = daySessions.fold(0, (sum, s) => sum + s.durationSeconds);
       totalSeconds += dayTotal;
 
       buffer.writeln(
@@ -656,7 +690,8 @@ class _StatsScreenState extends State<StatsScreen>
     if (sessions.isEmpty) return;
 
     try {
-      final filename = 'ekatimer_${_formatShortDate(startDate)}_${_formatShortDate(endDate)}.csv';
+      final filename =
+          'ekatimer_${_formatShortDate(startDate)}_${_formatShortDate(endDate)}.csv';
       await CsvDataService.exportSessionsToCsv(sessions, filename: filename);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -672,7 +707,9 @@ class _StatsScreenState extends State<StatsScreen>
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${TranslationService.of(context).translate('stats.exportFailed')}: $e'),
+            content: Text(
+              '${TranslationService.of(context).translate('stats.exportFailed')}: $e',
+            ),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppColors.error,
           ),
@@ -848,7 +885,9 @@ class _StatsScreenState extends State<StatsScreen>
     // Group data into rows of itemsPerRow each.
     final rows = <List<dynamic>>[];
     for (int i = 0; i < data.length; i += itemsPerRow) {
-      final end = (i + itemsPerRow < data.length) ? i + itemsPerRow : data.length;
+      final end = (i + itemsPerRow < data.length)
+          ? i + itemsPerRow
+          : data.length;
       rows.add(data.sublist(i, end));
     }
 
@@ -867,7 +906,9 @@ class _StatsScreenState extends State<StatsScreen>
               ...rowData.map((point) {
                 final int seconds = point.durationSeconds;
                 final bool hasValue = seconds > 0;
-                final height = maxSeconds > 0 ? (seconds / maxSeconds) * 100.0 : 0.0;
+                final height = maxSeconds > 0
+                    ? (seconds / maxSeconds) * 100.0
+                    : 0.0;
 
                 return Expanded(
                   child: Padding(
@@ -897,9 +938,9 @@ class _StatsScreenState extends State<StatsScreen>
                           decoration: BoxDecoration(
                             color: hasValue
                                 ? barColor
-                                : Theme.of(context).dividerColor.withValues(
-                                    alpha: 0.15,
-                                  ),
+                                : Theme.of(
+                                    context,
+                                  ).dividerColor.withValues(alpha: 0.15),
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(6),
                             ),
@@ -912,10 +953,11 @@ class _StatsScreenState extends State<StatsScreen>
                             fit: BoxFit.scaleDown,
                             child: Text(
                               point.label,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                               maxLines: 1,
                             ),
                           ),
@@ -927,7 +969,10 @@ class _StatsScreenState extends State<StatsScreen>
               }),
               // Invisible spacers for partial last row so bar widths stay consistent.
               if (rowData.length < itemsPerRow)
-                ...List.generate(itemsPerRow - rowData.length, (_) => const Expanded(child: SizedBox.shrink())),
+                ...List.generate(
+                  itemsPerRow - rowData.length,
+                  (_) => const Expanded(child: SizedBox.shrink()),
+                ),
             ],
           ),
         );

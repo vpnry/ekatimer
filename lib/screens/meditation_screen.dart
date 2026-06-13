@@ -25,7 +25,7 @@ class _MeditationScreenState extends State<MeditationScreen>
   late Animation<double> _pulseAnimation;
   bool _showStopConfirm = false;
   bool _hasNavigatedToComplete = false;
-  String _currentScreenControl = 'off';
+  String _currentScreenControl = 'deviceTimeOut';
 
   @override
   void initState() {
@@ -94,7 +94,7 @@ class _MeditationScreenState extends State<MeditationScreen>
 
     final isDark =
         settingsProvider.themeMode == 'dark' ||
-        (settingsProvider.themeMode == 'system' &&
+        (settingsProvider.themeMode == 'deviceTheme' &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final theme = isDark ? AppTheme.darkTheme : AppTheme.lightTheme;
 
@@ -406,7 +406,8 @@ class _MeditationScreenState extends State<MeditationScreen>
     SessionProvider sessionProvider,
     double progress,
   ) {
-    final bool hasEndAt = timerProvider.timerMode == TimerMode.endAt &&
+    final bool hasEndAt =
+        timerProvider.timerMode == TimerMode.endAt &&
         timerProvider.endTime != null;
 
     return Column(
@@ -416,9 +417,8 @@ class _MeditationScreenState extends State<MeditationScreen>
           child: LayoutBuilder(
             builder: (context, constraints) {
               // Account for ~40px of endAt text below the circle if visible
-              final availableHeight = constraints.maxHeight -
-                  (hasEndAt ? 40.0 : 0.0) -
-                  16.0;
+              final availableHeight =
+                  constraints.maxHeight - (hasEndAt ? 40.0 : 0.0) - 16.0;
               // Use up to 180px, but shrink to fit smaller screens
               final circleSize = availableHeight.clamp(120.0, 180.0);
 
@@ -464,8 +464,7 @@ class _MeditationScreenState extends State<MeditationScreen>
                       child: _buildControlButton(
                         icon: Icons.stop_rounded,
                         label: t.translate('meditation.stop'),
-                        onTap: () =>
-                            setState(() => _showStopConfirm = true),
+                        onTap: () => setState(() => _showStopConfirm = true),
                         isDestructive: true,
                         large: true,
                       ),
@@ -480,34 +479,20 @@ class _MeditationScreenState extends State<MeditationScreen>
     );
   }
 
-  Widget _buildTopBar(
-    TranslationService t,
-    TimerProvider timerProvider,
-  ) {
+  Widget _buildTopBar(TranslationService t, TimerProvider timerProvider) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 6,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withAlpha(30),
+              color: Theme.of(context).colorScheme.primary.withAlpha(30),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              _modeLabel(
-                t,
-                timerProvider.timerMode,
-              ).toUpperCase(),
+              _modeLabel(t, timerProvider.timerMode).toUpperCase(),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.primary,
                 fontSize: 12,
@@ -525,18 +510,14 @@ class _MeditationScreenState extends State<MeditationScreen>
                     : _currentScreenControl == 'dim'
                     ? Icons.brightness_low
                     : Icons.brightness_auto,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withAlpha(120),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(120),
                 size: 16,
               ),
               const SizedBox(width: 8),
               Text(
                 TimeUtils.formatTimeOfDay(DateTime.now()),
                 style: TextStyle(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withAlpha(180),
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
                   fontSize: 14,
                 ),
               ),
@@ -557,10 +538,7 @@ class _MeditationScreenState extends State<MeditationScreen>
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
-        return Transform.scale(
-          scale: _pulseAnimation.value,
-          child: child,
-        );
+        return Transform.scale(scale: _pulseAnimation.value, child: child);
       },
       child: TimerDisplay(
         timeText: timerProvider.displayTime,
@@ -583,10 +561,7 @@ class _MeditationScreenState extends State<MeditationScreen>
     );
   }
 
-  Widget _buildEndAtText(
-    TranslationService t,
-    TimerProvider timerProvider,
-  ) {
+  Widget _buildEndAtText(TranslationService t, TimerProvider timerProvider) {
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Text(
@@ -594,9 +569,7 @@ class _MeditationScreenState extends State<MeditationScreen>
         style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: Theme.of(
-            context,
-          ).colorScheme.onSurface.withAlpha(180),
+          color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
         ),
       ),
     );
@@ -607,10 +580,7 @@ class _MeditationScreenState extends State<MeditationScreen>
     TimerProvider timerProvider,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 32,
-        vertical: 24,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
