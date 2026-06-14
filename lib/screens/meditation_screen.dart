@@ -1,3 +1,4 @@
+import 'dart:async'; // Required for the inactivity Timer
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +28,13 @@ class _MeditationScreenState extends State<MeditationScreen>
   bool _hasNavigatedToComplete = false;
   String _currentScreenControl = 'deviceTimeOut';
 
+  // Inactivity dimming configurations
+  Timer? _dimTimer;
+  bool _isAutoDimmed = false;
+  static const Duration _autoDimDelay = Duration(
+    seconds: 8,
+  ); // Time before visual dimming starts
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +49,7 @@ class _MeditationScreenState extends State<MeditationScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _applyScreenControl();
+      _resetDimTimer();
     });
 
     SystemChrome.setSystemUIOverlayStyle(
@@ -54,6 +63,7 @@ class _MeditationScreenState extends State<MeditationScreen>
   @override
   void dispose() {
     _pulseController.dispose();
+    _dimTimer?.cancel();
     WakelockPlus.disable();
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -80,6 +90,37 @@ class _MeditationScreenState extends State<MeditationScreen>
 
   bool get _showDimOverlay => _currentScreenControl == 'dim';
 
+  /// Starts or resets the auto-dim countdown timer
+  void _resetDimTimer() {
+    _dimTimer?.cancel();
+    if (!mounted) return;
+
+    final timerProvider = context.read<TimerProvider>();
+
+    // Start inactivity countdown only when timer is running and 'deviceTimeOut' is selected
+    if (_currentScreenControl == 'deviceTimeOut' &&
+        !_showStopConfirm &&
+        timerProvider.state == TimerState.running &&
+        !_isAutoDimmed) {
+      _dimTimer = Timer(_autoDimDelay, () {
+        if (mounted) {
+          setState(() {
+            _isAutoDimmed = true;
+          });
+        }
+      });
+    }
+  }
+
+  /// Safe translation helper returning local fallback if key is missing
+  String _getTapToWakeText(TranslationService t) {
+    final translated = t.translate('meditation.tapToWake');
+    if (translated == 'meditation.tapToWake') {
+      return 'Screen is dim now,\nthen turn off based on your device settings';
+    }
+    return translated;
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = TranslationService.of(context);
@@ -90,6 +131,18 @@ class _MeditationScreenState extends State<MeditationScreen>
     if (_currentScreenControl != settingsProvider.screenControl) {
       _currentScreenControl = settingsProvider.screenControl;
       _applyWakelock(_currentScreenControl);
+      _resetDimTimer();
+    }
+
+    // Force wake if the timer state is no longer running (paused, completed, etc.)
+    if (timerProvider.state != TimerState.running && _isAutoDimmed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _isAutoDimmed = false;
+          });
+        }
+      });
     }
 
     final isDark =
@@ -128,128 +181,186 @@ class _MeditationScreenState extends State<MeditationScreen>
       data: theme,
       child: Scaffold(
         backgroundColor: theme.colorScheme.surface,
-        body: Stack(
-          children: [
-            SafeArea(
-              child: isLandscape
-                  ? _buildLandscapeContent(
-                      t,
-                      timerProvider,
-                      sessionProvider,
-                      progress,
-                    )
-                  : _buildPortraitContent(
-                      t,
-                      timerProvider,
-                      sessionProvider,
-                      progress,
-                    ),
-            ),
-
-            if (_showDimOverlay)
-              IgnorePointer(
-                child: AnimatedOpacity(
-                  opacity: 0.45,
-                  duration: const Duration(milliseconds: 800),
-                  child: Container(color: Colors.black),
-                ),
+        body: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (_) {
+            _resetDimTimer(); // Reset dimming countdown on physical screen contact
+          },
+          child: Stack(
+            children: [
+              SafeArea(
+                child: isLandscape
+                    ? _buildLandscapeContent(
+                        t,
+                        timerProvider,
+                        sessionProvider,
+                        progress,
+                      )
+                    : _buildPortraitContent(
+                        t,
+                        timerProvider,
+                        sessionProvider,
+                        progress,
+                      ),
               ),
 
-            if (_showStopConfirm)
-              Container(
-                color: Colors.black54,
-                child: Center(
-                  child: Container(
-                    margin: const EdgeInsets.all(32),
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.shadow.withAlpha(40),
-                          blurRadius: 20,
-                          spreadRadius: 5,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.info_outline_rounded,
-                          size: 48,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          t.translate('meditation.endSession'),
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          t.translate(
-                            'meditation.meditatingFor',
-                            args: {
-                              'duration': TimeUtils.formatDurationReadable(
-                                timerProvider.elapsedSeconds,
+              if (_showDimOverlay)
+                IgnorePointer(
+                  child: AnimatedOpacity(
+                    opacity: 0.45,
+                    duration: const Duration(milliseconds: 800),
+                    child: Container(color: Colors.black),
+                  ),
+                ),
+
+              // Interactive Auto-Dimming Shield Overlay (deviceTimeOut setting dimming)
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: !_isAutoDimmed,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isAutoDimmed = false;
+                      });
+                      _resetDimTimer();
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 600),
+                      color: _isAutoDimmed
+                          ? Colors.black.withValues(alpha: 0.96)
+                          : Colors.transparent,
+                      child: Center(
+                        child: AnimatedOpacity(
+                          opacity: _isAutoDimmed ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 600),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.nights_stay_outlined,
+                                color: Colors.white.withValues(alpha: 0.3),
+                                size: 36,
                               ),
-                            },
+                              const SizedBox(height: 12),
+                              Text(
+                                _getTapToWakeText(t),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w300,
+                                  letterSpacing: 1.2,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
                           ),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge,
                         ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextButton(
-                                onPressed: () {
-                                  setState(() => _showStopConfirm = false);
-                                },
-                                child: Text(
-                                  t.translate('meditation.continue'),
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  setState(() => _showStopConfirm = false);
-                                  await timerProvider.stopSession(
-                                    completed: false,
-                                  );
-                                  if (context.mounted) {
-                                    _navigateToComplete(context);
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(
-                                    context,
-                                  ).colorScheme.error,
-                                  foregroundColor: Theme.of(
-                                    context,
-                                  ).colorScheme.onError,
-                                ),
-                                child: Text(t.translate('meditation.end')),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-          ],
+
+              if (_showStopConfirm)
+                Container(
+                  color: Colors.black54,
+                  child: Center(
+                    child: Container(
+                      margin: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.shadow.withAlpha(40),
+                            blurRadius: 20,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.info_outline_rounded,
+                            size: 48,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            t.translate('meditation.endSession'),
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            t.translate(
+                              'meditation.meditatingFor',
+                              args: {
+                                'duration': TimeUtils.formatDurationReadable(
+                                  timerProvider.elapsedSeconds,
+                                ),
+                              },
+                            ),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _showStopConfirm = false;
+                                    });
+                                    _resetDimTimer();
+                                  },
+                                  child: Text(
+                                    t.translate('meditation.continue'),
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    setState(() => _showStopConfirm = false);
+                                    await timerProvider.stopSession(
+                                      completed: false,
+                                    );
+                                    if (context.mounted) {
+                                      _navigateToComplete(context);
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.error,
+                                    foregroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.onError,
+                                  ),
+                                  child: Text(t.translate('meditation.end')),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -438,6 +549,7 @@ class _MeditationScreenState extends State<MeditationScreen>
                         onTap: () {
                           if (timerProvider.state == TimerState.paused) {
                             timerProvider.resumeSession();
+                            _resetDimTimer();
                           } else {
                             timerProvider.pauseSession();
                           }
@@ -464,7 +576,13 @@ class _MeditationScreenState extends State<MeditationScreen>
                       child: _buildControlButton(
                         icon: Icons.stop_rounded,
                         label: t.translate('meditation.stop'),
-                        onTap: () => setState(() => _showStopConfirm = true),
+                        onTap: () {
+                          setState(() {
+                            _showStopConfirm = true;
+                            _isAutoDimmed = false;
+                          });
+                          _dimTimer?.cancel();
+                        },
                         isDestructive: true,
                         large: true,
                       ),
@@ -594,6 +712,7 @@ class _MeditationScreenState extends State<MeditationScreen>
             onTap: () {
               if (timerProvider.state == TimerState.paused) {
                 timerProvider.resumeSession();
+                _resetDimTimer();
               } else {
                 timerProvider.pauseSession();
               }
@@ -603,7 +722,13 @@ class _MeditationScreenState extends State<MeditationScreen>
           _buildControlButton(
             icon: Icons.stop_rounded,
             label: t.translate('meditation.stop'),
-            onTap: () => setState(() => _showStopConfirm = true),
+            onTap: () {
+              setState(() {
+                _showStopConfirm = true;
+                _isAutoDimmed = false;
+              });
+              _dimTimer?.cancel();
+            },
             isDestructive: true,
           ),
         ],
