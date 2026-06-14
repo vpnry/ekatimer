@@ -8,6 +8,7 @@ class SessionCard extends StatelessWidget {
   final DateTime startTime;
   final int durationSeconds;
   final bool completed;
+  final String? notes;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
   final VoidCallback? onEdit;
@@ -18,6 +19,7 @@ class SessionCard extends StatelessWidget {
     required this.startTime,
     required this.durationSeconds,
     this.completed = true,
+    this.notes,
     this.onTap,
     this.onDelete,
     this.onEdit,
@@ -66,6 +68,31 @@ class SessionCard extends StatelessWidget {
                         color: theme.colorScheme.onSurface.withAlpha(150),
                       ),
                     ),
+                    if (notes != null && notes!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.notes_rounded,
+                            size: 14,
+                            color: theme.colorScheme.onSurface.withAlpha(100),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              notes!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withAlpha(180),
+                                fontStyle: FontStyle.italic,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -8,6 +8,9 @@ import '../theme/colors.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
 import '../models/meditation_session.dart';
+import 'dart:convert';
+import 'dart:math';
+import 'package:flutter/services.dart';
 import '../widgets/edit_session_dialog.dart';
 
 class CompleteScreen extends StatefulWidget {
@@ -31,6 +34,8 @@ class _CompleteScreenState extends State<CompleteScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
+
+  String _motivation = '';
 
   @override
   void initState() {
@@ -60,8 +65,41 @@ class _CompleteScreenState extends State<CompleteScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<TimerProvider>().reset(cancelAlarms: false);
+        _loadMotivation();
       }
     });
+  }
+
+  Future<void> _loadMotivation() async {
+    try {
+      final locale = TranslationService.of(context).locale;
+      final data = await rootBundle.loadString('assets/quotes/quotes.json');
+      final allQuotes = json.decode(data) as Map<String, dynamic>;
+
+      // Try current locale first; fall back to English if empty/missing
+      final localeQuotes =
+          (allQuotes[locale] as List?)?.cast<String>() ?? [];
+      final quotes = localeQuotes.isNotEmpty
+          ? localeQuotes
+          : ((allQuotes['en'] as List?)?.cast<String>() ?? []);
+
+      if (quotes.isNotEmpty && mounted) {
+        setState(() {
+          _motivation = quotes[Random().nextInt(quotes.length)];
+        });
+      } else if (mounted) {
+        setState(() {
+          _motivation = 'TipitakaPali.org';
+        });
+      }
+    } catch (_) {
+      // Fallback if quotes.json not found
+      if (mounted) {
+        setState(() {
+          _motivation = 'TipitakaPali.org';
+        });
+      }
+    }
   }
 
   @override
@@ -73,7 +111,6 @@ class _CompleteScreenState extends State<CompleteScreen>
   @override
   Widget build(BuildContext context) {
     final t = TranslationService.of(context);
-    final sessionProvider = context.watch<SessionProvider>();
     final settingsProvider = context.watch<SettingsProvider>();
 
     final isDark =
@@ -89,7 +126,7 @@ class _CompleteScreenState extends State<CompleteScreen>
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.fromLTRB(32, 8, 32, 32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -207,74 +244,42 @@ class _CompleteScreenState extends State<CompleteScreen>
                         const SizedBox(height: 24),
 
                         Container(
+                          width: double.infinity,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 16,
+                            horizontal: 20,
+                            vertical: 18,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.accent.withAlpha(20),
+                            color: AppColors.primary.withAlpha(10),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: AppColors.accent.withAlpha(50),
+                              color: AppColors.primary.withAlpha(30),
                             ),
                           ),
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.local_fire_department_rounded,
-                                color: AppColors.accent,
-                                size: 28,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                t.translate(
-                                  'complete.daysStreak',
-                                  args: {
-                                    'count': '${sessionProvider.currentStreak}',
-                                    'unit': sessionProvider.currentStreak == 1
-                                        ? t.translate('stats.day')
-                                        : t.translate('stats.days'),
-                                  },
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Icon(
+                                  Icons.format_quote_rounded,
+                                  size: 20,
+                                  color: AppColors.primary.withAlpha(100),
                                 ),
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(
-                                      color: AppColors.accent,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  _motivation,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        height: 1.4,
+                                      ),
+                                ),
                               ),
                             ],
                           ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        Row(
-                          children: [
-                            _buildMiniStat(
-                              context,
-                              label: t.translate('complete.sessions'),
-                              value: '${sessionProvider.totalSessions}',
-                              icon: Icons.self_improvement,
-                            ),
-                            const SizedBox(width: 12),
-                            _buildMiniStat(
-                              context,
-                              label: t.translate('complete.totalTime'),
-                              value: TimeUtils.formatDurationReadable(
-                                sessionProvider.totalDurationSeconds,
-                              ),
-                              icon: Icons.access_time,
-                            ),
-                            const SizedBox(width: 12),
-                            _buildMiniStat(
-                              context,
-                              label: t.translate('complete.bestStreak'),
-                              value:
-                                  '${sessionProvider.longestStreak} ${t.translate('stats.days')}',
-                              icon: Icons.emoji_events,
-                            ),
-                          ],
                         ),
                       ],
                     ),
@@ -309,7 +314,9 @@ class _CompleteScreenState extends State<CompleteScreen>
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(TranslationService.of(context).translate('editSession.notFound')),
+            content: Text(
+              TranslationService.of(context).translate('editSession.notFound'),
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -323,49 +330,14 @@ class _CompleteScreenState extends State<CompleteScreen>
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(TranslationService.of(context).translate('editSession.updated')),
+            content: Text(
+              TranslationService.of(context).translate('editSession.updated'),
+            ),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.green,
           ),
         );
       }
     }
-  }
-
-  Widget _buildMiniStat(
-    BuildContext context, {
-    required String label,
-    required String value,
-    required IconData icon,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white.withAlpha(10)
-              : Colors.black.withAlpha(5),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 20, color: AppColors.primaryLight),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontSize: 14),
-            ),
-            Text(
-              label,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontSize: 11),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

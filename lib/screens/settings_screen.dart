@@ -306,6 +306,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
+            // DIY Convert guide tile
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: isDark
+                        ? Colors.white.withAlpha(25)
+                        : Colors.black.withAlpha(12),
+                  ),
+                ),
+                child: ListTile(
+                  leading: Icon(Icons.info_outline, color: AppColors.primary),
+                  title: Text(
+                    t.translate('settings.diyConvertTitle'),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    t.translate('settings.diyConvertSubtitle'),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _showCsvFormatGuide(context),
+                ),
+              ),
+            ),
+
             const Divider(),
 
             _buildSectionHeader(context, t.translate('settings.about')),
@@ -756,6 +788,90 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  void _showCsvFormatGuide(BuildContext context) {
+    final t = TranslationService.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(t.translate('settings.diyConvertTitle')),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                t.translate('settings.diyConvertDesc'),
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Here is the ekaTimer CSV format:',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              _buildSectionLabel(context, 'Column format'),
+              const SizedBox(height: 4),
+              const Text(
+                'id — Auto-generated UUID for each session\n'
+                'startTime — Session start time (ISO 8601)\n'
+                'endTime — Session end time (ISO 8601)\n'
+                'durationSeconds — Actual duration in seconds\n'
+                'targetDurationSeconds — Planned duration in seconds (same as durationSeconds)\n'
+                'timerMode — Timer mode: timed | endAt | unlimited\n'
+                'completed — 1 session completed as planned | 0 stopped early\n'
+                'notes — Optional session notes',
+                style: TextStyle(fontSize: 12, height: 1.6),
+              ),
+              const SizedBox(height: 16),
+              _buildSectionLabel(context, 'Example CSV row'),
+              const SizedBox(height: 4),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: SelectableText(
+                  'id,startTime,endTime,durationSeconds,targetDurationSeconds,timerMode,completed,notes\n'
+                  'fb004417-34f3-405c-8bdf-4340d5c44347,2015-01-01T00:00:00.000000,2015-01-01T02:12:52.000000,7972,7972,timed,1,good session\n'
+                  'b9b8a49a-e9ed-4799-895e-bdb4db6776ad,2015-01-01T04:30:07.000000,2015-01-01T05:14:09.000000,2642,2642,timed,1,nice session',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                    height: 1.5,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                t.translate('settings.diyConvertHint'),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'You can use AI to help you. Here is an example converter:',
+                style: TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 4),
+              SelectableText(
+                'https://vpnry.github.io/ekatimer/convert.html',
+                style: TextStyle(fontSize: 12, color: AppColors.primary),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: Navigator.of(context).pop,
+            child: Text(t.translate('settings.close')),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showLicenseAttributionDialog(BuildContext context) {
     final t = TranslationService.of(context);
     showDialog(
@@ -819,7 +935,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // ── Audio Attributions ────────────────────────────────
               _buildSectionLabel(context, 'Audio Attributions'),
               const SizedBox(height: 16),
-              _buildSectionLabel(context, 'Free Dhamma Distribution'),
+              _buildSectionLabel(context, 'Free Dhamma Gifts'),
               const SizedBox(height: 8),
               const Text(
                 'Sadhu.wav',
@@ -827,7 +943,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const Text('Author: Ven. Pa-Auk Tawya Sayadaw'),
               const Text(
-                'Adapted from the Pa-Auk Forest Monastery\'s Chanting Audio - Free Distribution.',
+                'Adapted from the Pa-Auk Forest Monastery\'s Chanting Audio - Dhamma Gift.',
                 style: TextStyle(fontSize: 13),
               ),
               const SizedBox(height: 20),
@@ -890,7 +1006,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
     );
   }
-
 }
 
 class _LicenseBox extends StatelessWidget {

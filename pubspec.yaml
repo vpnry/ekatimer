@@ -1,7 +1,7 @@
 name: ekatimer
 description: "A beautiful modern meditation timer app for iOS and Android."
 publish_to: 'none'
-version: 1.0.15+15
+version: 1.0.16+16
 
 environment:
   sdk: ^3.12.0
@@ -44,6 +44,7 @@ flutter:
   assets:
     - assets/sounds/
     - assets/translations/
+    - assets/quotes/
     - assets/images/launch_image.png
 
 # dart run flutter_launcher_icons to generate Android app icons

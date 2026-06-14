@@ -2,7 +2,7 @@ class AppConstants {
   AppConstants._();
 
   static const String appName = 'ekaTimer';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.16';
 
   static const int defaultTimerDurationMinutes = 60;
   static const int minTimerDurationMinutes = 1;
@@ -23,7 +23,8 @@ class AppConstants {
   static const String prefStartVibration = 'start_vibration';
   static const String prefEndVibration = 'end_vibration';
   static const String prefIntervalVibration = 'interval_vibration';
-  static const String prefVibrationIntervalMinutes = 'vibration_interval_minutes';
+  static const String prefVibrationIntervalMinutes =
+      'vibration_interval_minutes';
   static const String prefLocale = 'locale';
   static const String prefSessionDelay = 'session_delay';
   static const String prefSessionVolume = 'session_volume';

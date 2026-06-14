@@ -40,6 +40,8 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
   late int _durationHours;
   late int _durationMinutes;
   late int _durationSeconds;
+  late String _notes;
+  late TextEditingController _notesController;
 
   late FixedExtentScrollController _startHourCtrl;
   late FixedExtentScrollController _startMinuteCtrl;
@@ -70,6 +72,11 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
     _durationHours = session.durationSeconds ~/ 3600;
     _durationMinutes = (session.durationSeconds % 3600) ~/ 60;
     _durationSeconds = session.durationSeconds % 60;
+    _notes = session.notes ?? '';
+    _notesController = TextEditingController(text: _notes);
+    _notesController.addListener(() {
+      _notes = _notesController.text;
+    });
 
     _startHourCtrl = FixedExtentScrollController(initialItem: _startHour);
     _startMinuteCtrl = FixedExtentScrollController(initialItem: _startMinute);
@@ -90,6 +97,7 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
 
   @override
   void dispose() {
+    _notesController.dispose();
     _startHourCtrl.dispose();
     _startMinuteCtrl.dispose();
     _startSecondCtrl.dispose();
@@ -114,7 +122,8 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
           top: 16,
           bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         ),
-        child: Column(
+        child: SingleChildScrollView(
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -235,6 +244,12 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
             ),
             const SizedBox(height: 20),
 
+            // ── Notes ──
+            _buildSectionLabel(context, t.translate('editSession.notes')),
+            const SizedBox(height: 8),
+            _buildNotesField(context),
+            const SizedBox(height: 24),
+
             // ── Buttons ──
             Row(
               children: [
@@ -256,6 +271,35 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
             ),
           ],
         ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotesField(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final t = TranslationService.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withAlpha(10) : Colors.black.withAlpha(5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? Colors.white.withAlpha(20) : Colors.black.withAlpha(12),
+        ),
+      ),          child: TextField(
+        controller: _notesController,
+        maxLines: 3,
+        minLines: 1,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: InputDecoration(
+          hintText: t.translate('editSession.notesHint'),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          hintStyle: TextStyle(
+            color: isDark ? Colors.white.withAlpha(60) : Colors.black.withAlpha(60),
+          ),
+        ),
+        style: const TextStyle(fontSize: 15),
       ),
     );
   }
@@ -466,6 +510,7 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
       startTime: newStartTime,
       endTime: newEndTime,
       durationSeconds: totalDurationSeconds,
+      notes: _notes.trim().isNotEmpty ? _notes.trim() : null,
     );
 
     Navigator.of(context).pop(updated);

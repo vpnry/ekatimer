@@ -469,6 +469,7 @@ class _StatsScreenState extends State<StatsScreen>
                       startTime: session.startTime,
                       durationSeconds: session.durationSeconds,
                       completed: session.completed,
+                      notes: session.notes,
                       onDelete: () => _confirmDelete(context, session.id),
                       onEdit: () => _onEditSession(context, session),
                     ),
