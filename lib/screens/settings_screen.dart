@@ -43,7 +43,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         body: ListView(
           padding: const EdgeInsets.symmetric(vertical: 8),
           children: [
-            _buildSectionHeader(context, t.translate('settings.timerSettings')),
+            _buildSectionHeader(
+              context,
+              t.translate('settings.timerModeSettings'),
+            ),
             _buildListTile(
               context,
               icon: Icons.timer_outlined,
@@ -96,7 +99,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const Divider(),
 
-            _buildSectionHeader(context, t.translate('settings.soundSettings')),
+            _buildSectionHeader(
+              context,
+              t.translate('settings.soundVibrationSettings'),
+            ),
             _buildListTile(
               context,
               icon: Icons.volume_up_outlined,
@@ -123,16 +129,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: VibrationPicker(
+                label: t.translate('settings.startVibration'),
+                currentVibration: settings.vibrationConfig.startVibration,
+                onChanged: (vib) => settings.setStartVibration(vib),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: SoundPicker(
                 label: t.translate('settings.endSound'),
                 currentSound: settings.soundConfig.endSound,
                 onChanged: (sound) => settings.setEndSound(sound),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: VibrationPicker(
+                label: t.translate('settings.endVibration'),
+                currentVibration: settings.vibrationConfig.endVibration,
+                onChanged: (vib) => settings.setEndVibration(vib),
+              ),
+            ),
 
             const Divider(),
 
-            _buildSectionHeader(context, t.translate('settings.intervalBell')),
+            _buildSectionHeader(
+              context,
+              t.translate('settings.intervalBellVibration'),
+            ),
             _buildIntervalTile(
               context,
               icon: Icons.repeat_one_outlined,
@@ -150,56 +175,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onMinutesChanged: (m) => settings.setIntervalMinutes(m),
               onSoundChanged: (s) => settings.setIntervalSound(s),
             ),
-
-            // _buildIntervalTile(
-            //   context,
-            //   icon: Icons.notifications_outlined,
-            //   title: t.translate('settings.mindfulnessBell'),
-            //   subtitle: settings.soundConfig.bellIntervalMinutes > 0
-            //       ? t.translate(
-            //           'settings.everyMin',
-            //           args: {
-            //             'minutes':
-            //                 '${settings.soundConfig.bellIntervalMinutes}',
-            //           },
-            //         )
-            //       : t.translate('settings.disabled'),
-            //   value: settings.soundConfig.bellIntervalMinutes,
-            //   maxValue: 60,
-            //   soundValue: settings.soundConfig.bellSound,
-            //   onMinutesChanged: (m) => settings.setBellIntervalMinutes(m),
-            //   onSoundChanged: (s) => settings.setBellSound(s),
-            // ),
+            _buildIntervalVibrationTile(context, settings: settings),
             const Divider(),
-
-            _buildSectionHeader(
-              context,
-              t.translate('settings.vibrationSettings'),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: VibrationPicker(
-                label: t.translate('settings.startVibration'),
-                currentVibration: settings.vibrationConfig.startVibration,
-                onChanged: (vib) => settings.setStartVibration(vib),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: VibrationPicker(
-                label: t.translate('settings.endVibration'),
-                currentVibration: settings.vibrationConfig.endVibration,
-                onChanged: (vib) => settings.setEndVibration(vib),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: VibrationPicker(
-                label: t.translate('settings.intervalVibration'),
-                currentVibration: settings.vibrationConfig.intervalVibration,
-                onChanged: (vib) => settings.setIntervalVibration(vib),
-              ),
-            ),
 
             const Divider(),
 
@@ -470,8 +447,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(width: 4),
               const Text('min'),
               const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.check, size: 20),
+                tooltip: 'Apply',
+                onPressed: () {
+                  FocusScope.of(context).unfocus();
+                  final text = controller.text;
+                  final parsed = int.tryParse(text);
+                  if (parsed != null && parsed > 0) {
+                    onMinutesChanged(parsed);
+                  } else {
+                    onMinutesChanged(0);
+                    controller.clear();
+                  }
+                },
+              ),
               TextButton(
-                onPressed: () => onMinutesChanged(0),
+                onPressed: () {
+                  FocusScope.of(context).unfocus();
+                  onMinutesChanged(0);
+                  controller.clear();
+                },
                 child: const Text('Off'),
               ),
             ],
@@ -488,6 +484,128 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         // Show warning when interval is large (>60 min) — likely to exceed session duration
         if (value > 60)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: Colors.orange.shade400,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    t.translate('settings.intervalTooLongWarning'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.orange.shade400,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildIntervalVibrationTile(
+    BuildContext context, {
+    required SettingsProvider settings,
+  }) {
+    final t = TranslationService.of(context);
+    final config = settings.vibrationConfig;
+    final controller = TextEditingController(
+      text: config.intervalMinutes > 0 ? '${config.intervalMinutes}' : '',
+    );
+    return ExpansionTile(
+      leading: const Icon(Icons.vibration),
+      title: Text(t.translate('settings.intervalVibration')),
+      subtitle: Text(
+        config.intervalMinutes > 0
+            ? t.translate(
+                'settings.everyMin',
+                args: {'minutes': '${config.intervalMinutes}'},
+              )
+            : t.translate('settings.disabled'),
+        style: const TextStyle(fontSize: 13),
+      ),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: Row(
+            children: [
+              const Text('Every'),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 64,
+                child: TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    hintText: 'Off',
+                    hintStyle: const TextStyle(fontSize: 14),
+                  ),
+                  style: const TextStyle(fontSize: 14),
+                  onSubmitted: (text) {
+                    final parsed = int.tryParse(text);
+                    if (parsed != null && parsed > 0) {
+                      settings.setVibrationIntervalMinutes(parsed);
+                    } else {
+                      settings.setVibrationIntervalMinutes(0);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Text('min'),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.check, size: 20),
+                tooltip: 'Apply',
+                onPressed: () {
+                  FocusScope.of(context).unfocus();
+                  final text = controller.text;
+                  final parsed = int.tryParse(text);
+                  if (parsed != null && parsed > 0) {
+                    settings.setVibrationIntervalMinutes(parsed);
+                  } else {
+                    settings.setVibrationIntervalMinutes(0);
+                    controller.clear();
+                  }
+                },
+              ),
+              TextButton(
+                onPressed: () {
+                  FocusScope.of(context).unfocus();
+                  settings.setVibrationIntervalMinutes(0);
+                  controller.clear();
+                },
+                child: const Text('Off'),
+              ),
+            ],
+          ),
+        ),
+        if (config.intervalMinutes > 0)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: VibrationPicker(
+              label: t.translate('settings.intervalVibration'),
+              currentVibration: config.intervalVibration,
+              onChanged: (vib) => settings.setIntervalVibration(vib),
+            ),
+          ),
+        if (config.intervalMinutes > 60)
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
             child: Row(

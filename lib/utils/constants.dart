@@ -23,6 +23,7 @@ class AppConstants {
   static const String prefStartVibration = 'start_vibration';
   static const String prefEndVibration = 'end_vibration';
   static const String prefIntervalVibration = 'interval_vibration';
+  static const String prefVibrationIntervalMinutes = 'vibration_interval_minutes';
   static const String prefReminderEnabled = 'reminder_enabled';
   static const String prefReminderHour = 'reminder_hour';
   static const String prefReminderMinute = 'reminder_minute';

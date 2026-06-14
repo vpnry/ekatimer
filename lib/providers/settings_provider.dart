@@ -110,6 +110,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setVibrationIntervalMinutes(int minutes) async {
+    final updated =
+        _settings.vibrationConfig.copyWith(intervalMinutes: minutes);
+    _settings = _settings.copyWith(vibrationConfig: updated);
+    await PersistenceService.setVibrationIntervalMinutes(minutes);
+    notifyListeners();
+  }
+
   Future<void> setReminderEnabled(bool enabled) async {
     _settings = _settings.copyWith(reminderEnabled: enabled);
     await PersistenceService.setReminderEnabled(enabled);

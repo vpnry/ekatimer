@@ -34,8 +34,10 @@ class TimerProvider extends ChangeNotifier {
   String? _currentSessionId;
 
   int _lastIntervalMinute = -1;
+  int _lastVibrationIntervalMinute = -1;
 
   int intervalMinutes = 0;
+  int vibrationIntervalMinutes = 0;
   String startSound = 'none';
   String endSound = 'ThreeBowl';
   String intervalSound = 'Bowl';
@@ -145,6 +147,7 @@ class TimerProvider extends ChangeNotifier {
     _elapsedSeconds = 0;
     _pauseDurationSeconds = 0;
     _lastIntervalMinute = -1;
+    _lastVibrationIntervalMinute = -1;
     _alarmFired = false;
 
     switch (_timerMode) {
@@ -315,6 +318,7 @@ class TimerProvider extends ChangeNotifier {
     final settings = await PersistenceService.loadSettings();
     sessionDelaySeconds = settings.sessionDelaySeconds;
     intervalMinutes = settings.soundConfig.intervalMinutes;
+    vibrationIntervalMinutes = settings.vibrationConfig.intervalMinutes;
     startSound = settings.soundConfig.startSound;
     endSound = settings.soundConfig.endSound;
     intervalSound = settings.soundConfig.intervalSound;
@@ -446,8 +450,6 @@ class TimerProvider extends ChangeNotifier {
   }
 
   void _checkIntervalSounds(DateTime now) {
-    if (intervalMinutes <= 0) return;
-
     final currentMinute = (_elapsedSeconds ~/ 60);
 
     // Do not play interval sounds at the very start (minute 0).
@@ -455,18 +457,31 @@ class TimerProvider extends ChangeNotifier {
     // (e.g., a 3-minute interval first plays at minute 3, not minute 0).
     if (currentMinute == 0) return;
 
-    // Auto-disable: interval won't fire if it's >= total session duration (timed mode).
-    if (_timerMode == TimerMode.timed && _durationMinutes > 0 &&
-        intervalMinutes >= _durationMinutes) {
-      return;
+    // Check sound interval
+    if (intervalMinutes > 0) {
+      // Auto-disable: interval won't fire if it's >= total session duration (timed mode).
+      if (!(_timerMode == TimerMode.timed && _durationMinutes > 0 &&
+          intervalMinutes >= _durationMinutes)) {
+        final interval = currentMinute ~/ intervalMinutes;
+        if (interval > _lastIntervalMinute &&
+            currentMinute % intervalMinutes == 0) {
+          _lastIntervalMinute = interval;
+          _audioService.playSound(intervalSound);
+        }
+      }
     }
 
-    final interval = currentMinute ~/ intervalMinutes;
-    if (interval > _lastIntervalMinute &&
-        currentMinute % intervalMinutes == 0) {
-      _lastIntervalMinute = interval;
-      _audioService.playSound(intervalSound);
-      _vibrationService.vibrate(intervalVibration);
+    // Check vibration interval
+    if (vibrationIntervalMinutes > 0) {
+      if (!(_timerMode == TimerMode.timed && _durationMinutes > 0 &&
+          vibrationIntervalMinutes >= _durationMinutes)) {
+        final vibInterval = currentMinute ~/ vibrationIntervalMinutes;
+        if (vibInterval > _lastVibrationIntervalMinute &&
+            currentMinute % vibrationIntervalMinutes == 0) {
+          _lastVibrationIntervalMinute = vibInterval;
+          _vibrationService.vibrate(intervalVibration);
+        }
+      }
     }
   }
 
@@ -523,6 +538,7 @@ class TimerProvider extends ChangeNotifier {
     _delayRemainingSeconds = 0;
     _currentSessionId = null;
     _lastIntervalMinute = -1;
+    _lastVibrationIntervalMinute = -1;
     _alarmFired = false;
     notifyListeners();
   }
