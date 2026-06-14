@@ -10,6 +10,7 @@ import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
 import '../models/meditation_session.dart';
 import '../widgets/session_card.dart';
+import '../widgets/edit_session_dialog.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -454,6 +455,7 @@ class _StatsScreenState extends State<StatsScreen>
                       durationSeconds: session.durationSeconds,
                       completed: session.completed,
                       onDelete: () => _confirmDelete(context, session.id),
+                      onEdit: () => _onEditSession(context, session),
                     ),
                   ),
                 ],
@@ -712,6 +714,25 @@ class _StatsScreenState extends State<StatsScreen>
             ),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _onEditSession(
+    BuildContext context,
+    MeditationSession session,
+  ) async {
+    final updated = await showEditSessionDialog(context, session);
+    if (updated != null && context.mounted) {
+      await context.read<SessionProvider>().updateSession(updated);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(TranslationService.of(context).translate('editSession.updated')),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.green,
           ),
         );
       }

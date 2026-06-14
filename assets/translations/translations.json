@@ -37,7 +37,7 @@
     "complete.backToHome": "Back to Home",
     "complete.meditationTime": "Meditation Time",
     "complete.sessionComplete": "Session Complete",
-    "complete.sessionEnded": "Session Ended",
+    "complete.sessionEnded": "Session Ended Early",
     "complete.sessions": "Sessions",
     "complete.totalTime": "Total Time",
     "complete.bestStreak": "Best Streak",
@@ -193,7 +193,13 @@
     "editPresets.desc": "Set the values for the 4 fixed hour buttons (in minutes):",
     "editPresets.fillAll": "Please fill in all 4 fields.",
     "editPresets.invalidRange": "Each value must be a number between 1 and 100800.",
-    "editPresets.minutesFor": "Minutes for {hour}h"
+    "editPresets.minutesFor": "Minutes for {hour}h",
+    "editSession.title": "Edit Session Record",
+    "editSession.date": "Date",
+    "editSession.startTime": "Start Time",
+    "editSession.duration": "Duration",
+    "editSession.updated": "Session updated",
+    "editSession.notFound": "Session not found"
   },
   "vi": {
     "app.title": "ekaTimer",

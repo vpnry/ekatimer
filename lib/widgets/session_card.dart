@@ -10,6 +10,7 @@ class SessionCard extends StatelessWidget {
   final bool completed;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
 
   const SessionCard({
     super.key,
@@ -19,6 +20,7 @@ class SessionCard extends StatelessWidget {
     this.completed = true,
     this.onTap,
     this.onDelete,
+    this.onEdit,
   });
 
   @override
@@ -83,15 +85,29 @@ class SessionCard extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (onDelete != null)
-                IconButton(
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: 20,
-                    color: theme.colorScheme.onSurface.withAlpha(100),
-                  ),
-                  onPressed: onDelete,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (onEdit != null)
+                    IconButton(
+                      icon: Icon(
+                        Icons.edit_outlined,
+                        size: 20,
+                        color: theme.colorScheme.onSurface.withAlpha(100),
+                      ),
+                      onPressed: onEdit,
+                    ),
+                  if (onDelete != null)
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_outline,
+                        size: 20,
+                        color: theme.colorScheme.onSurface.withAlpha(100),
+                      ),
+                      onPressed: onDelete,
+                    ),
+                ],
+              ),
             ],
           ),
         ),

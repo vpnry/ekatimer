@@ -7,15 +7,19 @@ import '../providers/settings_provider.dart';
 import '../theme/colors.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
+import '../models/meditation_session.dart';
+import '../widgets/edit_session_dialog.dart';
 
 class CompleteScreen extends StatefulWidget {
   final int durationSeconds;
   final bool isTimedOut;
+  final String? sessionId;
 
   const CompleteScreen({
     super.key,
     required this.durationSeconds,
     this.isTimedOut = true,
+    this.sessionId,
   });
 
   @override
@@ -189,6 +193,17 @@ class _CompleteScreenState extends State<CompleteScreen>
                               ),
                         ),
 
+                        const SizedBox(height: 16),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _onEditSession(context),
+                            icon: const Icon(Icons.edit_outlined, size: 18),
+                            label: Text(t.translate('editSession.title')),
+                          ),
+                        ),
+
                         const SizedBox(height: 24),
 
                         Container(
@@ -232,7 +247,7 @@ class _CompleteScreenState extends State<CompleteScreen>
                           ),
                         ),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
 
                         Row(
                           children: [
@@ -271,6 +286,50 @@ class _CompleteScreenState extends State<CompleteScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _onEditSession(BuildContext context) async {
+    final sessionProvider = context.read<SessionProvider>();
+
+    // Find the session to edit — use sessionId if provided, otherwise use the most recent session.
+    MeditationSession? session;
+    if (widget.sessionId != null) {
+      for (final s in sessionProvider.sessions) {
+        if (s.id == widget.sessionId) {
+          session = s;
+          break;
+        }
+      }
+    }
+    session ??= sessionProvider.sessions.isNotEmpty
+        ? sessionProvider.sessions.first
+        : null;
+
+    if (session == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(TranslationService.of(context).translate('editSession.notFound')),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    final updated = await showEditSessionDialog(context, session);
+    if (updated != null && context.mounted) {
+      await sessionProvider.updateSession(updated);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(TranslationService.of(context).translate('editSession.updated')),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildMiniStat(

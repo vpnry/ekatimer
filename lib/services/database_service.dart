@@ -175,6 +175,16 @@ class DatabaseService {
     return longest;
   }
 
+  static Future<void> updateSession(MeditationSession session) async {
+    final db = await database;
+    await db.update(
+      'sessions',
+      session.toMap(),
+      where: 'id = ?',
+      whereArgs: [session.id],
+    );
+  }
+
   static Future<void> deleteSession(String id) async {
     final db = await database;
     await db.delete('sessions', where: 'id = ?', whereArgs: [id]);

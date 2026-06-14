@@ -760,6 +760,7 @@ class _MeditationScreenState extends State<MeditationScreen>
           builder: (_) => CompleteScreen(
             durationSeconds: timerProvider.elapsedSeconds,
             isTimedOut: timerProvider.state == TimerState.completed,
+            sessionId: timerProvider.currentSessionId,
           ),
         ),
       );

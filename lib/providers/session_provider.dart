@@ -89,6 +89,11 @@ class SessionProvider extends ChangeNotifier {
     return DatabaseService.getSessionsInRange(start, end);
   }
 
+  Future<void> updateSession(MeditationSession session) async {
+    await DatabaseService.updateSession(session);
+    await loadSessions();
+  }
+
   Future<void> deleteSession(String id) async {
     await DatabaseService.deleteSession(id);
     await loadSessions();
