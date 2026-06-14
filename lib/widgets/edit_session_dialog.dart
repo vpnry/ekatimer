@@ -5,6 +5,7 @@ import '../models/meditation_session.dart';
 import '../services/translation_service.dart';
 import '../theme/colors.dart';
 import '../theme/app_theme.dart';
+import '../services/database_service.dart';
 
 /// Shows a modal bottom sheet to edit a session's date, start time, and duration.
 Future<MeditationSession?> showEditSessionDialog(
@@ -47,6 +48,11 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
   late FixedExtentScrollController _durationMinuteCtrl;
   late FixedExtentScrollController _durationSecondCtrl;
 
+  bool _showStartTimePicker = false;
+  bool _showDurationPicker = false;
+
+  DateTime? _pickerFirstDate;
+
   @override
   void initState() {
     super.initState();
@@ -71,6 +77,15 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
     _durationHourCtrl = FixedExtentScrollController(initialItem: _durationHours);
     _durationMinuteCtrl = FixedExtentScrollController(initialItem: _durationMinutes);
     _durationSecondCtrl = FixedExtentScrollController(initialItem: _durationSeconds);
+
+    // Pre-fetch the oldest session timestamp for the date picker min date.
+    DatabaseService.getOldestSessionTimestamp().then((timestamp) {
+      if (timestamp != null && mounted) {
+        setState(() {
+          _pickerFirstDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        });
+      }
+    });
   }
 
   @override
@@ -135,36 +150,56 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
 
             // ── Start Time ──
             _buildSectionLabel(context, t.translate('editSession.startTime')),
-            const SizedBox(height: 2),
-            _buildLabelRow(context, 'HH', 'mm', 'ss'),
-            _buildWheelRow(context, [
-              _buildWheel(context, 0, 23, _startHourCtrl, (v) {
-                setState(() => _startHour = v);
-              }),
-              _buildWheel(context, 0, 59, _startMinuteCtrl, (v) {
-                setState(() => _startMinute = v);
-              }),
-              _buildWheel(context, 0, 59, _startSecondCtrl, (v) {
-                setState(() => _startSecond = v);
-              }),
-            ]),
+            const SizedBox(height: 8),
+            _buildExpandableTimeTile(
+              context,
+              value:
+                  '${_startHour.toString().padLeft(2, '0')}:${_startMinute.toString().padLeft(2, '0')}:${_startSecond.toString().padLeft(2, '0')}',
+              isExpanded: _showStartTimePicker,
+              onTap: () => setState(() => _showStartTimePicker = !_showStartTimePicker),
+            ),
+            if (_showStartTimePicker) ...[
+              const SizedBox(height: 8),
+              _buildLabelRow(context, 'HH', 'mm', 'ss'),
+              _buildWheelRow(context, [
+                _buildWheel(context, 0, 23, _startHourCtrl, (v) {
+                  setState(() => _startHour = v);
+                }),
+                _buildWheel(context, 0, 59, _startMinuteCtrl, (v) {
+                  setState(() => _startMinute = v);
+                }),
+                _buildWheel(context, 0, 59, _startSecondCtrl, (v) {
+                  setState(() => _startSecond = v);
+                }),
+              ]),
+            ],
             const SizedBox(height: 20),
 
             // ── Duration ──
             _buildSectionLabel(context, t.translate('editSession.duration')),
-            const SizedBox(height: 2),
-            _buildLabelRow(context, 'HH', 'mm', 'ss'),
-            _buildWheelRow(context, [
-              _buildWheel(context, 0, 99, _durationHourCtrl, (v) {
-                setState(() => _durationHours = v);
-              }),
-              _buildWheel(context, 0, 59, _durationMinuteCtrl, (v) {
-                setState(() => _durationMinutes = v);
-              }),
-              _buildWheel(context, 0, 59, _durationSecondCtrl, (v) {
-                setState(() => _durationSeconds = v);
-              }),
-            ]),
+            const SizedBox(height: 8),
+            _buildExpandableTimeTile(
+              context,
+              value:
+                  '${_durationHours.toString().padLeft(2, '0')}:${_durationMinutes.toString().padLeft(2, '0')}:${_durationSeconds.toString().padLeft(2, '0')}',
+              isExpanded: _showDurationPicker,
+              onTap: () => setState(() => _showDurationPicker = !_showDurationPicker),
+            ),
+            if (_showDurationPicker) ...[
+              const SizedBox(height: 8),
+              _buildLabelRow(context, 'HH', 'mm', 'ss'),
+              _buildWheelRow(context, [
+                _buildWheel(context, 0, 99, _durationHourCtrl, (v) {
+                  setState(() => _durationHours = v);
+                }),
+                _buildWheel(context, 0, 59, _durationMinuteCtrl, (v) {
+                  setState(() => _durationMinutes = v);
+                }),
+                _buildWheel(context, 0, 59, _durationSecondCtrl, (v) {
+                  setState(() => _durationSeconds = v);
+                }),
+              ]),
+            ],
             const SizedBox(height: 24),
 
             // ── Preview ──
@@ -231,6 +266,52 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
         fontWeight: FontWeight.w600,
         color: AppColors.primary,
+      ),
+    );
+  }
+
+  Widget _buildExpandableTimeTile(
+    BuildContext context, {
+    required String value,
+    required bool isExpanded,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withAlpha(10) : Colors.black.withAlpha(5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isExpanded ? AppColors.primary.withAlpha(80) : (isDark ? Colors.white.withAlpha(20) : Colors.black.withAlpha(12)),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.access_time,
+              size: 20,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                value,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, letterSpacing: 2),
+              ),
+            ),
+            AnimatedRotation(
+              turns: isExpanded ? 0.5 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondaryLight),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -340,7 +421,7 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime(2000),
+      firstDate: _pickerFirstDate ?? DateTime(2000),
       lastDate: DateTime.now(),
       builder: (ctx, child) {
         return Theme(

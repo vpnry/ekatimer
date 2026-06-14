@@ -11,6 +11,7 @@ import '../utils/time_utils.dart';
 import '../models/meditation_session.dart';
 import '../widgets/session_card.dart';
 import '../widgets/edit_session_dialog.dart';
+import '../services/database_service.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -25,6 +26,8 @@ class _StatsScreenState extends State<StatsScreen>
 
   late DateTime _sessionStartDate;
   late DateTime _sessionEndDate;
+
+  DateTime? _oldestDate;
 
   // Make futures nullable to avoid LateInitializationError during first build.
   Future<List<dynamic>>? _weeklyDataFuture;
@@ -53,6 +56,18 @@ class _StatsScreenState extends State<StatsScreen>
       _weeklyDataFuture = loadFuture.then((_) => provider.getWeeklyData());
       _monthlyDataFuture = loadFuture.then((_) => provider.getMonthlyData());
       _yearlyDataFuture = loadFuture.then((_) => provider.getYearlyData());
+    });
+
+    _refreshOldestDate();
+  }
+
+  void _refreshOldestDate() {
+    DatabaseService.getOldestSessionTimestamp().then((timestamp) {
+      if (timestamp != null && mounted) {
+        setState(() {
+          _oldestDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        });
+      }
     });
   }
 
@@ -600,7 +615,7 @@ class _StatsScreenState extends State<StatsScreen>
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: DateTime(2015),
+      firstDate: _oldestDate ?? DateTime(2000),
       lastDate: DateTime.now().add(const Duration(days: 1)),
     );
     if (picked != null) {
@@ -727,6 +742,7 @@ class _StatsScreenState extends State<StatsScreen>
     final updated = await showEditSessionDialog(context, session);
     if (updated != null && context.mounted) {
       await context.read<SessionProvider>().updateSession(updated);
+      _refreshOldestDate();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -754,6 +770,7 @@ class _StatsScreenState extends State<StatsScreen>
           TextButton(
             onPressed: () {
               context.read<SessionProvider>().deleteSession(id);
+              _refreshOldestDate();
               Navigator.of(ctx).pop();
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
