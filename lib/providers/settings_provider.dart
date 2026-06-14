@@ -4,7 +4,6 @@ import '../models/timer_mode.dart';
 import '../models/sound_config.dart';
 import '../models/vibration_config.dart';
 import '../services/persistence_service.dart';
-import '../services/notification_service.dart';
 import '../services/widget_action_handler.dart';
 
 class SettingsProvider extends ChangeNotifier {
@@ -20,9 +19,6 @@ class SettingsProvider extends ChangeNotifier {
   VibrationConfig get vibrationConfig => _settings.vibrationConfig;
   int get sessionDelaySeconds => _settings.sessionDelaySeconds;
   bool get transparentWidget => _settings.transparentWidget;
-  bool get reminderEnabled => _settings.reminderEnabled;
-  int get reminderHour => _settings.reminderHour;
-  int get reminderMinute => _settings.reminderMinute;
   String get locale => _settings.locale;
 
   Future<void> loadSettings() async {
@@ -118,25 +114,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setReminderEnabled(bool enabled) async {
-    _settings = _settings.copyWith(reminderEnabled: enabled);
-    await PersistenceService.setReminderEnabled(enabled);
-
-    if (enabled) {
-      final notificationService = NotificationService();
-      await notificationService.scheduleDailyReminder(
-        id: 1,
-        hour: _settings.reminderHour,
-        minute: _settings.reminderMinute,
-      );
-    } else {
-      final notificationService = NotificationService();
-      await notificationService.cancelNotification(1);
-    }
-
-    notifyListeners();
-  }
-
   Future<void> setSessionDelay(int seconds) async {
     _settings = _settings.copyWith(sessionDelaySeconds: seconds);
     await PersistenceService.setSessionDelay(seconds);
@@ -157,19 +134,4 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setReminderTime(int hour, int minute) async {
-    _settings = _settings.copyWith(reminderHour: hour, reminderMinute: minute);
-    await PersistenceService.setReminderTime(hour, minute);
-
-    if (_settings.reminderEnabled) {
-      final notificationService = NotificationService();
-      await notificationService.scheduleDailyReminder(
-        id: 1,
-        hour: hour,
-        minute: minute,
-      );
-    }
-
-    notifyListeners();
-  }
 }

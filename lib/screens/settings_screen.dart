@@ -258,26 +258,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const Divider(),
 
-            _buildSectionHeader(context, t.translate('settings.dailyReminder')),
-            SwitchListTile(
-              secondary: const Icon(Icons.notifications_active_outlined),
-              title: Text(t.translate('settings.dailyReminder')),
-              subtitle: Text(t.translate('settings.reminderDesc')),
-              value: settings.reminderEnabled,
-              onChanged: (value) => settings.setReminderEnabled(value),
-            ),
-            if (settings.reminderEnabled)
-              _buildListTile(
-                context,
-                icon: Icons.access_time,
-                title: t.translate('settings.reminderTime'),
-                subtitle:
-                    '${settings.reminderHour.toString().padLeft(2, '0')}:${settings.reminderMinute.toString().padLeft(2, '0')}',
-                onTap: () => _pickReminderTime(context, settings),
-              ),
-
-            const Divider(),
-
             _buildSectionHeader(
               context,
               t.translate('settings.dataManagement'),
@@ -911,36 +891,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _pickReminderTime(
-    BuildContext context,
-    SettingsProvider settings,
-  ) async {
-    final now = DateTime.now();
-    final initial = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      settings.reminderHour,
-      settings.reminderMinute,
-    );
-
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(initial),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: AppColors.primary),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      settings.setReminderTime(picked.hour, picked.minute);
-    }
-  }
 }
 
 class _LicenseBox extends StatelessWidget {

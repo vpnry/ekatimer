@@ -76,42 +76,6 @@ class NotificationService {
     );
   }
 
-  Future<void> scheduleDailyReminder({
-    required int id,
-    required int hour,
-    required int minute,
-    String title = 'Time to Meditate',
-    String body = 'Take a moment to be mindful and meditate.',
-  }) async {
-    await _plugin.cancel(id: id);
-
-    const androidDetails = AndroidNotificationDetails(
-      'meditation_channel',
-      'Meditation Reminders',
-      channelDescription: 'Daily meditation reminders',
-      importance: Importance.high,
-      priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
-    );
-    const iosDetails = DarwinNotificationDetails(
-      presentSound: true,
-      interruptionLevel: InterruptionLevel.timeSensitive,
-    );
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await _plugin.periodicallyShow(
-      id: id,
-      title: title,
-      body: body,
-      repeatInterval: RepeatInterval.daily,
-      notificationDetails: details,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-    );
-  }
-
   Future<void> cancelNotification(int id) async {
     await _plugin.cancel(id: id);
   }

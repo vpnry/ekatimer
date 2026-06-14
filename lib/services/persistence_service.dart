@@ -44,9 +44,7 @@ class PersistenceService {
       transparentWidget: p.getBool(AppConstants.prefTransparentWidget) ?? false,
       sessionDelaySeconds: p.getInt(AppConstants.prefSessionDelay) ?? 0,
       locale: p.getString(AppConstants.prefLocale) ?? 'system',
-      reminderEnabled: p.getBool(AppConstants.prefReminderEnabled) ?? false,
-      reminderHour: p.getInt(AppConstants.prefReminderHour) ?? 19,
-      reminderMinute: p.getInt(AppConstants.prefReminderMinute) ?? 0,
+
     );
   }
 
@@ -112,15 +110,6 @@ class PersistenceService {
 
   static Future<void> setLocale(String locale) async =>
       saveString(AppConstants.prefLocale, locale);
-
-  static Future<void> setReminderEnabled(bool enabled) async =>
-      saveBool(AppConstants.prefReminderEnabled, enabled);
-
-  static Future<void> setReminderTime(int hour, int minute) async {
-    final p = await prefs;
-    await p.setInt(AppConstants.prefReminderHour, hour);
-    await p.setInt(AppConstants.prefReminderMinute, minute);
-  }
 
   static Future<void> saveActiveSession({
     required int startTime,

@@ -12,10 +12,6 @@ class AppSettings {
   final VibrationConfig vibrationConfig;
   final bool transparentWidget;
   final int sessionDelaySeconds;
-  final bool reminderEnabled;
-  final int reminderHour;
-  final int reminderMinute;
-
   const AppSettings({
     this.defaultTimerMode = TimerMode.timed,
     this.defaultDurationMinutes = 60,
@@ -26,9 +22,6 @@ class AppSettings {
     this.vibrationConfig = const VibrationConfig(),
     this.transparentWidget = true,
     this.sessionDelaySeconds = 0,
-    this.reminderEnabled = false,
-    this.reminderHour = 19,
-    this.reminderMinute = 0,
   });
 
   AppSettings copyWith({
@@ -41,9 +34,6 @@ class AppSettings {
     VibrationConfig? vibrationConfig,
     bool? transparentWidget,
     int? sessionDelaySeconds,
-    bool? reminderEnabled,
-    int? reminderHour,
-    int? reminderMinute,
   }) {
     return AppSettings(
       defaultTimerMode: defaultTimerMode ?? this.defaultTimerMode,
@@ -56,9 +46,6 @@ class AppSettings {
       vibrationConfig: vibrationConfig ?? this.vibrationConfig,
       transparentWidget: transparentWidget ?? this.transparentWidget,
       sessionDelaySeconds: sessionDelaySeconds ?? this.sessionDelaySeconds,
-      reminderEnabled: reminderEnabled ?? this.reminderEnabled,
-      reminderHour: reminderHour ?? this.reminderHour,
-      reminderMinute: reminderMinute ?? this.reminderMinute,
     );
   }
 }
