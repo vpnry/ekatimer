@@ -40,6 +40,7 @@ class AppConstants {
   static const String sessionStateIsPaused = 'session_is_paused';
   static const String sessionStatePauseDuration = 'session_pause_duration';
   static const String sessionStateEndTime = 'session_end_time';
+  static const String sessionStatePauseStartTime = 'session_pause_start_time';
 
   static const List<String> builtInSounds = [
     'Sadhu',

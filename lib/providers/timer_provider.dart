@@ -10,7 +10,6 @@ import '../services/database_service.dart';
 import '../services/alarm_service.dart';
 import '../utils/constants.dart';
 
-
 enum TimerState { idle, delaying, running, paused, completed }
 
 class TimerProvider extends ChangeNotifier {
@@ -207,6 +206,17 @@ class TimerProvider extends ChangeNotifier {
         vibrate: endVibration != 'none',
         volume: volume / 100.0,
       );
+    } else if (_timerMode == TimerMode.unlimited) {
+      // Schedule a dummy keep-alive alarm far in the future so the alarm
+      // package's iOS background audio keep-alive mechanism stays active.
+      final dummyEndTime = DateTime.now().add(const Duration(hours: 72));
+      await _alarmService.scheduleEndAlarm(
+        id: 1003,
+        dateTime: dummyEndTime,
+        assetAudioPath: null,
+        vibrate: false,
+        volume: 0.0,
+      );
     }
 
     await _persistSessionState();
@@ -243,8 +253,12 @@ class TimerProvider extends ChangeNotifier {
     _state = TimerState.paused;
     _pauseStartTime = DateTime.now();
     _stopTick();
-    final alarmId = _timerMode == TimerMode.timed ? 1001 : 1002;
-    await _alarmService.cancelAlarm(alarmId);
+    if (_timerMode == TimerMode.unlimited) {
+      await _alarmService.cancelAlarm(1003);
+    } else {
+      final alarmId = _timerMode == TimerMode.timed ? 1001 : 1002;
+      await _alarmService.cancelAlarm(alarmId);
+    }
     await _persistSessionState();
     notifyListeners();
   }
@@ -269,6 +283,16 @@ class TimerProvider extends ChangeNotifier {
         assetAudioPath: _assetPath(endSound),
         vibrate: endVibration != 'none',
         volume: volume / 100.0,
+      );
+    } else if (_timerMode == TimerMode.unlimited) {
+      // Re-schedule keep-alive dummy alarm on resume
+      final dummyEndTime = DateTime.now().add(const Duration(hours: 72));
+      await _alarmService.scheduleEndAlarm(
+        id: 1003,
+        dateTime: dummyEndTime,
+        assetAudioPath: null,
+        vibrate: false,
+        volume: 0.0,
       );
     }
 
@@ -311,7 +335,11 @@ class TimerProvider extends ChangeNotifier {
 
   int _calculateElapsedSeconds(DateTime now) {
     final totalElapsed = now.difference(_startTime).inSeconds;
-    return totalElapsed - _pauseDurationSeconds;
+    int currentPause = 0;
+    if (_state == TimerState.paused) {
+      currentPause = now.difference(_pauseStartTime).inSeconds;
+    }
+    return totalElapsed - _pauseDurationSeconds - currentPause;
   }
 
   Future<void> restoreSession(Map<String, int> sessionData) async {
@@ -331,6 +359,7 @@ class TimerProvider extends ChangeNotifier {
     final durationSeconds = sessionData['durationSeconds']!;
     final pauseDuration = sessionData['pauseDuration'] ?? 0;
     final endTimeMs = sessionData['endTime']!;
+    final pauseStartTimeMs = sessionData['pauseStartTime'] ?? 0;
 
     _startTime = DateTime.fromMillisecondsSinceEpoch(startTimeMs);
     _endTime = DateTime.fromMillisecondsSinceEpoch(
@@ -348,7 +377,11 @@ class TimerProvider extends ChangeNotifier {
     _state = isPaused ? TimerState.paused : TimerState.running;
 
     if (isPaused) {
-      _pauseStartTime = DateTime.now();
+      if (pauseStartTimeMs > 0) {
+        _pauseStartTime = DateTime.fromMillisecondsSinceEpoch(pauseStartTimeMs);
+      } else {
+        _pauseStartTime = DateTime.now();
+      }
     }
 
     final now = DateTime.now();
@@ -375,6 +408,16 @@ class TimerProvider extends ChangeNotifier {
           vibrate: endVibration != 'none',
           volume: volume / 100.0,
         );
+      } else if (_timerMode == TimerMode.unlimited) {
+        // Re-schedule keep-alive dummy alarm when restoring a running session
+        final dummyEndTime = DateTime.now().add(const Duration(hours: 72));
+        await _alarmService.scheduleEndAlarm(
+          id: 1003,
+          dateTime: dummyEndTime,
+          assetAudioPath: null,
+          vibrate: false,
+          volume: 0.0,
+        );
       }
       _startTick();
     }
@@ -390,6 +433,9 @@ class TimerProvider extends ChangeNotifier {
       isPaused: _state == TimerState.paused,
       pauseDuration: _pauseDurationSeconds,
       endTime: _endTime?.millisecondsSinceEpoch ?? 0,
+      pauseStartTime: _state == TimerState.paused
+          ? _pauseStartTime.millisecondsSinceEpoch
+          : null,
     );
   }
 
@@ -460,7 +506,8 @@ class TimerProvider extends ChangeNotifier {
     // Check sound interval
     if (intervalMinutes > 0) {
       // Auto-disable: interval won't fire if it's >= total session duration (timed mode).
-      if (!(_timerMode == TimerMode.timed && _durationMinutes > 0 &&
+      if (!(_timerMode == TimerMode.timed &&
+          _durationMinutes > 0 &&
           intervalMinutes >= _durationMinutes)) {
         final interval = currentMinute ~/ intervalMinutes;
         if (interval > _lastIntervalMinute &&
@@ -473,7 +520,8 @@ class TimerProvider extends ChangeNotifier {
 
     // Check vibration interval
     if (vibrationIntervalMinutes > 0) {
-      if (!(_timerMode == TimerMode.timed && _durationMinutes > 0 &&
+      if (!(_timerMode == TimerMode.timed &&
+          _durationMinutes > 0 &&
           vibrationIntervalMinutes >= _durationMinutes)) {
         final vibInterval = currentMinute ~/ vibrationIntervalMinutes;
         if (vibInterval > _lastVibrationIntervalMinute &&

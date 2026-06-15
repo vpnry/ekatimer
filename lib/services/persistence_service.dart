@@ -132,6 +132,7 @@ class PersistenceService {
     required bool isPaused,
     required int pauseDuration,
     required int endTime,
+    int? pauseStartTime,
   }) async {
     final p = await prefs;
     await p.setInt(AppConstants.sessionStateStartTime, startTime);
@@ -140,6 +141,11 @@ class PersistenceService {
     await p.setBool(AppConstants.sessionStateIsPaused, isPaused);
     await p.setInt(AppConstants.sessionStatePauseDuration, pauseDuration);
     await p.setInt(AppConstants.sessionStateEndTime, endTime);
+    if (pauseStartTime != null) {
+      await p.setInt(AppConstants.sessionStatePauseStartTime, pauseStartTime);
+    } else {
+      await p.remove(AppConstants.sessionStatePauseStartTime);
+    }
   }
 
   static Future<Map<String, int>?> loadActiveSession() async {
@@ -152,6 +158,7 @@ class PersistenceService {
       'durationSeconds': p.getInt(AppConstants.sessionStateDuration) ?? 0,
       'pauseDuration': p.getInt(AppConstants.sessionStatePauseDuration) ?? 0,
       'endTime': p.getInt(AppConstants.sessionStateEndTime) ?? 0,
+      'pauseStartTime': p.getInt(AppConstants.sessionStatePauseStartTime) ?? 0,
     };
   }
 
@@ -173,6 +180,7 @@ class PersistenceService {
     await p.remove(AppConstants.sessionStateIsPaused);
     await p.remove(AppConstants.sessionStatePauseDuration);
     await p.remove(AppConstants.sessionStateEndTime);
+    await p.remove(AppConstants.sessionStatePauseStartTime);
   }
 
   static Future<List<int>> loadRecentDurations() async {

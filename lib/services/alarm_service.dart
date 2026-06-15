@@ -5,6 +5,7 @@ import 'package:alarm/alarm.dart';
 class AlarmService {
   static const int _timedAlarmId = 1001;
   static const int _endAtAlarmId = 1002;
+  static const int _unlimitedKeepAliveAlarmId = 1003;
 
   static final AlarmService _instance = AlarmService._internal();
   factory AlarmService() => _instance;
@@ -73,6 +74,7 @@ class AlarmService {
   Future<void> cancelAllAlarms() async {
     await cancelAlarm(_timedAlarmId);
     await cancelAlarm(_endAtAlarmId);
+    await cancelAlarm(_unlimitedKeepAliveAlarmId);
   }
 
   void dispose() {
