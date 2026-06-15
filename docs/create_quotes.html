@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ekaTimer — Create Your Quotes</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #356668;
+      --primary-light: #A8DADC;
+      --bg: #F8FAFB;
+      --bg-card: #ffffff;
+      --text: #191C1D;
+      --text-muted: #5A6364;
+      --border: #C0C8C8;
+      --radius: 16px;
+      --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--primary);
+      letter-spacing: -0.3px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-top: 6px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title .badge {
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 300px;
+      padding: 16px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 14px;
+      line-height: 1.7;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    textarea:focus {
+      border-color: var(--primary);
+    }
+
+    textarea::placeholder {
+      color: #9AA2A3;
+    }
+
+    .textarea-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .textarea-info .count {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #E1E3E4;
+    }
+
+    .btn-success {
+      background: #2E7D6F;
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      opacity: 0.9;
+    }
+
+    .preview-card {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 16px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      border: 1px solid var(--border);
+    }
+
+    .preview-card:empty {
+      display: none;
+    }
+
+    .format-guide {
+      font-size: 14px;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .format-guide code {
+      background: var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .format-guide ul {
+      margin: 8px 0 0 20px;
+    }
+
+    .format-guide li {
+      margin-bottom: 4px;
+    }
+
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--text);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 0; }
+      .card { padding: 16px; }
+      textarea { min-height: 220px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>🪷 Create Your Quotes</h1>
+      <p>Paste your meditation quotes — one per line — and download a <code>Quotes.json</code> file ready to import into ekaTimer.</p>
+    </header>
+
+    <!-- Quote Input -->
+    <div class="card">
+      <div class="card-title">
+        📝 Your Quotes
+        <span class="badge">One per line</span>
+      </div>
+
+      <textarea id="quoteInput" placeholder="Enter one quote per line...
+
+Example:
+Just as a fine horse is stirred when struck by a whip, be ardent and filled with spiritual urgency. - Dhammapada 144
+You yourselves must make the effort; the Buddhas only point the way. - Dhammapada 276
+From meditation, wisdom is born; from a lack of meditation, wisdom is destroyed. - Dhammapada 282"></textarea>
+
+      <div class="textarea-info">
+        <span id="quoteCount">0 quotes</span>
+        <span>Lines are trimmed; empty lines are skipped</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="generateAndDownload()">
+          ⬇️ Download Quotes.json
+        </button>
+        <button class="btn btn-secondary" onclick="clearAll()">
+          🗑️ Clear
+        </button>
+        <button class="btn btn-secondary" onclick="loadSample()">
+          ✨ Load Sample
+        </button>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="card">
+      <div class="card-title">
+        👁️ Preview
+        <span class="badge">JSON output</span>
+      </div>
+      <div id="preview" class="preview-card"></div>
+    </div>
+
+    <!-- Format Guide -->
+    <div class="card">
+      <div class="card-title">📖 Format Guide</div>
+      <div class="format-guide">
+        <p>Each non-empty line becomes one quote in the generated JSON. The file will have the same structure as ekaTimer's built-in quotes:</p>
+        <ul>
+          <li>Every line is wrapped as a JSON string in an <code>"en"</code> array</li>
+          <li>Empty lines are automatically skipped</li>
+          <li>Leading/trailing whitespace is trimmed from each quote</li>
+          <li>Duplicate lines are <em>not</em> removed — each line stays as-is</li>
+        </ul>
+        <p style="margin-top: 12px;">The generated file looks like this:</p>
+        <pre style="background: var(--border); padding: 12px; border-radius: 8px; margin-top: 8px; font-size: 13px; overflow-x: auto;">{
+    "en": [
+        "Just as a fine horse is stirred...",
+        "You yourselves must make the effort..."
+    ]
+}</pre>
+      </div>
+    </div>
+
+    <footer>
+      <p>Made for <a href="https://tipitakapali.org" target="_blank">ekaTimer</a> — a free meditation timer app.</p>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const input = document.getElementById('quoteInput');
+    const preview = document.getElementById('preview');
+    const quoteCount = document.getElementById('quoteCount');
+
+    // Live preview on every keystroke
+    input.addEventListener('input', updatePreview);
+
+    function getQuotes() {
+      return input.value
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+    }
+
+    function buildJson(quotes) {
+      return JSON.stringify({ en: quotes }, null, 4);
+    }
+
+    function updatePreview() {
+      const quotes = getQuotes();
+      quoteCount.textContent = `${quotes.length} quote${quotes.length !== 1 ? 's' : ''}`;
+      if (quotes.length === 0) {
+        preview.textContent = '';
+        preview.style.display = 'none';
+      } else {
+        preview.textContent = buildJson(quotes);
+        preview.style.display = 'block';
+      }
+    }
+
+    function generateAndDownload() {
+      const quotes = getQuotes();
+      if (quotes.length === 0) {
+        showToast('Please enter at least one quote first.');
+        return;
+      }
+
+      const json = buildJson(quotes);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Quotes.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast(`✅ Downloaded ${quotes.length} quote${quotes.length !== 1 ? 's' : ''} as Quotes.json`);
+    }
+
+    function clearAll() {
+      input.value = '';
+      updatePreview();
+      showToast('Cleared all quotes');
+    }
+
+    function loadSample() {
+      input.value = `Just as a fine horse is stirred when struck by a whip, be ardent and filled with spiritual urgency. By faith, virtue, effort, concentration, and the investigation of the Dhamma; endowed with knowledge and good conduct, and fully mindful, you will abandon this immense suffering. - Dhammapada 144
+Just as a fletcher straightens an arrow, the wise one straightens his trembling and unsteady mind, which is difficult to guard and difficult to hold back. - Dhammapada 33
+It is good to tame the mind, which is difficult to restrain, swift, and alights wherever it pleases. A tamed mind brings happiness. - Dhammapada 35
+You yourselves must make the effort; the Buddhas only point the way. Those who have entered the path and meditate are freed from the bonds of Mara. - Dhammapada 276
+From meditation, wisdom is born; from a lack of meditation, wisdom is destroyed. Knowing this twofold path of progress and decline, one should direct oneself in such a way that wisdom increases. - Dhammapada 282
+May all beings be happy and free from suffering. May my practice bring peace and understanding to myself and to all beings.`;
+      updatePreview();
+      showToast('✨ Sample quotes loaded');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t._hide);
+      t._hide = setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // Initial preview
+    updatePreview();
+  </script>
+
+</body>
+</html>

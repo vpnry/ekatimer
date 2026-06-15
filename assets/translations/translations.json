@@ -52,6 +52,8 @@
     "history.cancel": "Cancel",
     "history.delete": "Delete",
     "history.stopped": "Stopped",
+    "history.showMore": "Show more",
+    "history.showLess": "Show less",
     "stats.title": "Statistics",
     "stats.overview": "Overview",
     "stats.sessions": "Sessions",
@@ -205,7 +207,14 @@
     "editSession.updated": "Session updated",
     "editSession.notFound": "Session not found",
     "editSession.notes": "Notes",
-    "editSession.notesHint": "Add a note about this session…"
+    "editSession.notesHint": "Add a note about this session…",
+    "settings.quotes": "Motivational Quotes",
+    "settings.importQuotes": "Import Quotes.json",
+    "settings.clearQuotes": "Clear Quotes.json",
+    "settings.importQuotesHint": "These quotes appear when a session completes. Read instructions below.",
+    "settings.createQuotesTitle": "Create Your Own Quotes",
+    "settings.createQuotesSubtitle": "Generate a custom quotes file online",
+    "settings.createQuotesDesc": "Open the link below in your browser to create your own motivational quotes file. Paste one quote per line, then download the generated users_quotes.json and import it using the button above."
   },
   "vi": {
     "app.title": "ekaTimer",
@@ -413,7 +422,16 @@
     "editSession.updated": "Đã cập nhật phiên",
     "editSession.notFound": "Không tìm thấy phiên",
     "editSession.notes": "Ghi chú",
-    "editSession.notesHint": "Thêm ghi chú cho phiên thiền này…"
+    "editSession.notesHint": "Thêm ghi chú cho phiên thiền này…",
+    "settings.quotes": "Trích dẫn tạo động lực",
+    "settings.importQuotes": "Nhập Quotes.json",
+    "settings.clearQuotes": "Xoá Quotes.json",
+    "settings.importQuotesHint": "Những trích dẫn này sẽ hiện khi hoàn thành phiên. Đọc hướng dẫn bên dưới.",
+    "settings.createQuotesTitle": "Tạo trích dẫn của riêng bạn",
+    "settings.createQuotesSubtitle": "Tạo tệp trích dẫn tuỳ chỉnh trực tuyến",
+    "settings.createQuotesDesc": "Mở liên kết dưới đây bằng trình duyệt để tạo tệp trích dẫn của bạn. Dán mỗi trích dẫn trên một dòng, tải xuống tệp Quotes.json và dùng nút bên trên để nhập.",
+    "history.showMore": "Hiện thêm",
+    "history.showLess": "Ẩn bớt"
   },
   "de": {
     "app.title": "ekaTimer",
@@ -621,7 +639,16 @@
     "editSession.updated": "Sitzung aktualisiert",
     "editSession.notFound": "Sitzung nicht gefunden",
     "editSession.notes": "Notiz",
-    "editSession.notesHint": "Notiz zu dieser Sitzung hinzufügen…"
+    "editSession.notesHint": "Notiz zu dieser Sitzung hinzufügen…",
+    "settings.quotes": "Motivierende Zitate",
+    "settings.importQuotes": "Quotes.json importieren",
+    "settings.clearQuotes": "Quotes.json löschen",
+    "settings.importQuotesHint": "Diese Zitate erscheinen nach Abschluss einer Sitzung. Lesen Sie die Anleitung unten.",
+    "settings.createQuotesTitle": "Eigene Zitate erstellen",
+    "settings.createQuotesSubtitle": "Benutzerdefinierte Zitatdatei online erstellen",
+    "settings.createQuotesDesc": "Öffnen Sie den Link unten im Browser, um Ihre Zitatdatei zu erstellen. Fügen Sie ein Zitat pro Zeile ein, laden Sie die generierte Quotes.json herunter und importieren Sie sie über die Schaltfläche oben.",
+    "history.showMore": "Mehr anzeigen",
+    "history.showLess": "Weniger anzeigen"
   },
   "my": {
     "app.title": "ekaTimer",
@@ -829,7 +856,16 @@
     "editSession.updated": "မှတ်တမ်း ပြင်ဆင်ပြီးပါပြီ",
     "editSession.notFound": "မှတ်တမ်း ရှာမတွေ့ပါ",
     "editSession.notes": "မှတ်ချက်",
-    "editSession.notesHint": "ဤအကြိမ်အတွက် မှတ်ချက်ထည့်ပါ…"
+    "editSession.notesHint": "ဤအကြိမ်အတွက် မှတ်ချက်ထည့်ပါ…",
+    "settings.quotes": "ခွန်အားပေး စာသားများ",
+    "settings.importQuotes": "Quotes.json ကို ထည့်သွင်းရန်",
+    "settings.clearQuotes": "Quotes.json ကို ဖျက်ရန်",
+    "settings.importQuotesHint": "တရားထိုင်ပြီးချိန်တွင် ဤစာသားများ ပေါ်လာပါမည်။ အောက်ပါ ညွှန်ကြားချက်များကို ဖတ်ပါ။",
+    "settings.createQuotesTitle": "သင့်ကိုယ်ပိုင် စာသားများ ဖန်တီးပါ",
+    "settings.createQuotesSubtitle": "အွန်လိုင်းတွင် စိတ်ကြိုက် စာသားဖိုင် ဖန်တီးပါ",
+    "settings.createQuotesDesc": "သင့်ကိုယ်ပိုင် စာသားဖိုင် ဖန်တီးရန် အောက်ပါလင့်ခ်ကို ဘရောက်ဇာတွင် ဖွင့်ပါ။ တစ်ကြောင်းလျှင် စာသားတစ်ခု ထည့်ပါ၊ ထို့နောက် Quotes.json ကို ဒေါင်းလုဒ်လုပ်ပြီး အထက်ပါခလုတ်ကို အသုံးပြု၍ ထည့်သွင်းပါ။",
+    "history.showMore": "ပိုမိုပြသရန်",
+    "history.showLess": "လျှော့၍ပြသရန်"
   },
   "si": {
     "app.title": "ekaTimer",
@@ -1037,7 +1073,16 @@
     "editSession.updated": "සැසිය යාවත්කාලීන කරන ලදී",
     "editSession.notFound": "සැසිය සොයා ගත නොහැකි විය",
     "editSession.notes": "සටහන්",
-    "editSession.notesHint": "මෙම සැසිය ගැන සටහනක් එකතු කරන්න…"
+    "editSession.notesHint": "මෙම සැසිය ගැන සටහනක් එකතු කරන්න…",
+    "settings.quotes": "අභිප්‍රේරණ උපුටා දැක්වීම්",
+    "settings.importQuotes": "Quotes.json ආයාත කරන්න",
+    "settings.clearQuotes": "Quotes.json ඉවත් කරන්න",
+    "settings.importQuotesHint": "සැසියක් අවසන් වූ විට මෙම උපුටා දැක්වීම් දිස්වේ. පහත උපදෙස් කියවන්න.",
+    "settings.createQuotesTitle": "ඔබේම උපුටා දැක්වීම් සාදන්න",
+    "settings.createQuotesSubtitle": "අභිරුචි උපුටා දැක්වීම් ගොනුවක් මාර්ගගතව සාදන්න",
+    "settings.createQuotesDesc": "ඔබේම උපුටා දැක්වීම් ගොනුවක් සෑදීමට පහත සබැඳිය බ්‍රවුසරයෙන් විවෘත කරන්න. එක් පේළියකට එක් උපුටා දැක්වීමක් අලවා, Quotes.json බාගෙන ඉහත බොත්තම භාවිතයෙන් එය ආයාත කරන්න.",
+    "history.showMore": "තව පෙන්වන්න",
+    "history.showLess": "අඩුවෙන් පෙන්වන්න"
   },
   "id": {
     "app.title": "ekaTimer",
@@ -1245,7 +1290,16 @@
     "editSession.updated": "Sesi diperbarui",
     "editSession.notFound": "Sesi tidak ditemukan",
     "editSession.notes": "Catatan",
-    "editSession.notesHint": "Tambahkan catatan tentang sesi ini…"
+    "editSession.notesHint": "Tambahkan catatan tentang sesi ini…",
+    "settings.quotes": "Kutipan Motivasi",
+    "settings.importQuotes": "Impor Quotes.json",
+    "settings.clearQuotes": "Hapus Quotes.json",
+    "settings.importQuotesHint": "Kutipan ini muncul saat sesi selesai. Baca petunjuk di bawah.",
+    "settings.createQuotesTitle": "Buat Kutipan Sendiri",
+    "settings.createQuotesSubtitle": "Buat file kutipan kustom secara online",
+    "settings.createQuotesDesc": "Buka tautan di bawah di browser Anda untuk membuat file kutipan sendiri. Tempel satu kutipan per baris, lalu unduh Quotes.json yang dihasilkan dan impor menggunakan tombol di atas.",
+    "history.showMore": "Tampilkan lebih banyak",
+    "history.showLess": "Tampilkan lebih sedikit"
   },
   "zh": {
     "app.title": "ekaTimer",
@@ -1453,7 +1507,16 @@
     "editSession.updated": "记录已更新",
     "editSession.notFound": "未找到记录",
     "editSession.notes": "备注",
-    "editSession.notesHint": "添加本次冥想的备注…"
+    "editSession.notesHint": "添加本次冥想的备注…",
+    "settings.quotes": "励志语录",
+    "settings.importQuotes": "导入 Quotes.json",
+    "settings.clearQuotes": "清除 Quotes.json",
+    "settings.importQuotesHint": "这些语录将在冥想结束时显示。请阅读下方说明。",
+    "settings.createQuotesTitle": "创建专属语录",
+    "settings.createQuotesSubtitle": "在线生成自定义语录文件",
+    "settings.createQuotesDesc": "在浏览器中打开下方链接以创建自己的语录文件。每行粘贴一句语录，然后下载生成的 Quotes.json，并使用上方的按钮将其导入。",
+    "history.showMore": "显示更多",
+    "history.showLess": "显示更少"
   },
   "th": {
     "app.title": "ekaTimer",
@@ -1661,7 +1724,16 @@
     "editSession.updated": "อัปเดตบันทึกแล้ว",
     "editSession.notFound": "ไม่พบบันทึก",
     "editSession.notes": "บันทึก",
-    "editSession.notesHint": "เพิ่มบันทึกสำหรับครั้งนี้…"
+    "editSession.notesHint": "เพิ่มบันทึกสำหรับครั้งนี้…",
+    "settings.quotes": "คำคมสร้างแรงบันดาลใจ",
+    "settings.importQuotes": "นำเข้า Quotes.json",
+    "settings.clearQuotes": "ลบ Quotes.json",
+    "settings.importQuotesHint": "คำคมเหล่านี้จะแสดงเมื่อสิ้นสุดการนั่งสมาธิ อ่านคำแนะนำด้านล่าง",
+    "settings.createQuotesTitle": "สร้างคำคมของคุณเอง",
+    "settings.createQuotesSubtitle": "สร้างไฟล์คำคมแบบกำหนดเองทางออนไลน์",
+    "settings.createQuotesDesc": "เปิดลิงก์ด้านล่างในเบราว์เซอร์เพื่อสร้างไฟล์คำคมของคุณเอง วางคำคมบรรทัดละหนึ่งข้อความ จากนั้นดาวน์โหลดไฟล์ Quotes.json ที่ได้ แล้วนำเข้าโดยใช้ปุ่มด้านบน",
+    "history.showMore": "ดูเพิ่มเติม",
+    "history.showLess": "ดูน้อยลง"
   },
   "hi": {
     "app.title": "ekaTimer",
@@ -1869,7 +1941,16 @@
     "editSession.updated": "सत्र अपडेट किया गया",
     "editSession.notFound": "सत्र नहीं मिला",
     "editSession.notes": "नोट",
-    "editSession.notesHint": "इस सत्र के बारे में नोट जोड़ें…"
+    "editSession.notesHint": "इस सत्र के बारे में नोट जोड़ें…",
+    "settings.quotes": "प्रेरणादायक विचार",
+    "settings.importQuotes": "Quotes.json इंपोर्ट करें",
+    "settings.clearQuotes": "Quotes.json हटाएं",
+    "settings.importQuotesHint": "ध्यान सत्र पूरा होने पर ये विचार दिखाई देंगे। नीचे दिए गए निर्देश पढ़ें।",
+    "settings.createQuotesTitle": "अपने खुद के विचार बनाएं",
+    "settings.createQuotesSubtitle": "ऑनलाइन कस्टम कोट्स फ़ाइल बनाएं",
+    "settings.createQuotesDesc": "अपनी खुद की कोट्स फ़ाइल बनाने के लिए नीचे दिए गए लिंक को अपने ब्राउज़र में खोलें। प्रति पंक्ति एक विचार चिपकाएं, फिर जनरेट की गई Quotes.json डाउनलोड करें और ऊपर दिए गए बटन का उपयोग करके इसे इंपोर्ट करें।",
+    "history.showMore": "और दिखाएं",
+    "history.showLess": "कम दिखाएं"
   },
   "ne": {
     "app.title": "ekaTimer",
@@ -2077,7 +2158,16 @@
     "editSession.updated": "सत्र अपडेट गरियो",
     "editSession.notFound": "सत्र फेला परेन",
     "editSession.notes": "टिप्पणी",
-    "editSession.notesHint": "यस सत्रबारे टिप्पणी थप्नुहोस्…"
+    "editSession.notesHint": "यस सत्रबारे टिप्पणी थप्नुहोस्…",
+    "settings.quotes": "प्रेरणादायक भनाइहरू",
+    "settings.importQuotes": "Quotes.json आयात गर्नुहोस्",
+    "settings.clearQuotes": "Quotes.json हटाउनुहोस्",
+    "settings.importQuotesHint": "सत्र पूरा भएपछि यी भनाइहरू देखिन्छन्। तलका निर्देशनहरू पढ्नुहोस्।",
+    "settings.createQuotesTitle": "आफ्नै भनाइहरू बनाउनुहोस्",
+    "settings.createQuotesSubtitle": "अनलाइन अनुकूल भनाइहरूको फाइल बनाउनुहोस्",
+    "settings.createQuotesDesc": "आफ्नै भनाइहरूको फाइल बनाउन तलको लिङ्क ब्राउजरमा खोल्नुहोस्। प्रति लाइन एक भनाइ टाँस्नुहोस्, त्यसपछि तयार भएको Quotes.json डाउनलोड गर्नुहोस् र माथिको बटन प्रयोग गरेर आयात गर्नुहोस्।",
+    "history.showMore": "थप देखाउनुहोस्",
+    "history.showLess": "कम देखाउनुहोस्"
   },
   "ko": {
     "app.title": "ekaTimer",
@@ -2285,7 +2375,16 @@
     "editSession.updated": "기록이 수정되었습니다",
     "editSession.notFound": "기록을 찾을 수 없습니다",
     "editSession.notes": "메모",
-    "editSession.notesHint": "이 세션에 대한 메모를 입력하세요…"
+    "editSession.notesHint": "이 세션에 대한 메모를 입력하세요…",
+    "settings.quotes": "동기 부여 명언",
+    "settings.importQuotes": "Quotes.json 가져오기",
+    "settings.clearQuotes": "Quotes.json 지우기",
+    "settings.importQuotesHint": "명상 세션이 완료되면 이 명언들이 표시됩니다. 아래 지침을 읽어보세요.",
+    "settings.createQuotesTitle": "나만의 명언 만들기",
+    "settings.createQuotesSubtitle": "온라인에서 사용자 맞춤 명언 파일 생성",
+    "settings.createQuotesDesc": "브라우저에서 아래 링크를 열어 나만의 명언 파일을 만드세요. 한 줄에 하나의 명언을 붙여넣고, 생성된 Quotes.json을 다운로드한 후 위 버튼을 사용하여 가져오세요.",
+    "history.showMore": "더 보기",
+    "history.showLess": "간단히 보기"
   },
   "ja": {
     "app.title": "ekaTimer",
@@ -2493,7 +2592,16 @@
     "editSession.updated": "セッションを更新しました",
     "editSession.notFound": "セッションが見つかりません",
     "editSession.notes": "メモ",
-    "editSession.notesHint": "このセッションのメモを追加…"
+    "editSession.notesHint": "このセッションのメモを追加…",
+    "settings.quotes": "モチベーションを高める名言",
+    "settings.importQuotes": "Quotes.json をインポート",
+    "settings.clearQuotes": "Quotes.json をクリア",
+    "settings.importQuotesHint": "これらの名言はセッション完了時に表示されます。以下の説明をお読みください。",
+    "settings.createQuotesTitle": "オリジナルの名言を作成",
+    "settings.createQuotesSubtitle": "オンラインでカスタム名言ファイルを作成",
+    "settings.createQuotesDesc": "ブラウザで下のリンクを開き、独自の名言ファイルを作成します。1行に1つの名言を貼り付け、生成された Quotes.json をダウンロードして、上のボタンからインポートしてください。",
+    "history.showMore": "もっと見る",
+    "history.showLess": "表示を減らす"
   },
   "km": {
     "app.title": "ekaTimer",
@@ -2701,7 +2809,16 @@
     "editSession.updated": "បានធ្វើបច្ចុប្បន្នភាព",
     "editSession.notFound": "រកមិនឃើញ",
     "editSession.notes": "កំណត់ចំណាំ",
-    "editSession.notesHint": "បន្ថែមកំណត់ចំណាំសម្រាប់សមាធិនេះ…"
+    "editSession.notesHint": "បន្ថែមកំណត់ចំណាំសម្រាប់សមាធិនេះ…",
+    "settings.quotes": "សម្រង់ពាក្យលើកទឹកចិត្ត",
+    "settings.importQuotes": "នាំចូល Quotes.json",
+    "settings.clearQuotes": "សម្អាត Quotes.json",
+    "settings.importQuotesHint": "សម្រង់ពាក្យទាំងនេះបង្ហាញនៅពេលវគ្គសមាធិបញ្ចប់។ សូមអានការណែនាំខាងក្រោម។",
+    "settings.createQuotesTitle": "បង្កើតសម្រង់ពាក្យផ្ទាល់ខ្លួនរបស់អ្នក",
+    "settings.createQuotesSubtitle": "បង្កើតឯកសារសម្រង់ពាក្យតាមបំណងតាមអ៊ីនធឺណិត",
+    "settings.createQuotesDesc": "បើកតំណខាងក្រោមក្នុងកម្មវិធីរុករករបស់អ្នក ដើម្បីបង្កើតឯកសារសម្រង់ពាក្យផ្ទាល់ខ្លួន។ ដាក់មួយសម្រង់ពាក្យក្នុងមួយបន្ទាត់ រួចទាញយកឯកសារ Quotes.json ដែលបានបង្កើត និងនាំចូលវាដោយប្រើប៊ូតុងខាងលើ។",
+    "history.showMore": "បង្ហាញច្រើនទៀត",
+    "history.showLess": "បង្ហាញតិចជាងមុន"
   },
   "ru": {
     "app.title": "ekaTimer",
@@ -2909,7 +3026,16 @@
     "editSession.updated": "Запись обновлена",
     "editSession.notFound": "Запись не найдена",
     "editSession.notes": "Заметка",
-    "editSession.notesHint": "Добавьте заметку об этом сеансе…"
+    "editSession.notesHint": "Добавьте заметку об этом сеансе…",
+    "settings.quotes": "Мотивирующие цитаты",
+    "settings.importQuotes": "Импорт Quotes.json",
+    "settings.clearQuotes": "Удалить Quotes.json",
+    "settings.importQuotesHint": "Эти цитаты появляются после завершения медитации. Прочтите инструкции ниже.",
+    "settings.createQuotesTitle": "Создать свои цитаты",
+    "settings.createQuotesSubtitle": "Создать файл с цитатами онлайн",
+    "settings.createQuotesDesc": "Откройте ссылку ниже в браузере, чтобы создать собственный файл с цитатами. Вставляйте по одной цитате в строку, затем скачайте сгенерированный Quotes.json и импортируйте его с помощью кнопки выше.",
+    "history.showMore": "Показать больше",
+    "history.showLess": "Показать меньше"
   },
   "lo": {
     "app.title": "ekaTimer",
@@ -3117,6 +3243,15 @@
     "editSession.updated": "ອັບເດດແລ້ວ",
     "editSession.notFound": "ບໍ່ພົບບັນທຶກ",
     "editSession.notes": "ໝາຍເຫດ",
-    "editSession.notesHint": "ເພີ່ມໝາຍເຫດສຳລັບການນັ່ງສະມາທິຄັ້ງນີ້…"
+    "editSession.notesHint": "ເພີ່ມໝາຍເຫດສຳລັບການນັ່ງສະມາທິຄັ້ງນີ້…",
+    "settings.quotes": "ຄຳຄົມສ້າງແຮງບັນດານໃຈ",
+    "settings.importQuotes": "ນຳເຂົ້າ Quotes.json",
+    "settings.clearQuotes": "ລຶບ Quotes.json",
+    "settings.importQuotesHint": "ຄຳຄົມເຫຼົ່ານີ້ຈະສະແດງເມື່ອການນັ່ງສະມາທິສຳເລັດ. ອ່ານຄຳແນະນຳດ້ານລຸ່ມ.",
+    "settings.createQuotesTitle": "ສ້າງຄຳຄົມຂອງທ່ານເອງ",
+    "settings.createQuotesSubtitle": "ສ້າງໄຟລ໌ຄຳຄົມແບບກຳນົດເອງທາງອອນລາຍ",
+    "settings.createQuotesDesc": "ເປີດລິ້ງດ້ານລຸ່ມໃນເບຣາວເຊີເພື່ອສ້າງໄຟລ໌ຄຳຄົມຂອງທ່ານເອງ. ວາງຄຳຄົມແຖວລະໜຶ່ງຂໍ້ຄວາມ, ຈາກນັ້ນດາວໂຫຼດໄຟລ໌ Quotes.json ທີ່ໄດ້ ແລະ ນຳເຂົ້າໂດຍໃຊ້ປຸ່ມດ້ານເທິງ.",
+    "history.showMore": "ເບິ່ງເພີ່ມເຕີມ",
+    "history.showLess": "ເບິ່ງໜ້ອຍລົງ"
   }
 }

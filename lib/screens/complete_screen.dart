@@ -73,27 +73,68 @@ class _CompleteScreenState extends State<CompleteScreen>
   Future<void> _loadMotivation() async {
     try {
       final locale = TranslationService.of(context).locale;
-      final data = await rootBundle.loadString('assets/quotes/quotes.json');
-      final allQuotes = json.decode(data) as Map<String, dynamic>;
+      final settings = context.read<SettingsProvider>();
 
-      // Try current locale first; fall back to English if empty/missing
-      final localeQuotes =
-          (allQuotes[locale] as List?)?.cast<String>() ?? [];
-      final quotes = localeQuotes.isNotEmpty
-          ? localeQuotes
-          : ((allQuotes['en'] as List?)?.cast<String>() ?? []);
+      // First, try to load user-imported quotes — these completely replace
+      // the built-in quotes when available.
+      String? userQuotesJson;
+      try {
+        userQuotesJson = await settings.getUserQuotes();
+      } catch (_) {
+        // ignore
+      }
 
-      if (quotes.isNotEmpty && mounted) {
-        setState(() {
-          _motivation = quotes[Random().nextInt(quotes.length)];
-        });
-      } else if (mounted) {
+      if (userQuotesJson != null) {
+        // Use only the user's own quotes
+        final allQuotes = <String>[];
+        try {
+          final userData = json.decode(userQuotesJson);
+          if (userData is List) {
+            allQuotes.addAll(userData.cast<String>());
+          } else if (userData is Map) {
+            final localeList = (userData[locale] as List?)?.cast<String>();
+            final enList = (userData['en'] as List?)?.cast<String>();
+            allQuotes.addAll(localeList ?? enList ?? []);
+          }
+        } catch (_) {
+          // user quotes parse failed, fall through to bundled
+        }
+
+        if (allQuotes.isNotEmpty && mounted) {
+          setState(() {
+            _motivation = allQuotes[Random().nextInt(allQuotes.length)];
+          });
+          return;
+        }
+      }
+
+      // Fall back to bundled quotes (only if no user quotes were loaded)
+      try {
+        final data = await rootBundle.loadString('assets/quotes/quotes.json');
+        final bundled = json.decode(data) as Map<String, dynamic>;
+        final localeQuotes =
+            (bundled[locale] as List?)?.cast<String>() ?? [];
+        final quotes = localeQuotes.isNotEmpty
+            ? localeQuotes
+            : ((bundled['en'] as List?)?.cast<String>() ?? []);
+
+        if (quotes.isNotEmpty && mounted) {
+          setState(() {
+            _motivation = quotes[Random().nextInt(quotes.length)];
+          });
+          return;
+        }
+      } catch (_) {
+        // bundled quotes not available
+      }
+
+      // Ultimate fallback
+      if (mounted) {
         setState(() {
           _motivation = 'TipitakaPali.org';
         });
       }
     } catch (_) {
-      // Fallback if quotes.json not found
       if (mounted) {
         setState(() {
           _motivation = 'TipitakaPali.org';

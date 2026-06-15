@@ -1,9 +1,12 @@
 // lib/screens/settings_screen.dart
 
-import 'dart:io' show Platform;
+import 'dart:convert';
+import 'dart:io' show File, Platform;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import '../providers/settings_provider.dart';
 import '../providers/session_provider.dart';
 import '../models/timer_mode.dart';
@@ -334,6 +337,97 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => _showCsvFormatGuide(context),
+                ),
+              ),
+            ),
+
+            const Divider(),
+
+            _buildSectionHeader(context, t.translate('settings.quotes')),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: isDark
+                        ? Colors.white.withAlpha(25)
+                        : Colors.black.withAlpha(12),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 20,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildDataButton(
+                          context,
+                          icon: Icons.file_download_outlined,
+                          label: t.translate('settings.importQuotes'),
+                          onTap: () => _importQuotes(context),
+                          isDark: isDark,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildDataButton(
+                          context,
+                          icon: Icons.delete_outline,
+                          label: t.translate('settings.clearQuotes'),
+                          onTap: () => _clearQuotes(context),
+                          isDark: isDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+              child: Text(
+                t.translate('settings.importQuotesHint'),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark
+                      ? Colors.white.withAlpha(100)
+                      : Colors.black.withAlpha(100),
+                ),
+              ),
+            ),
+
+            // Create Quotes guide tile
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: isDark
+                        ? Colors.white.withAlpha(25)
+                        : Colors.black.withAlpha(12),
+                  ),
+                ),
+                child: ListTile(
+                  leading: Icon(Icons.info_outline, color: AppColors.primary),
+                  title: Text(
+                    t.translate('settings.createQuotesTitle'),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    t.translate('settings.createQuotesSubtitle'),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _showCreateQuotesGuide(context),
                 ),
               ),
             ),
@@ -788,6 +882,248 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _importQuotes(BuildContext context) async {
+    final scaffold = ScaffoldMessenger.of(context);
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return; // user cancelled
+      }
+
+      final pickedFile = result.files.single;
+
+      // Read file content — use explicit UTF-8 decoding
+      // to correctly handle non-ASCII characters (Pali diacritics, CJK, etc.)
+      String jsonString;
+      if (pickedFile.bytes != null) {
+        jsonString = utf8.decode(pickedFile.bytes!);
+      } else if (pickedFile.path != null) {
+        jsonString = await File(pickedFile.path!).readAsString(encoding: utf8);
+      } else {
+        throw Exception('Could not read file.');
+      }
+
+      if (jsonString.trim().isEmpty) {
+        throw FormatException('The file is empty.');
+      }
+
+      // Validate JSON format
+      final decoded = json.decode(jsonString);
+
+      if (decoded is List) {
+        // Simple list of strings
+        for (final item in decoded) {
+          if (item is! String) {
+            throw FormatException(
+              'Invalid format: each item in the array must be a string.',
+            );
+          }
+        }
+        if (decoded.isEmpty) {
+          throw FormatException('The quotes array is empty.');
+        }
+      } else if (decoded is Map) {
+        // Language-keyed map, e.g. {"en": [...], "vi": [...]}
+        for (final entry in decoded.entries) {
+          if (entry.value is! List) {
+            throw FormatException(
+              'Invalid format: "${entry.key}" must contain a list of quotes.',
+            );
+          }
+          for (final item in entry.value as List) {
+            if (item is! String) {
+              throw FormatException(
+                'Invalid format: each quote in "${entry.key}" must be a string.',
+              );
+            }
+          }
+        }
+        if (decoded.isEmpty) {
+          throw FormatException('The quotes object is empty.');
+        }
+      } else {
+        throw FormatException(
+          'Invalid format: file must contain a JSON array of strings '
+          'or an object with language keys mapping to arrays of strings.',
+        );
+      }
+
+      if (!context.mounted) return;
+
+      // Count quotes for confirmation
+      int quoteCount = 0;
+      if (decoded is List) {
+        quoteCount = decoded.length;
+      } else {
+        for (final list in (decoded as Map).values) {
+          quoteCount += (list as List).length;
+        }
+      }
+
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Import Quotes'),
+          content: Text(
+            'Found $quoteCount quote${quoteCount == 1 ? '' : 's'} in the file.\n\n'
+            'Your custom quotes will replace the built-in quotes '
+            'on the session complete screen.\n\n'
+            'Import now?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Import'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true || !context.mounted) return;
+
+      await context.read<SettingsProvider>().setUserQuotes(jsonString);
+
+      if (!context.mounted) return;
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text(
+            '$quoteCount quote${quoteCount == 1 ? '' : 's'} imported',
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text('Import failed: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _clearQuotes(BuildContext context) async {
+    final scaffold = ScaffoldMessenger.of(context);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear Custom Quotes'),
+        content: const Text(
+          'Remove all your imported custom quotes? '
+          'Only the built-in quotes will be shown.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !context.mounted) return;
+
+    await context.read<SettingsProvider>().clearUserQuotes();
+
+    if (!context.mounted) return;
+    scaffold.showSnackBar(
+      SnackBar(
+        content: const Text('Custom quotes cleared'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showCreateQuotesGuide(BuildContext context) {
+    final t = TranslationService.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(t.translate('settings.createQuotesTitle')),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                t.translate('settings.createQuotesDesc'),
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const SelectableText(
+                        'https://vpnry.github.io/ekatimer/create_quotes.html',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontFamily: 'monospace',
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 20),
+                    tooltip: 'Copy link',
+                    onPressed: () {
+                      Clipboard.setData(
+                        const ClipboardData(
+                          text:
+                              'https://vpnry.github.io/ekatimer/create_quotes.html',
+                        ),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Link copied'),
+                          duration: Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: Navigator.of(context).pop,
+            child: Text(t.translate('settings.close')),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showCsvFormatGuide(BuildContext context) {
     final t = TranslationService.of(context);
     showDialog(
@@ -855,9 +1191,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(fontSize: 12),
               ),
               const SizedBox(height: 4),
-              SelectableText(
-                'https://vpnry.github.io/ekatimer/convert.html',
-                style: TextStyle(fontSize: 12, color: AppColors.primary),
+              Row(
+                children: [
+                  Expanded(
+                    child: SelectableText(
+                      'https://vpnry.github.io/ekatimer/convert.html',
+                      style: TextStyle(fontSize: 12, color: AppColors.primary),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 20),
+                    tooltip: 'Copy link',
+                    onPressed: () {
+                      Clipboard.setData(
+                        const ClipboardData(
+                          text:
+                              'https://vpnry.github.io/ekatimer/convert.html',
+                        ),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Link copied'),
+                          duration: Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -891,17 +1253,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'but WITHOUT ANY WARRANTY; without even the implied warranty of '
                 'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.',
               ),
-              const SizedBox(height: 12),
               const Text(
-                'While ekaTimer is not a fork of Meditation Assistant, many of its '
-                'features and behaviours were derived from studying and '
-                're-implementing concepts found in that project.',
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Accordingly, ekaTimer is distributed under the GNU General Public '
-                'License v3 (GPLv3), in recognition of the GPLv3 licence applied to '
-                'Meditation Assistant by Trevor Slocum.',
+                'ekaTimer is distributed under the GNU General Public '
+                'License v3 (GPLv3).',
               ),
               const SizedBox(height: 8),
               Text(
@@ -917,8 +1271,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildSectionLabel(context, 'Meditation Assistant'),
               const SizedBox(height: 8),
               const Text(
-                'ekaTimer is a Dart/Flutter reimplementation inspired by '
-                'Meditation Assistant, originally authored by Trevor Slocum.',
+                'While ekaTimer is not a fork of Meditation Assistant (GPLv3) authored by Trevor Slocum, many of its '
+                'features and behaviours were inspired by or derived from studying and '
+                're-implementing concepts found in this project.',
               ),
               const SizedBox(height: 8),
               const Text(

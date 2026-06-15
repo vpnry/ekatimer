@@ -111,6 +111,20 @@ class PersistenceService {
   static Future<void> setLocale(String locale) async =>
       saveString(AppConstants.prefLocale, locale);
 
+  static Future<void> saveUserQuotes(String quotesJson) async =>
+      saveString(AppConstants.prefUserQuotes, quotesJson);
+
+  static Future<String?> loadUserQuotes() async {
+    final p = await prefs;
+    final json = p.getString(AppConstants.prefUserQuotes);
+    return (json != null && json.isNotEmpty) ? json : null;
+  }
+
+  static Future<void> clearUserQuotes() async {
+    final p = await prefs;
+    await p.remove(AppConstants.prefUserQuotes);
+  }
+
   static Future<void> saveActiveSession({
     required int startTime,
     required int durationSeconds,

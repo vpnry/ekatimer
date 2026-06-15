@@ -3,7 +3,7 @@ import '../theme/colors.dart';
 import '../utils/time_utils.dart';
 import '../services/translation_service.dart';
 
-class SessionCard extends StatelessWidget {
+class SessionCard extends StatefulWidget {
   final String id;
   final DateTime startTime;
   final int durationSeconds;
@@ -26,15 +26,22 @@ class SessionCard extends StatelessWidget {
   });
 
   @override
+  State<SessionCard> createState() => _SessionCardState();
+}
+
+class _SessionCardState extends State<SessionCard> {
+  bool _notesExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final timeCategory = TimeUtils.getTimeOfDayCategory(startTime);
+    final timeCategory = TimeUtils.getTimeOfDayCategory(widget.startTime);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
+        onTap: widget.onTap,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -58,17 +65,17 @@ class SessionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      TimeUtils.formatDate(startTime),
+                      TimeUtils.formatDate(widget.startTime),
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${TimeUtils.formatTimeOfDay(startTime)} · ${TimeUtils.formatDurationReadable(durationSeconds)}',
+                      '${TimeUtils.formatTimeOfDay(widget.startTime)} · ${TimeUtils.formatDurationReadable(widget.durationSeconds)}',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurface.withAlpha(150),
                       ),
                     ),
-                    if (notes != null && notes!.isNotEmpty) ...[
+                    if (widget.notes != null && widget.notes!.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,14 +87,46 @@ class SessionCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Expanded(
-                            child: Text(
-                              notes!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withAlpha(180),
-                                fontStyle: FontStyle.italic,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.notes!,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface.withAlpha(180),
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  maxLines: _notesExpanded ? null : 2,
+                                  overflow: _notesExpanded
+                                      ? null
+                                      : TextOverflow.ellipsis,
+                                ),
+                                if (widget.notes!.length > 120 ||
+                                    widget.notes!.contains('\n'))
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _notesExpanded = !_notesExpanded;
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        _notesExpanded
+                                            ? TranslationService.of(context)
+                                                .translate('history.showLess')
+                                            : TranslationService.of(context)
+                                                .translate('history.showMore'),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: AppColors.primary,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 11,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ],
@@ -96,7 +135,7 @@ class SessionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (!completed)
+              if (!widget.completed)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
@@ -115,23 +154,23 @@ class SessionCard extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (onEdit != null)
+                  if (widget.onEdit != null)
                     IconButton(
                       icon: Icon(
                         Icons.edit_outlined,
                         size: 20,
                         color: theme.colorScheme.onSurface.withAlpha(100),
                       ),
-                      onPressed: onEdit,
+                      onPressed: widget.onEdit,
                     ),
-                  if (onDelete != null)
+                  if (widget.onDelete != null)
                     IconButton(
                       icon: Icon(
                         Icons.delete_outline,
                         size: 20,
                         color: theme.colorScheme.onSurface.withAlpha(100),
                       ),
-                      onPressed: onDelete,
+                      onPressed: widget.onDelete,
                     ),
                 ],
               ),

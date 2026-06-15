@@ -32,6 +32,7 @@ class AppConstants {
   static const String prefRecentDurations = 'recent_durations';
   static const String prefFixedHourPresets = 'fixed_hour_presets';
   static const String prefTransparentWidget = 'transparent_widget';
+  static const String prefUserQuotes = 'user_quotes';
 
   static const String sessionStateStartTime = 'session_start_time';
   static const String sessionStateDuration = 'session_duration';

@@ -134,4 +134,19 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Store user-imported quotes JSON string.
+  Future<void> setUserQuotes(String quotesJson) async {
+    await PersistenceService.saveUserQuotes(quotesJson);
+  }
+
+  /// Retrieve stored user quotes JSON, or null if none.
+  Future<String?> getUserQuotes() async {
+    return PersistenceService.loadUserQuotes();
+  }
+
+  /// Clear user-imported quotes.
+  Future<void> clearUserQuotes() async {
+    await PersistenceService.clearUserQuotes();
+  }
+
 }
