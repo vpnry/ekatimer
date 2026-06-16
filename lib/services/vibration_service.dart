@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 
 class VibrationService {
@@ -5,9 +7,20 @@ class VibrationService {
   factory VibrationService() => _instance;
   VibrationService._internal();
 
+  // Reuse the existing alarm channel — no new channel registration needed.
+  static const MethodChannel _iosChannel = MethodChannel(
+    'org.tipitakapali.ekatimer/alarm',
+  );
+
   bool _hasVibrator = false;
 
   Future<void> init() async {
+    if (Platform.isIOS) {
+      // All iPhones have a Taptic Engine; skip the plugin hasVibrator() call
+      // which may itself invoke CHHapticEngine on iOS 13+.
+      _hasVibrator = true;
+      return;
+    }
     try {
       _hasVibrator = await Vibration.hasVibrator();
     } catch (_) {
@@ -16,6 +29,20 @@ class VibrationService {
   }
 
   Future<void> vibrate(String pattern) async {
+    if (pattern == 'none' || pattern.isEmpty) return;
+
+    if (Platform.isIOS) {
+      // Route ALL iOS vibration through the native channel.
+      // AudioServicesPlaySystemSound(kSystemSoundID_Vibrate) works while
+      // the .playback audio session is active (screen off), unlike
+      // CHHapticEngine which iOS suspends on screen-off.
+      // Pattern nuance is intentionally dropped on iOS — a single Taptic
+      // pulse is the correct UX for meditation interval signals.
+      await _vibrateIos();
+      return;
+    }
+
+    // Android — unchanged
     switch (pattern) {
       case 'short':
         await _vibrateWithDuration(100);
@@ -25,9 +52,16 @@ class VibrationService {
         await _vibrateWithDuration(600);
       case 'double':
         await _vibratePattern([0, 150, 100, 150]);
-      case 'none':
       default:
         break;
+    }
+  }
+
+  Future<void> _vibrateIos() async {
+    try {
+      await _iosChannel.invokeMethod<void>('vibrateNow');
+    } catch (_) {
+      // Native channel unavailable (e.g. simulator) — silent fail.
     }
   }
 
@@ -46,6 +80,7 @@ class VibrationService {
   }
 
   Future<void> cancel() async {
+    if (Platform.isIOS) return; // Nothing to cancel with AudioServices
     if (!_hasVibrator) return;
     try {
       await Vibration.cancel();

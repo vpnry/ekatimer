@@ -148,6 +148,14 @@ fileprivate var _widgetActionData: [String: Any]? = nil
       guard let self = self else { return }
 
       switch call.method {
+      case "vibrateNow":
+        // AudioServicesPlaySystemSound bypasses CHHapticEngine entirely.
+        // CHHapticEngine is suspended by iOS when screen is off; this
+        // lower-level API is not subject to the same restriction and
+        // works while the audio session (.playback) keeps the app alive.
+        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+        result(nil)
+
       case "acquireCpuWakeLock":
         self.startBackgroundTask()
         result(true)
