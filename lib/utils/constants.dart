@@ -2,7 +2,7 @@ class AppConstants {
   AppConstants._();
 
   static const String appName = 'ekaTimer';
-  static const String appVersion = '1.0.16';
+  static const String appVersion = '1.0.18';
 
   static const int defaultTimerDurationMinutes = 60;
   static const int minTimerDurationMinutes = 1;
