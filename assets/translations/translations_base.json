@@ -214,7 +214,7 @@
     "settings.importQuotesHint": "These quotes appear when a session completes. Read instructions below.",
     "settings.createQuotesTitle": "Create Your Own Quotes",
     "settings.createQuotesSubtitle": "Generate a custom quotes file online",
-    "settings.createQuotesDesc": "Open the link below in your browser to create your own motivational quotes file. Paste one quote per line, then download the generated users_quotes.json and import it using the button above."
+    "settings.createQuotesDesc": "Open the link below in your browser to create your own motivational quotes file. Paste one quote per line, then download the generated Quotes.json and import it using the button above."
   },
   "vi": {},
   "de": {},

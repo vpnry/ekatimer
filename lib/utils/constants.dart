@@ -2,7 +2,7 @@ class AppConstants {
   AppConstants._();
 
   static const String appName = 'ekaTimer';
-  static const String appVersion = '1.0.18';
+  static const String appVersion = '1.0.19';
 
   static const int defaultTimerDurationMinutes = 60;
   static const int minTimerDurationMinutes = 1;
@@ -79,18 +79,6 @@ class AppConstants {
     'medium': 'Medium',
     'long': 'Long',
     'double': 'Double',
-  };
-
-  static const Map<String, String> screenControlLabels = {
-    'deviceTimeOut': 'Device Settings',
-    'on': 'Stay On',
-    'dim': 'Dim',
-  };
-
-  static const Map<String, String> themeModeLabels = {
-    'deviceTheme': 'Device Theme',
-    'light': 'Light',
-    'dark': 'Dark',
   };
 
   static const List<int> intervalOptions = [1, 2, 3, 5, 10, 15, 20, 30, 45, 60];

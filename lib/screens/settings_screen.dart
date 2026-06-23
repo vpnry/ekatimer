@@ -206,18 +206,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               icon: Icons.phone_android_outlined,
               title: t.translate('settings.screenDuring'),
-              subtitle:
-                  AppConstants.screenControlLabels[settings.screenControl] ??
-                  t.translate('settings.deviceTimeOut'),
+              subtitle: _getScreenControlLabel(t, settings.screenControl),
               trailing: DropdownButton<String>(
                 value: settings.screenControl,
                 underline: const SizedBox(),
                 items: ['deviceTimeOut', 'dim', 'on'].map((control) {
                   return DropdownMenuItem(
                     value: control,
-                    child: Text(
-                      AppConstants.screenControlLabels[control] ?? control,
-                    ),
+                    child: Text(_getScreenControlLabel(t, control)),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -229,16 +225,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               icon: Icons.dark_mode_outlined,
               title: t.translate('settings.theme'),
-              subtitle:
-                  AppConstants.themeModeLabels[settings.themeMode] ??
-                  t.translate('settings.deviceTheme'),
+              subtitle: _getThemeModeLabel(t, settings.themeMode),
               trailing: DropdownButton<String>(
                 value: settings.themeMode,
                 underline: const SizedBox(),
                 items: ['deviceTheme', 'light', 'dark'].map((mode) {
                   return DropdownMenuItem(
                     value: mode,
-                    child: Text(AppConstants.themeModeLabels[mode] ?? mode),
+                    child: Text(_getThemeModeLabel(t, mode)),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -466,6 +460,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  String _getScreenControlLabel(TranslationService t, String control) {
+    switch (control) {
+      case 'on':
+        return t.translate('settings.stayOn');
+      case 'dim':
+        return t.translate('settings.dim');
+      case 'deviceTimeOut':
+      default:
+        return t.translate('settings.deviceTimeOut');
+    }
+  }
+
+  String _getThemeModeLabel(TranslationService t, String mode) {
+    switch (mode) {
+      case 'light':
+        return t.translate('settings.light');
+      case 'dark':
+        return t.translate('settings.dark');
+      case 'deviceTheme':
+      default:
+        return t.translate('settings.deviceTheme');
+    }
+  }
+
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -519,7 +537,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           child: Row(
             children: [
-              const Text('Every'),
+              Text(t.translate('settings.every')),
               const SizedBox(width: 8),
               SizedBox(
                 width: 64,
@@ -536,7 +554,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    hintText: 'Off',
+                    hintText: t.translate('settings.off'),
                     hintStyle: const TextStyle(fontSize: 14),
                   ),
                   style: const TextStyle(fontSize: 14),
@@ -551,7 +569,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              const Text('min'),
+              Text(t.translate('settings.min')),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.check, size: 20),
@@ -574,7 +592,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onMinutesChanged(0);
                   controller.clear();
                 },
-                child: const Text('Off'),
+                child: Text(t.translate('settings.off')),
               ),
             ],
           ),
@@ -642,7 +660,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           child: Row(
             children: [
-              const Text('Every'),
+              Text(t.translate('settings.every')),
               const SizedBox(width: 8),
               SizedBox(
                 width: 64,
@@ -659,7 +677,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    hintText: 'Off',
+                    hintText: t.translate('settings.off'),
                     hintStyle: const TextStyle(fontSize: 14),
                   ),
                   style: const TextStyle(fontSize: 14),
@@ -674,7 +692,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              const Text('min'),
+              Text(t.translate('settings.min')),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.check, size: 20),
@@ -697,7 +715,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   settings.setVibrationIntervalMinutes(0);
                   controller.clear();
                 },
-                child: const Text('Off'),
+                child: Text(t.translate('settings.off')),
               ),
             ],
           ),
@@ -1206,8 +1224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () {
                       Clipboard.setData(
                         const ClipboardData(
-                          text:
-                              'https://vpnry.github.io/ekatimer/convert.html',
+                          text: 'https://vpnry.github.io/ekatimer/convert.html',
                         ),
                       );
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -1248,23 +1265,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // ── ekaTimer ─────────────────────────────────────────
               _buildSectionLabel(context, 'ekaTimer'),
               const SizedBox(height: 8),
-              _LicenseBox(
-                'This program is distributed in the hope that it will be useful, '
-                'but WITHOUT ANY WARRANTY; without even the implied warranty of '
-                'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.',
-              ),
               const Text(
                 'ekaTimer is distributed under the GNU General Public '
                 'License v3 (GPLv3).',
               ),
               const SizedBox(height: 8),
+
               Text(
                 'Source code: https://github.com/vpnry/ekatimer',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
 
+              const SizedBox(height: 8),
+              _LicenseBox(
+                'This program is distributed in the hope that it will be useful, '
+                'but WITHOUT ANY WARRANTY; without even the implied warranty of '
+                'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n'
+                'This software is provided "AS IS", without any express or implied '
+                'warranty of any kind, including but not limited to the warranties '
+                'of merchantability, fitness for a particular purpose, and '
+                'non-infringement.\n\n'
+                'In no event shall the authors or contributors be liable for any '
+                'claims or damages arising from the use of this software.',
+              ),
+
               const SizedBox(height: 20),
-              const Divider(),
+              const Divider(color: Colors.brown),
               const SizedBox(height: 12),
 
               // ── Meditation Assistant ──────────────────────────────
@@ -1272,20 +1298,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 8),
               const Text(
                 'While ekaTimer is not a fork of Meditation Assistant (GPLv3) authored by Trevor Slocum, many of its '
-                'features and behaviours were inspired by or derived from studying and '
+                'features were inspired by or derived from studying and '
                 're-implementing concepts found in this project.',
               ),
               const SizedBox(height: 8),
               const Text(
-                'Author: Trevor Slocum',
-                style: TextStyle(fontSize: 13),
-              ),
-              const Text(
-                'Source: https://codeberg.org/tslocum/meditationassistant',
+                'Source code: https://codeberg.org/tslocum/meditationassistant',
                 style: TextStyle(fontSize: 13),
               ),
 
               const SizedBox(height: 24),
+              const Divider(color: Colors.brown),
+              const SizedBox(height: 8),
 
               // ── Audio Attributions ────────────────────────────────
               _buildSectionLabel(context, 'Audio Attributions'),
