@@ -57,24 +57,30 @@ class VibrationPicker extends StatelessWidget {
             child: DropdownButton<String>(
               value: currentVibration,
               isExpanded: true,
+              itemHeight: null,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               items: AppConstants.vibrationOptions.map((vib) {
                 return DropdownMenuItem(
                   value: vib,
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.vibration,
-                        size: 18,
-                        color: vib == 'none'
-                            ? theme.colorScheme.onSurface.withAlpha(80)
-                            : theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _vibrationLabel(context, vib),
-                      ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.vibration,
+                          size: 18,
+                          color: vib == 'none'
+                              ? theme.colorScheme.onSurface.withAlpha(80)
+                              : theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _vibrationLabel(context, vib),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               }).toList(),

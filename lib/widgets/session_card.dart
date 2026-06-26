@@ -69,11 +69,34 @@ class _SessionCardState extends State<SessionCard> {
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      '${TimeUtils.formatTimeOfDay(widget.startTime)} · ${TimeUtils.formatDurationReadable(widget.durationSeconds)}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withAlpha(150),
-                      ),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          '${TimeUtils.formatTimeOfDay(widget.startTime)} · ${TimeUtils.formatDurationReadable(widget.durationSeconds)}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withAlpha(150),
+                          ),
+                        ),
+                        if (!widget.completed)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withAlpha(30),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              TranslationService.of(context).translate('history.stopped'),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: AppColors.warning,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     if (widget.notes != null && widget.notes!.isNotEmpty) ...[
                       const SizedBox(height: 4),
@@ -135,22 +158,7 @@ class _SessionCardState extends State<SessionCard> {
                   ],
                 ),
               ),
-              if (!widget.completed)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withAlpha(30),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    TranslationService.of(context).translate('history.stopped'),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppColors.warning,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

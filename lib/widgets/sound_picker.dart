@@ -152,58 +152,65 @@ class _SoundPickerState extends State<SoundPicker>
               child: DropdownButton<String>(
                 value: widget.currentSound,
                 isExpanded: true,
+                itemHeight: null,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 items: [
                   DropdownMenuItem(
                     value: 'none',
-                    child: Text(
-                      TranslationService.of(context).translate('common.none'),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      child: Text(
+                        TranslationService.of(context).translate('common.none'),
+                      ),
                     ),
                   ),
                   ...AppConstants.builtInSounds.map((sound) {
                     return DropdownMenuItem(
                       value: sound,
-                      child: Row(
-                        children: [
-                          AnimatedBuilder(
-                            animation: _pulseAnimation,
-                            builder: (context, _) {
-                              return Transform.scale(
-                                scale:
-                                    (_isPreviewing &&
-                                        widget.currentSound == sound)
-                                    ? _pulseAnimation.value
-                                    : 1.0,
-                                child: Icon(
-                                  (_isPreviewing &&
-                                          widget.currentSound == sound)
-                                      ? Icons.volume_up_rounded
-                                      : Icons.music_note,
-                                  size: 18,
-                                  color:
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        child: Row(
+                          children: [
+                            AnimatedBuilder(
+                              animation: _pulseAnimation,
+                              builder: (context, _) {
+                                return Transform.scale(
+                                  scale:
                                       (_isPreviewing &&
                                           widget.currentSound == sound)
-                                      ? AppColors.primary
-                                      : theme.colorScheme.primary,
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          Text(_soundLabel(context, sound)),
-                          const Spacer(),
-                          if (_isPreviewing && widget.currentSound == sound)
-                            Text(
-                              TranslationService.of(
-                                context,
-                              ).translate('common.playing'),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w500,
-                              ),
+                                      ? _pulseAnimation.value
+                                      : 1.0,
+                                  child: Icon(
+                                    (_isPreviewing &&
+                                            widget.currentSound == sound)
+                                        ? Icons.volume_up_rounded
+                                        : Icons.music_note,
+                                    size: 18,
+                                    color:
+                                        (_isPreviewing &&
+                                            widget.currentSound == sound)
+                                        ? AppColors.primary
+                                        : theme.colorScheme.primary,
+                                  ),
+                                );
+                              },
                             ),
-                        ],
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(_soundLabel(context, sound))),
+                            const SizedBox(width: 8),
+                            if (_isPreviewing && widget.currentSound == sound)
+                              Text(
+                                TranslationService.of(
+                                  context,
+                                ).translate('common.playing'),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     );
                   }),

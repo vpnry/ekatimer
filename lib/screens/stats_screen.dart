@@ -219,22 +219,24 @@ class _StatsScreenState extends State<StatsScreen>
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.translate('stats.averageSession'),
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      Text(
-                        TimeUtils.formatDurationReadable(
-                          provider.averageDurationSeconds.round(),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          t.translate('stats.averageSession'),
+                          style: theme.textTheme.bodyMedium,
                         ),
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w300,
+                        Text(
+                          TimeUtils.formatDurationReadable(
+                            provider.averageDurationSeconds.round(),
+                          ),
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w300,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -316,14 +318,18 @@ class _StatsScreenState extends State<StatsScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodyLarge),
-          const Spacer(),
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.bodyLarge),
+          ),
+          const SizedBox(width: 8),
           Text(
             TimeUtils.formatDurationReadable(seconds),
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            textAlign: TextAlign.right,
           ),
         ],
       ),
@@ -426,32 +432,41 @@ class _StatsScreenState extends State<StatsScreen>
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          TimeUtils.formatDate(date),
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                        Expanded(
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              Text(
+                                TimeUtils.formatDate(date),
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withAlpha(20),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${sessions.length} ${sessions.length == 1 ? t.translate('history.session') : t.translate('history.sessions')}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withAlpha(20),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${sessions.length} ${sessions.length == 1 ? t.translate('history.session') : t.translate('history.sessions')}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
                         Text(
                           TimeUtils.formatDurationReadable(totalSeconds),
                           style: TextStyle(
@@ -504,7 +519,9 @@ class _StatsScreenState extends State<StatsScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // ── Row 1: From / To date pickers ──
-          Row(
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 8,
             children: [
               _buildDateChip(
                 context,

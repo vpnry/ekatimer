@@ -55,12 +55,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.timer_outlined,
               title: t.translate('settings.defaultTimerMode'),
               trailing: DropdownButton<TimerMode>(
+                isExpanded: true,
+                itemHeight: null,
                 value: settings.defaultTimerMode,
                 underline: const SizedBox(),
                 items: TimerMode.values.map((mode) {
                   return DropdownMenuItem(
                     value: mode,
-                    child: Text(_modeLabel(t, mode)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      child: Text(_modeLabel(t, mode)),
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -189,12 +194,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.language,
               title: t.translate('settings.language'),
               trailing: DropdownButton<String>(
+                isExpanded: true,
+                itemHeight: null,
                 value: settings.locale,
                 underline: const SizedBox(),
                 items: languages.keys.map((code) {
                   return DropdownMenuItem(
                     value: code,
-                    child: Text(languages[code] ?? code),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      child: Text(languages[code] ?? code),
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -208,12 +218,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: t.translate('settings.screenDuring'),
               subtitle: _getScreenControlLabel(t, settings.screenControl),
               trailing: DropdownButton<String>(
+                isExpanded: true,
+                itemHeight: null,
                 value: settings.screenControl,
                 underline: const SizedBox(),
                 items: ['deviceTimeOut', 'dim', 'on'].map((control) {
                   return DropdownMenuItem(
                     value: control,
-                    child: Text(_getScreenControlLabel(t, control)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      child: Text(_getScreenControlLabel(t, control)),
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -227,12 +242,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: t.translate('settings.theme'),
               subtitle: _getThemeModeLabel(t, settings.themeMode),
               trailing: DropdownButton<String>(
+                isExpanded: true,
+                itemHeight: null,
                 value: settings.themeMode,
                 underline: const SizedBox(),
                 items: ['deviceTheme', 'light', 'dark'].map((mode) {
                   return DropdownMenuItem(
                     value: mode,
-                    child: Text(_getThemeModeLabel(t, mode)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      child: Text(_getThemeModeLabel(t, mode)),
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -505,13 +525,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Widget? trailing,
     VoidCallback? onTap,
   }) {
+    // Check if the font scale is large to adjust layout
+    final double textScale = MediaQuery.textScalerOf(context).scale(1);
+    final bool isLargeText = textScale > 1.15;
+
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
-      subtitle: subtitle != null
-          ? Text(subtitle, style: const TextStyle(fontSize: 13))
+      subtitle: (subtitle != null || (isLargeText && trailing != null))
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (subtitle != null)
+                  Text(subtitle, style: const TextStyle(fontSize: 13)),
+                if (isLargeText && trailing != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                    child: trailing,
+                  ),
+              ],
+            )
           : null,
-      trailing: trailing,
+      trailing: (isLargeText || trailing == null)
+          ? null
+          : ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.45,
+              ),
+              child: trailing,
+            ),
       onTap: onTap,
     );
   }
@@ -537,10 +580,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           child: Row(
             children: [
-              Text(t.translate('settings.every')),
+              Flexible(child: Text(t.translate('settings.every'))),
               const SizedBox(width: 8),
               SizedBox(
-                width: 64,
+                width: 80,
                 child: TextField(
                   controller: controller,
                   keyboardType: TextInputType.number,
@@ -554,7 +597,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    hintText: t.translate('settings.off'),
+                    hintText: '0',
                     hintStyle: const TextStyle(fontSize: 14),
                   ),
                   style: const TextStyle(fontSize: 14),
@@ -568,9 +611,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 4),
-              Text(t.translate('settings.min')),
-              const Spacer(),
+              const SizedBox(width: 8),
+              Expanded(child: Text(t.translate('settings.min'))),
               IconButton(
                 icon: const Icon(Icons.check, size: 20),
                 tooltip: 'Apply',
@@ -586,13 +628,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   }
                 },
               ),
-              TextButton(
-                onPressed: () {
-                  FocusScope.of(context).unfocus();
-                  onMinutesChanged(0);
-                  controller.clear();
-                },
-                child: Text(t.translate('settings.off')),
+              Flexible(
+                child: TextButton(
+                  onPressed: () {
+                    FocusScope.of(context).unfocus();
+                    onMinutesChanged(0);
+                    controller.clear();
+                  },
+                  child: Text(
+                    t.translate('settings.off'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
             ],
           ),
@@ -660,10 +708,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           child: Row(
             children: [
-              Text(t.translate('settings.every')),
+              Flexible(child: Text(t.translate('settings.every'))),
               const SizedBox(width: 8),
               SizedBox(
-                width: 64,
+                width: 80,
                 child: TextField(
                   controller: controller,
                   keyboardType: TextInputType.number,
@@ -677,7 +725,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    hintText: t.translate('settings.off'),
+                    hintText: '0',
                     hintStyle: const TextStyle(fontSize: 14),
                   ),
                   style: const TextStyle(fontSize: 14),
@@ -691,9 +739,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 4),
-              Text(t.translate('settings.min')),
-              const Spacer(),
+              const SizedBox(width: 8),
+              Expanded(child: Text(t.translate('settings.min'))),
               IconButton(
                 icon: const Icon(Icons.check, size: 20),
                 tooltip: 'Apply',
@@ -709,13 +756,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   }
                 },
               ),
-              TextButton(
-                onPressed: () {
-                  FocusScope.of(context).unfocus();
-                  settings.setVibrationIntervalMinutes(0);
-                  controller.clear();
-                },
-                child: Text(t.translate('settings.off')),
+              Flexible(
+                child: TextButton(
+                  onPressed: () {
+                    FocusScope.of(context).unfocus();
+                    settings.setVibrationIntervalMinutes(0);
+                    controller.clear();
+                  },
+                  child: Text(
+                    t.translate('settings.off'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
             ],
           ),

@@ -432,16 +432,22 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
                           : AppColors.textSecondaryLight,
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      _modeLabel(t, mode),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                        color: isSelected
-                            ? Colors.white
-                            : AppColors.textSecondaryLight,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _modeLabel(t, mode),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.textSecondaryLight,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -466,12 +472,16 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
           onTap: () => _showEditFixedPresetsDialog(context),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                t.translate('home.editPresetDuration'),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(color: AppColors.primary),
+              Flexible(
+                child: Text(
+                  t.translate('home.editPresetDuration'),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: AppColors.primary),
+                  textAlign: TextAlign.center,
+                ),
               ),
               const SizedBox(width: 6),
               Icon(Icons.edit_rounded, size: 16, color: AppColors.primary),
@@ -655,87 +665,96 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
                 : Colors.black.withAlpha(8),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 64,
-                height: 120,
-                child: ListWheelScrollView(
-                  itemExtent: 48,
-                  diameterRatio: 1.2,
-                  useMagnifier: true,
-                  magnification: 1.1,
-                  controller: hourController,
-                  onSelectedItemChanged: (index) {
-                    setState(() => _endAtHour = index);
-                  },
-                  children: List.generate(24, (index) {
-                    final isSelected = index == _endAtHour;
-                    return Center(
-                      child: Text(
-                        index.toString().padLeft(2, '0'),
-                        style: TextStyle(
-                          fontSize: isSelected ? 28 : 20,
-                          fontWeight: FontWeight.w300,
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.textSecondaryLight.withAlpha(100),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 64,
+                  height: 120,
+                  child: ListWheelScrollView(
+                    itemExtent: 48,
+                    diameterRatio: 1.2,
+                    useMagnifier: true,
+                    magnification: 1.1,
+                    controller: hourController,
+                    onSelectedItemChanged: (index) {
+                      setState(() => _endAtHour = index);
+                    },
+                    children: List.generate(24, (index) {
+                      final isSelected = index == _endAtHour;
+                      return Center(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            index.toString().padLeft(2, '0'),
+                            style: TextStyle(
+                              fontSize: isSelected ? 28 : 20,
+                              fontWeight: FontWeight.w300,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.textSecondaryLight.withAlpha(100),
+                            ),
+                          ),
                         ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: Text(
-                  ':',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w300,
-                    fontSize: 28,
+                      );
+                    }),
                   ),
                 ),
-              ),
-              SizedBox(
-                width: 64,
-                height: 120,
-                child: ListWheelScrollView(
-                  itemExtent: 48,
-                  diameterRatio: 1.2,
-                  useMagnifier: true,
-                  magnification: 1.1,
-                  controller: minuteController,
-                  onSelectedItemChanged: (index) {
-                    setState(() => _endAtMinute = index);
-                  },
-                  children: List.generate(60, (index) {
-                    final isSelected = index == _endAtMinute;
-                    return Center(
-                      child: Text(
-                        index.toString().padLeft(2, '0'),
-                        style: TextStyle(
-                          fontSize: isSelected ? 28 : 20,
-                          fontWeight: FontWeight.w300,
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.textSecondaryLight.withAlpha(100),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Text(
+                    ':',
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.w300,
+                      fontSize: 28,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 64,
+                  height: 120,
+                  child: ListWheelScrollView(
+                    itemExtent: 48,
+                    diameterRatio: 1.2,
+                    useMagnifier: true,
+                    magnification: 1.1,
+                    controller: minuteController,
+                    onSelectedItemChanged: (index) {
+                      setState(() => _endAtMinute = index);
+                    },
+                    children: List.generate(60, (index) {
+                      final isSelected = index == _endAtMinute;
+                      return Center(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            index.toString().padLeft(2, '0'),
+                            style: TextStyle(
+                              fontSize: isSelected ? 28 : 20,
+                              fontWeight: FontWeight.w300,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.textSecondaryLight.withAlpha(100),
+                            ),
+                          ),
                         ),
-                      ),
-                    );
-                  }),
+                      );
+                    }),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                _endAtHour >= 12
-                    ? t.translate('time.pm')
-                    : t.translate('time.am'),
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.textSecondaryLight,
+                const SizedBox(width: 8),
+                Text(
+                  _endAtHour >= 12
+                      ? t.translate('time.pm')
+                      : t.translate('time.am'),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppColors.textSecondaryLight,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -802,28 +821,33 @@ class _MeditationHomeScreenState extends State<MeditationHomeScreen>
                 width: 160,
                 height: 160,
                 alignment: Alignment.center,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.play_arrow_rounded,
-                      size: 48,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _selectedMode == TimerMode.timed
-                          ? _formatMinutes(_selectedDurationMinutes, t)
-                          : _selectedMode == TimerMode.endAt
-                          ? '${t.translate('home.until')} ${_endAtHour > 12 ? _endAtHour - 12 : (_endAtHour == 0 ? 12 : _endAtHour)}:${_endAtMinute.toString().padLeft(2, '0')} ${_endAtHour >= 12 ? t.translate('time.pm') : t.translate('time.am')}'
-                          : t.translate('home.begin'),
-                      style: const TextStyle(
+                padding: const EdgeInsets.all(16),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.play_arrow_rounded,
+                        size: 48,
                         color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        _selectedMode == TimerMode.timed
+                            ? _formatMinutes(_selectedDurationMinutes, t)
+                            : _selectedMode == TimerMode.endAt
+                            ? '${t.translate('home.until')} ${_endAtHour > 12 ? _endAtHour - 12 : (_endAtHour == 0 ? 12 : _endAtHour)}:${_endAtMinute.toString().padLeft(2, '0')} ${_endAtHour >= 12 ? t.translate('time.pm') : t.translate('time.am')}'
+                            : t.translate('home.begin'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
