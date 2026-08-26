@@ -133,6 +133,8 @@ fileprivate var _widgetActionData: [String: Any]? = nil
   // MARK: - Method Channel Setup
 
   private func setupAlarmChannel(binaryMessenger: FlutterBinaryMessenger) {
+    // Cross-language API: both names must match the Dart alarm/vibration
+    // channels. A mismatch builds cleanly but fails only when invoked.
     let alarmEventChannel = FlutterEventChannel(
       name: "org.tipitakapali.ekatimer/alarm_events",
       binaryMessenger: binaryMessenger

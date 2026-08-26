@@ -10,8 +10,12 @@ import 'package:file_picker/file_picker.dart';
 import '../providers/settings_provider.dart';
 import '../providers/session_provider.dart';
 import '../models/timer_mode.dart';
+import '../models/data_import_mode.dart';
+import '../models/user_profile.dart';
 import '../services/translation_service.dart';
 import '../services/csv_data_service.dart';
+import '../services/backup_service.dart';
+import '../services/database_service.dart';
 import '../theme/colors.dart';
 import '../theme/app_theme.dart';
 import '../widgets/sound_picker.dart';
@@ -38,6 +42,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final theme = isDark ? AppTheme.darkTheme : AppTheme.lightTheme;
 
     final languages = TranslationService.supportedLanguages;
+    final selectedLocale = languages.containsKey(settings.locale)
+        ? settings.locale
+        : 'en';
 
     return Theme(
       data: theme,
@@ -46,6 +53,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
         body: ListView(
           padding: const EdgeInsets.symmetric(vertical: 8),
           children: [
+            _buildSectionHeader(context, t.translate('settings.profile')),
+            _buildListTile(
+              context,
+              icon: Icons.switch_account_outlined,
+              title: t.translate('profiles.active'),
+              subtitle: settings.userName,
+              trailing: const Icon(Icons.manage_accounts_outlined),
+              onTap: () => _showProfilesDialog(context, settings),
+            ),
+            _buildListTile(
+              context,
+              icon: Icons.language,
+              title: t.translate('settings.language'),
+              trailing: DropdownButton<String>(
+                isExpanded: true,
+                itemHeight: null,
+                value: selectedLocale,
+                underline: const SizedBox(),
+                items: languages.keys.map((code) {
+                  return DropdownMenuItem(
+                    value: code,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      child: Text(languages[code] ?? code),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) settings.setLocale(value);
+                },
+              ),
+            ),
+
+            const Divider(),
+
             _buildSectionHeader(
               context,
               t.translate('settings.timerModeSettings'),
@@ -191,29 +233,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSectionHeader(context, t.translate('settings.display')),
             _buildListTile(
               context,
-              icon: Icons.language,
-              title: t.translate('settings.language'),
-              trailing: DropdownButton<String>(
-                isExpanded: true,
-                itemHeight: null,
-                value: settings.locale,
-                underline: const SizedBox(),
-                items: languages.keys.map((code) {
-                  return DropdownMenuItem(
-                    value: code,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0),
-                      child: Text(languages[code] ?? code),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) settings.setLocale(value);
-                },
-              ),
-            ),
-            _buildListTile(
-              context,
               icon: Icons.phone_android_outlined,
               title: t.translate('settings.screenDuring'),
               subtitle: _getScreenControlLabel(t, settings.screenControl),
@@ -319,6 +338,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                   ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: isDark
+                        ? Colors.white.withAlpha(25)
+                        : Colors.black.withAlpha(12),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 20,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildDataButton(
+                          context,
+                          icon: Icons.cloud_upload_outlined,
+                          label: t.translate('backup.save'),
+                          onTap: () => _backupData(context),
+                          isDark: isDark,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildDataButton(
+                          context,
+                          icon: Icons.cloud_download_outlined,
+                          label: t.translate('backup.restore'),
+                          onTap: () => _restoreBackup(context),
+                          isDark: isDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: Text(
+                t.translate('backup.hint'),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark
+                      ? Colors.white.withAlpha(100)
+                      : Colors.black.withAlpha(100),
                 ),
               ),
             ),
@@ -465,6 +539,219 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 32),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Manage-profiles dialog: add/rename/switch/delete, reachable from
+  /// the settings row that shows the active profile's name.
+  Future<void> _showProfilesDialog(
+    BuildContext context,
+    SettingsProvider settings,
+  ) async {
+    final t = TranslationService.of(context);
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text(t.translate('profiles.title')),
+          content: SizedBox(
+            width: 420,
+            child: ListView(
+              shrinkWrap: true,
+              children: settings.profiles.map((profile) {
+                final isActive = profile.id == settings.activeProfileId;
+                return ListTile(
+                  key: ValueKey('profile-${profile.id}'),
+                  leading: Icon(
+                    isActive
+                        ? Icons.check_circle_rounded
+                        : Icons.circle_outlined,
+                    color: isActive ? AppColors.primary : null,
+                  ),
+                  title: Text(
+                    profile.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  selected: isActive,
+                  onTap: () async {
+                    await settings.selectUserProfile(profile.id);
+                    if (!dialogContext.mounted) return;
+                    await dialogContext.read<SessionProvider>().loadSessions(
+                      profileId: profile.id,
+                    );
+                    if (dialogContext.mounted) setDialogState(() {});
+                  },
+                  trailing: PopupMenuButton<String>(
+                    tooltip: t.translate('profiles.manage'),
+                    onSelected: (action) async {
+                      if (action == 'rename') {
+                        final newName = await _promptProfileName(
+                          dialogContext,
+                          initialName: profile.name,
+                          title: t.translate('profiles.rename'),
+                        );
+                        if (newName == null) return;
+                        try {
+                          await settings.renameUserProfile(profile.id, newName);
+                          if (dialogContext.mounted) setDialogState(() {});
+                        } catch (error) {
+                          if (dialogContext.mounted) {
+                            _showProfileError(dialogContext, error);
+                          }
+                        }
+                      } else if (action == 'delete') {
+                        await _confirmDeleteProfile(
+                          dialogContext,
+                          settings,
+                          profile,
+                        );
+                        if (dialogContext.mounted) setDialogState(() {});
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'rename',
+                        child: Text(t.translate('profiles.rename')),
+                      ),
+                      if (settings.profiles.length > 1)
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text(t.translate('common.delete')),
+                        ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: () async {
+                final name = await _promptProfileName(
+                  dialogContext,
+                  title: t.translate('profiles.add'),
+                );
+                if (name == null) return;
+                try {
+                  final profile = await settings.addUserProfile(name);
+                  if (!dialogContext.mounted) return;
+                  await dialogContext.read<SessionProvider>().loadSessions(
+                    profileId: profile.id,
+                  );
+                  if (dialogContext.mounted) setDialogState(() {});
+                } catch (error) {
+                  if (dialogContext.mounted) {
+                    _showProfileError(dialogContext, error);
+                  }
+                }
+              },
+              icon: const Icon(Icons.person_add_alt_1_outlined),
+              label: Text(t.translate('profiles.add')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(t.translate('common.done')),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<String?> _promptProfileName(
+    BuildContext context, {
+    String initialName = '',
+    required String title,
+  }) async {
+    final t = TranslationService.of(context);
+    final controller = TextEditingController(text: initialName);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 50,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            hintText: t.translate('settings.nameHint'),
+            border: const OutlineInputBorder(),
+          ),
+          onSubmitted: (value) {
+            final normalized = value.trim();
+            if (normalized.isNotEmpty) {
+              Navigator.of(dialogContext).pop(normalized);
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(t.translate('common.cancel')),
+          ),
+          FilledButton(
+            onPressed: () {
+              final normalized = controller.text.trim();
+              if (normalized.isNotEmpty) {
+                Navigator.of(dialogContext).pop(normalized);
+              }
+            },
+            child: Text(t.translate('common.save')),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    return result;
+  }
+
+  /// Confirmation dialog before deleting a profile. Note: this removes
+  /// the profile entry only — deleting its session history is a
+  /// separate, explicit step the caller must also trigger.
+  Future<void> _confirmDeleteProfile(
+    BuildContext context,
+    SettingsProvider settings,
+    UserProfile profile,
+  ) async {
+    final t = TranslationService.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(t.translate('profiles.delete')),
+        content: Text(
+          t.translate('profiles.deleteConfirm', args: {'name': profile.name}),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(t.translate('common.cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: Text(t.translate('common.delete')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final sessions = context.read<SessionProvider>();
+    await sessions.deleteSessionsForProfile(profile.id);
+    await settings.deleteUserProfile(profile.id);
+    await sessions.loadSessions(profileId: settings.activeProfileId);
+  }
+
+  void _showProfileError(BuildContext context, Object error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          error.toString().replaceFirst('Invalid argument(s): ', ''),
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.error,
       ),
     );
   }
@@ -877,7 +1164,127 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _backupData(BuildContext context) async {
+    final t = TranslationService.of(context);
+    final scaffold = ScaffoldMessenger.of(context);
+    try {
+      final settings = context.read<SettingsProvider>();
+      final path = await BackupService.saveBackup(
+        profiles: settings.profiles,
+        activeProfileId: settings.activeProfileId,
+      );
+      if (path != null && context.mounted) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text(t.translate('backup.saved')),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text('${t.translate('backup.failed')}: $error'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Restores a backup file, merging or overwriting per the user's
+  /// choice (see [BackupService.createRestorePlan]). Snapshots the
+  /// current profiles/sessions first so that if applying the plan
+  /// fails partway (sessions written but the profile-list update
+  /// throws), everything is rolled back to that snapshot instead of
+  /// leaving sessions and profiles out of sync.
+  Future<void> _restoreBackup(BuildContext context) async {
+    final t = TranslationService.of(context);
+    final scaffold = ScaffoldMessenger.of(context);
+    try {
+      final backup = await BackupService.pickBackup();
+      if (backup == null || !context.mounted) return;
+      final mode = await _showImportModeDialog(
+        context,
+        title: t.translate('backup.restore'),
+        message: t.translate(
+          'backup.restoreChoice',
+          args: {
+            'profiles': '${backup.profiles.length}',
+            'sessions': '${backup.sessions.length}',
+          },
+        ),
+        mergeDescription: t.translate('backup.mergeDescription'),
+        overwriteDescription: t.translate('backup.overwriteDescription'),
+      );
+      if (mode == null || !context.mounted) return;
+
+      final settings = context.read<SettingsProvider>();
+      final originalProfiles = settings.profiles;
+      final originalActiveProfileId = settings.activeProfileId;
+      final originalSessions = await DatabaseService.getAllSessions();
+      final restorePlan = BackupService.createRestorePlan(
+        mode: mode,
+        incoming: backup,
+        existingProfiles: originalProfiles,
+        existingActiveProfileId: originalActiveProfileId,
+        existingSessions: originalSessions,
+      );
+
+      try {
+        await BackupService.restoreBackup(restorePlan);
+        await settings.replaceUserProfiles(
+          restorePlan.profiles,
+          activeProfileId: restorePlan.activeProfileId,
+        );
+      } catch (_) {
+        await DatabaseService.replaceAllSessions(originalSessions);
+        try {
+          await settings.replaceUserProfiles(
+            originalProfiles,
+            activeProfileId: originalActiveProfileId,
+          );
+        } catch (_) {}
+        rethrow;
+      }
+
+      if (!context.mounted) return;
+      await context.read<SessionProvider>().loadSessions(
+        profileId: restorePlan.activeProfileId,
+      );
+      if (context.mounted) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text(
+              t.translate(
+                mode == DataImportMode.merge
+                    ? 'backup.merged'
+                    : 'backup.restored',
+              ),
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text('${t.translate('backup.failed')}: $error'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _importCsv(BuildContext context) async {
+    final t = TranslationService.of(context);
     final scaffold = ScaffoldMessenger.of(context);
 
     try {
@@ -900,42 +1307,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
 
-      // Show confirmation dialog
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Import Sessions'),
-          content: Text(
-            'Found ${sessions.length} session${sessions.length == 1 ? '' : 's'} in the CSV file.\n\n'
-            'Import them into ekaTimer?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Import'),
-            ),
-          ],
+      final mode = await _showImportModeDialog(
+        context,
+        title: t.translate('settings.importCSVTitle'),
+        message: t.translate(
+          'settings.importCSVChoice',
+          args: {'sessions': '${sessions.length}'},
+        ),
+        mergeDescription: t.translate('backup.mergeDescription'),
+        overwriteDescription: t.translate(
+          'settings.importCSVOverwriteDescription',
         ),
       );
 
-      if (confirm != true || !context.mounted) return;
+      if (mode == null || !context.mounted) return;
 
-      final count = await CsvDataService.importSessions(sessions);
+      final count = await CsvDataService.importSessions(sessions, mode: mode);
 
       if (!context.mounted) return;
 
-      // Refresh session data so stats update immediately
-      if (count > 0) {
-        context.read<SessionProvider>().loadSessions();
-      }
+      await context.read<SessionProvider>().loadSessions();
 
       scaffold.showSnackBar(
         SnackBar(
-          content: Text('$count session${count == 1 ? '' : 's'} imported'),
+          content: Text(
+            t.translate(
+              'settings.importCSVResult',
+              args: {'sessions': '$count'},
+            ),
+          ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.green,
         ),
@@ -944,13 +1344,98 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (context.mounted) {
         scaffold.showSnackBar(
           SnackBar(
-            content: Text('Import failed: $e'),
+            content: Text('${t.translate('settings.importCSVFailed')}: $e'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.red,
           ),
         );
       }
     }
+  }
+
+  Future<DataImportMode?> _showImportModeDialog(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required String mergeDescription,
+    required String overwriteDescription,
+  }) {
+    final t = TranslationService.of(context);
+    return showDialog<DataImportMode>(
+      context: context,
+      builder: (dialogContext) {
+        final colorScheme = Theme.of(dialogContext).colorScheme;
+        return AlertDialog(
+          title: Text(title),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(message),
+                const SizedBox(height: 16),
+                FilledButton.tonal(
+                  key: const ValueKey('import-mode-merge'),
+                  onPressed: () =>
+                      Navigator.of(dialogContext).pop(DataImportMode.merge),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          t.translate('backup.merge'),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          mergeDescription,
+                          style: Theme.of(dialogContext).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                  key: const ValueKey('import-mode-overwrite'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colorScheme.error,
+                    side: BorderSide(color: colorScheme.error),
+                  ),
+                  onPressed: () =>
+                      Navigator.of(dialogContext).pop(DataImportMode.overwrite),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          t.translate('backup.overwrite'),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          overwriteDescription,
+                          style: Theme.of(dialogContext).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              key: const ValueKey('import-mode-cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(t.translate('common.cancel')),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _importQuotes(BuildContext context) async {
@@ -1226,6 +1711,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'targetDurationSeconds — Planned duration in seconds (same as durationSeconds)\n'
                 'timerMode — Timer mode: timed | endAt | unlimited\n'
                 'completed — 1 session completed as planned | 0 stopped early\n'
+                'quality — Optional numeric score from 0.0 to 5.0 (one decimal place)\n'
                 'notes — Optional session notes',
                 style: TextStyle(fontSize: 12, height: 1.6),
               ),
@@ -1240,9 +1726,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: SelectableText(
-                  'id,startTime,endTime,durationSeconds,targetDurationSeconds,timerMode,completed,notes\n'
-                  'fb004417-34f3-405c-8bdf-4340d5c44347,2015-01-01T00:00:00.000000,2015-01-01T02:12:52.000000,7972,7972,timed,1,good session\n'
-                  'b9b8a49a-e9ed-4799-895e-bdb4db6776ad,2015-01-01T04:30:07.000000,2015-01-01T05:14:09.000000,2642,2642,timed,1,nice session',
+                  'id,startTime,endTime,durationSeconds,targetDurationSeconds,timerMode,completed,quality,notes\n'
+                  'fb004417-34f3-405c-8bdf-4340d5c44347,2015-01-01T00:00:00.000000,2015-01-01T02:12:52.000000,7972,7972,timed,1,4,good session\n'
+                  'b9b8a49a-e9ed-4799-895e-bdb4db6776ad,2015-01-01T04:30:07.000000,2015-01-01T05:14:09.000000,2642,2642,timed,1,calm,nice session',
                   style: TextStyle(
                     fontSize: 11,
                     fontFamily: 'monospace',
@@ -1325,7 +1811,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 8),
 
               Text(
-                'Source code: https://github.com/vpnry/ekatimer',
+                'Modified source code is distributed with this release.\n'
+                'Upstream ekaTimer: https://github.com/vpnry/ekatimer',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
 
@@ -1350,9 +1837,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildSectionLabel(context, 'Meditation Assistant'),
               const SizedBox(height: 8),
               const Text(
-                'While ekaTimer is not a fork of Meditation Assistant (GPLv3) authored by Trevor Slocum, many of its '
-                'features were inspired by or derived from studying and '
-                're-implementing concepts found in this project.',
+                'ekaTimer was inspired by Meditation Assistant (GPLv3), '
+                'authored by Trevor Slocum, and re-implemented many concepts '
+                'from that project.',
               ),
               const SizedBox(height: 8),
               const Text(

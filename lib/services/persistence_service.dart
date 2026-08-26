@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_settings.dart';
+import '../models/user_profile.dart';
 import '../models/timer_mode.dart';
 import '../models/sound_config.dart';
 import '../models/vibration_config.dart';
@@ -44,7 +47,7 @@ class PersistenceService {
       transparentWidget: p.getBool(AppConstants.prefTransparentWidget) ?? false,
       sessionDelaySeconds: p.getInt(AppConstants.prefSessionDelay) ?? 0,
       locale: p.getString(AppConstants.prefLocale) ?? 'system',
-
+      userName: p.getString(AppConstants.prefUserName) ?? '',
     );
   }
 
@@ -111,6 +114,83 @@ class PersistenceService {
   static Future<void> setLocale(String locale) async =>
       saveString(AppConstants.prefLocale, locale);
 
+  static Future<void> setUserName(String name) async =>
+      saveString(AppConstants.prefUserName, name);
+
+  /// Loads the saved profile list, migrating and repairing it as needed:
+  /// on first run after adding multi-profile support there is no list yet,
+  /// so the old single [AppConstants.prefUserName] value becomes the first
+  /// profile; if the stored active-profile id no longer matches any
+  /// profile (e.g. that profile was deleted), it falls back to the first
+  /// one. [AppConstants.prefUserName] is then re-saved to mirror the active
+  /// profile's name, since other code may still read that key directly.
+  static Future<List<UserProfile>> loadUserProfiles() async {
+    final p = await prefs;
+    final profiles = <UserProfile>[];
+    final seenIds = <String>{};
+    final raw = p.getString(AppConstants.prefUserProfiles);
+
+    if (raw != null && raw.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is List) {
+          for (final item in decoded) {
+            if (item is! Map) continue;
+            try {
+              final profile = UserProfile.fromJson(
+                Map<String, dynamic>.from(item),
+              );
+              if (seenIds.add(profile.id)) profiles.add(profile);
+            } catch (_) {
+              // Ignore malformed individual profiles and retain valid ones.
+            }
+          }
+        }
+      } catch (_) {
+        // Fall through to the legacy single-name migration below.
+      }
+    }
+
+    if (profiles.isEmpty) {
+      final legacyName = p.getString(AppConstants.prefUserName)?.trim() ?? '';
+      profiles.add(
+        UserProfile(
+          id: UserProfile.defaultId,
+          name: legacyName.isEmpty ? 'Meditator' : legacyName,
+        ),
+      );
+      await saveUserProfiles(profiles);
+    }
+
+    final savedActiveId = p.getString(AppConstants.prefActiveProfileId);
+    final activeId = profiles.any((profile) => profile.id == savedActiveId)
+        ? savedActiveId!
+        : profiles.first.id;
+    await p.setString(AppConstants.prefActiveProfileId, activeId);
+    final activeName = profiles
+        .firstWhere((profile) => profile.id == activeId)
+        .name;
+    await p.setString(AppConstants.prefUserName, activeName);
+    return List.unmodifiable(profiles);
+  }
+
+  static Future<void> saveUserProfiles(Iterable<UserProfile> profiles) async {
+    final p = await prefs;
+    final encoded = jsonEncode(
+      profiles.map((profile) => profile.toJson()).toList(),
+    );
+    await p.setString(AppConstants.prefUserProfiles, encoded);
+  }
+
+  static Future<String> loadActiveProfileId() async {
+    final p = await prefs;
+    return p.getString(AppConstants.prefActiveProfileId) ??
+        UserProfile.defaultId;
+  }
+
+  static Future<void> setActiveProfileId(String profileId) async =>
+      saveString(AppConstants.prefActiveProfileId, profileId);
+
   static Future<void> saveUserQuotes(String quotesJson) async =>
       saveString(AppConstants.prefUserQuotes, quotesJson);
 
@@ -132,6 +212,7 @@ class PersistenceService {
     required bool isPaused,
     required int pauseDuration,
     required int endTime,
+    required String profileId,
     int? pauseStartTime,
   }) async {
     final p = await prefs;
@@ -141,6 +222,7 @@ class PersistenceService {
     await p.setBool(AppConstants.sessionStateIsPaused, isPaused);
     await p.setInt(AppConstants.sessionStatePauseDuration, pauseDuration);
     await p.setInt(AppConstants.sessionStateEndTime, endTime);
+    await p.setString(AppConstants.sessionStateProfileId, profileId);
     if (pauseStartTime != null) {
       await p.setInt(AppConstants.sessionStatePauseStartTime, pauseStartTime);
     } else {
@@ -167,6 +249,12 @@ class PersistenceService {
     return p.getString(AppConstants.sessionStateMode);
   }
 
+  static Future<String> loadActiveSessionProfileId() async {
+    final p = await prefs;
+    return p.getString(AppConstants.sessionStateProfileId) ??
+        UserProfile.defaultId;
+  }
+
   static Future<bool> loadActiveSessionIsPaused() async {
     final p = await prefs;
     return p.getBool(AppConstants.sessionStateIsPaused) ?? false;
@@ -181,6 +269,7 @@ class PersistenceService {
     await p.remove(AppConstants.sessionStatePauseDuration);
     await p.remove(AppConstants.sessionStateEndTime);
     await p.remove(AppConstants.sessionStatePauseStartTime);
+    await p.remove(AppConstants.sessionStateProfileId);
   }
 
   static Future<List<int>> loadRecentDurations() async {

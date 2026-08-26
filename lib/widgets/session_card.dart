@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../utils/time_utils.dart';
 import '../services/translation_service.dart';
+import '../utils/sitting_quality.dart';
+import 'quality_rating_label.dart';
 
 class SessionCard extends StatefulWidget {
   final String id;
   final DateTime startTime;
+  final DateTime? endTime;
   final int durationSeconds;
   final bool completed;
+  final String? quality;
   final String? notes;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
@@ -17,8 +21,10 @@ class SessionCard extends StatefulWidget {
     super.key,
     required this.id,
     required this.startTime,
+    this.endTime,
     required this.durationSeconds,
     this.completed = true,
+    this.quality,
     this.notes,
     this.onTap,
     this.onDelete,
@@ -30,12 +36,17 @@ class SessionCard extends StatefulWidget {
 }
 
 class _SessionCardState extends State<SessionCard> {
-  bool _notesExpanded = false;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final timeCategory = TimeUtils.getTimeOfDayCategory(widget.startTime);
+    // Older sessions recorded before endTime was tracked have none
+    // stored; derive a display value from start + duration instead.
+    final displayedEndTime =
+        widget.endTime ??
+        widget.startTime.add(Duration(seconds: widget.durationSeconds));
+    final qualityRating = SittingQuality.rating(widget.quality);
+    final notes = widget.notes?.trim();
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -64,31 +75,72 @@ class _SessionCardState extends State<SessionCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      TimeUtils.formatDate(widget.startTime),
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 2),
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 4,
+                    Row(
                       children: [
-                        Text(
-                          '${TimeUtils.formatTimeOfDay(widget.startTime)} · ${TimeUtils.formatDurationReadable(widget.durationSeconds)}',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withAlpha(150),
+                        Expanded(
+                          child: Text(
+                            TimeUtils.formatDate(widget.startTime),
+                            style: theme.textTheme.titleMedium,
                           ),
                         ),
-                        if (!widget.completed)
+                        if (widget.onEdit != null)
+                          IconButton(
+                            key: const ValueKey('session-edit-button'),
+                            icon: Icon(
+                              Icons.edit_outlined,
+                              size: 20,
+                              color: theme.colorScheme.onSurface.withAlpha(100),
+                            ),
+                            visualDensity: VisualDensity.compact,
+                            onPressed: widget.onEdit,
+                          ),
+                        if (widget.onDelete != null)
+                          IconButton(
+                            icon: Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: theme.colorScheme.onSurface.withAlpha(100),
+                            ),
+                            visualDensity: VisualDensity.compact,
+                            onPressed: widget.onDelete,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${TimeUtils.formatTimeOfDay(widget.startTime)} → ${TimeUtils.formatTimeOfDay(displayedEndTime)}',
+                              key: const ValueKey('session-start-end'),
+                              maxLines: 1,
+                              softWrap: false,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withAlpha(
+                                  150,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (!widget.completed) ...[
+                          const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.warning.withAlpha(30),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              TranslationService.of(context).translate('history.stopped'),
+                              TranslationService.of(
+                                context,
+                              ).translate('history.stopped'),
                               style: TextStyle(
                                 fontSize: 10,
                                 color: AppColors.warning,
@@ -96,91 +148,50 @@ class _SessionCardState extends State<SessionCard> {
                               ),
                             ),
                           ),
+                        ],
                       ],
                     ),
-                    if (widget.notes != null && widget.notes!.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.notes_rounded,
-                            size: 14,
-                            color: theme.colorScheme.onSurface.withAlpha(100),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Text(
+                          TimeUtils.formatDurationReadable(
+                            widget.durationSeconds,
                           ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.notes!,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface.withAlpha(180),
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                  maxLines: _notesExpanded ? null : 2,
-                                  overflow: _notesExpanded
-                                      ? null
-                                      : TextOverflow.ellipsis,
-                                ),
-                                if (widget.notes!.length > 120 ||
-                                    widget.notes!.contains('\n'))
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _notesExpanded = !_notesExpanded;
-                                      });
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 2),
-                                      child: Text(
-                                        _notesExpanded
-                                            ? TranslationService.of(context)
-                                                .translate('history.showLess')
-                                            : TranslationService.of(context)
-                                                .translate('history.showMore'),
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: AppColors.primary,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 11,
-                                            ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
+                          key: const ValueKey('session-duration'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withAlpha(150),
+                          ),
+                        ),
+                        if (qualityRating != null) ...[
+                          const SizedBox(width: 10),
+                          QualityRatingLabel(
+                            key: const ValueKey('session-quality'),
+                            rating: qualityRating,
+                            iconSize: 13,
+                            gap: 3,
+                            starSpacing: 0,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
+                      ],
+                    ),
+                    if (notes != null && notes.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        notes,
+                        key: const ValueKey('session-notes'),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withAlpha(180),
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ],
                   ],
                 ),
-              ),
-
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (widget.onEdit != null)
-                    IconButton(
-                      icon: Icon(
-                        Icons.edit_outlined,
-                        size: 20,
-                        color: theme.colorScheme.onSurface.withAlpha(100),
-                      ),
-                      onPressed: widget.onEdit,
-                    ),
-                  if (widget.onDelete != null)
-                    IconButton(
-                      icon: Icon(
-                        Icons.delete_outline,
-                        size: 20,
-                        color: theme.colorScheme.onSurface.withAlpha(100),
-                      ),
-                      onPressed: widget.onDelete,
-                    ),
-                ],
               ),
             ],
           ),

@@ -18,6 +18,8 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
 
+    // Cross-language API: keep these names synchronized with the Dart services.
+    // A typo here still compiles, then surfaces as MissingPluginException.
     private val WIDGET_CHANNEL = "org.tipitakapali.ekatimer/widget"
     private val BATTERY_CHANNEL = "org.tipitakapali.ekatimer/background_settings"
     private var widgetTimerMode: String? = null

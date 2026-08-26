@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/timer_mode.dart';
 import '../models/meditation_session.dart';
+import '../models/user_profile.dart';
 import '../services/persistence_service.dart';
 import '../services/audio_service.dart';
 import '../services/vibration_service.dart';
@@ -31,6 +32,7 @@ class TimerProvider extends ChangeNotifier {
   int _pauseDurationSeconds = 0;
   late DateTime _pauseStartTime;
   String? _currentSessionId;
+  String _currentProfileId = UserProfile.defaultId;
 
   int _lastIntervalMinute = -1;
   int _lastVibrationIntervalMinute = -1;
@@ -142,6 +144,10 @@ class TimerProvider extends ChangeNotifier {
 
   Future<void> startSession() async {
     _currentSessionId = const Uuid().v4();
+    // Captured once, here, not read again at save time: if the user
+    // switches profile mid-session, this session must stay attributed to
+    // whoever started it, not whoever is active when it finishes.
+    _currentProfileId = await PersistenceService.loadActiveProfileId();
     _startTime = DateTime.now();
     _elapsedSeconds = 0;
     _pauseDurationSeconds = 0;
@@ -319,6 +325,7 @@ class TimerProvider extends ChangeNotifier {
 
     final session = MeditationSession(
       id: _currentSessionId ?? const Uuid().v4(),
+      profileId: _currentProfileId,
       startTime: _startTime,
       endTime: now,
       durationSeconds: _elapsedSeconds,
@@ -368,6 +375,7 @@ class TimerProvider extends ChangeNotifier {
     _totalDurationSeconds = durationSeconds;
     _pauseDurationSeconds = pauseDuration;
     _currentSessionId = const Uuid().v4();
+    _currentProfileId = await PersistenceService.loadActiveSessionProfileId();
     _alarmFired = false;
 
     final modeStr = await PersistenceService.loadActiveSessionMode();
@@ -433,6 +441,7 @@ class TimerProvider extends ChangeNotifier {
       isPaused: _state == TimerState.paused,
       pauseDuration: _pauseDurationSeconds,
       endTime: _endTime?.millisecondsSinceEpoch ?? 0,
+      profileId: _currentProfileId,
       pauseStartTime: _state == TimerState.paused
           ? _pauseStartTime.millisecondsSinceEpoch
           : null,
@@ -552,6 +561,7 @@ class TimerProvider extends ChangeNotifier {
 
     final session = MeditationSession(
       id: _currentSessionId ?? const Uuid().v4(),
+      profileId: _currentProfileId,
       startTime: _startTime,
       endTime: now,
       durationSeconds: _elapsedSeconds,

@@ -26,6 +26,10 @@ class TranslationService extends InheritedWidget {
   /// All supported language codes mapped to their native display names.
   /// Matches the language list from the upocal_widget project.
   /// 'system' is a special value meaning "follow iOS device preferred language".
+  // Every key here must have a matching top-level locale entry in
+  // assets/translations/translations.json. A locale with translated content
+  // but no entry here is unreachable: users can't pick it in Settings, and
+  // resolveLocale() below silently falls back to English for it.
   static const Map<String, String> supportedLanguages = {
     'system': 'Device Language',
     'en': 'English',

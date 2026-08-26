@@ -28,7 +28,11 @@ class TimeUtils {
     }
   }
 
-  static String formatTimeOfDay(DateTime dateTime, {String amLabel = 'AM', String pmLabel = 'PM'}) {
+  static String formatTimeOfDay(
+    DateTime dateTime, {
+    String amLabel = 'AM',
+    String pmLabel = 'PM',
+  }) {
     final hour = dateTime.hour;
     final minute = dateTime.minute;
     final amPm = hour >= 12 ? pmLabel : amLabel;
@@ -38,8 +42,18 @@ class TimeUtils {
 
   static String formatDate(DateTime dateTime) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return '${days[dateTime.weekday - 1]}, ${months[dateTime.month - 1]} ${dateTime.day}';
@@ -54,13 +68,24 @@ class TimeUtils {
     return 'Night';
   }
 
-  static List<Color> getGradientForTimeOfDay(DateTime time, {Brightness brightness = Brightness.light}) {
+  static List<Color> getGradientForTimeOfDay(
+    DateTime time, {
+    Brightness brightness = Brightness.light,
+  }) {
     final hour = time.hour;
     final bool isDark = brightness == Brightness.dark;
-    if (hour < 6) return isDark ? AppColors.gradientNightDark : AppColors.gradientNight;
-    if (hour < 12) return isDark ? AppColors.gradientSunriseDark : AppColors.gradientSunrise;
-    if (hour < 17) return isDark ? AppColors.gradientOceanDark : AppColors.gradientOcean;
-    if (hour < 21) return isDark ? AppColors.gradientSunsetDark : AppColors.gradientSunset;
+    if (hour < 6) {
+      return isDark ? AppColors.gradientNightDark : AppColors.gradientNight;
+    }
+    if (hour < 12) {
+      return isDark ? AppColors.gradientSunriseDark : AppColors.gradientSunrise;
+    }
+    if (hour < 17) {
+      return isDark ? AppColors.gradientOceanDark : AppColors.gradientOcean;
+    }
+    if (hour < 21) {
+      return isDark ? AppColors.gradientSunsetDark : AppColors.gradientSunset;
+    }
     return isDark ? AppColors.gradientNightDark : AppColors.gradientNight;
   }
 }

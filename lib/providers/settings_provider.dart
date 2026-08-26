@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../models/app_settings.dart';
+import '../models/user_profile.dart';
 import '../models/timer_mode.dart';
 import '../models/sound_config.dart';
 import '../models/vibration_config.dart';
@@ -8,6 +10,10 @@ import '../services/widget_action_handler.dart';
 
 class SettingsProvider extends ChangeNotifier {
   AppSettings _settings = const AppSettings();
+  List<UserProfile> _profiles = const [
+    UserProfile(id: UserProfile.defaultId, name: 'Meditator'),
+  ];
+  String _activeProfileId = UserProfile.defaultId;
 
   AppSettings get settings => _settings;
 
@@ -20,9 +26,23 @@ class SettingsProvider extends ChangeNotifier {
   int get sessionDelaySeconds => _settings.sessionDelaySeconds;
   bool get transparentWidget => _settings.transparentWidget;
   String get locale => _settings.locale;
+  List<UserProfile> get profiles => List.unmodifiable(_profiles);
+  String get activeProfileId => _activeProfileId;
+  UserProfile get activeProfile => _profiles.firstWhere(
+    (profile) => profile.id == _activeProfileId,
+    orElse: () => _profiles.first,
+  );
+  String get userName => activeProfile.name;
 
   Future<void> loadSettings() async {
     _settings = await PersistenceService.loadSettings();
+    _profiles = await PersistenceService.loadUserProfiles();
+    _activeProfileId = await PersistenceService.loadActiveProfileId();
+    if (!_profiles.any((profile) => profile.id == _activeProfileId)) {
+      _activeProfileId = _profiles.first.id;
+      await PersistenceService.setActiveProfileId(_activeProfileId);
+    }
+    _settings = _settings.copyWith(userName: activeProfile.name);
     notifyListeners();
   }
 
@@ -107,8 +127,9 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   Future<void> setVibrationIntervalMinutes(int minutes) async {
-    final updated =
-        _settings.vibrationConfig.copyWith(intervalMinutes: minutes);
+    final updated = _settings.vibrationConfig.copyWith(
+      intervalMinutes: minutes,
+    );
     _settings = _settings.copyWith(vibrationConfig: updated);
     await PersistenceService.setVibrationIntervalMinutes(minutes);
     notifyListeners();
@@ -134,6 +155,127 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ---- Multi-profile management ----------------------------------
+  // A profile is just an id + display name; all session data is looked
+  // up by the active profile's id elsewhere (see SessionProvider,
+  // DatabaseService). Every mutation here re-saves the full profile
+  // list and, if it touches the active profile, mirrors the change into
+  // AppSettings.userName so existing UI reading settings.userName stays
+  // correct without change.
+
+  Future<void> setUserName(String name) async {
+    await renameUserProfile(_activeProfileId, name);
+  }
+
+  Future<UserProfile> addUserProfile(String name) async {
+    final normalized = _validatedProfileName(name);
+    _ensureUniqueProfileName(normalized);
+    final profile = UserProfile(id: const Uuid().v4(), name: normalized);
+    _profiles = [..._profiles, profile];
+    await PersistenceService.saveUserProfiles(_profiles);
+    await selectUserProfile(profile.id);
+    return profile;
+  }
+
+  Future<void> selectUserProfile(String profileId) async {
+    final profile = _profiles.firstWhere(
+      (candidate) => candidate.id == profileId,
+      orElse: () =>
+          throw ArgumentError.value(profileId, 'profileId', 'Unknown profile'),
+    );
+    _activeProfileId = profile.id;
+    _settings = _settings.copyWith(userName: profile.name);
+    await PersistenceService.setActiveProfileId(profile.id);
+    await PersistenceService.setUserName(profile.name);
+    notifyListeners();
+  }
+
+  Future<void> renameUserProfile(String profileId, String name) async {
+    final normalized = _validatedProfileName(name);
+    _ensureUniqueProfileName(normalized, exceptId: profileId);
+    var found = false;
+    _profiles = _profiles.map((profile) {
+      if (profile.id != profileId) return profile;
+      found = true;
+      return profile.copyWith(name: normalized);
+    }).toList();
+    if (!found) {
+      throw ArgumentError.value(profileId, 'profileId', 'Unknown profile');
+    }
+    await PersistenceService.saveUserProfiles(_profiles);
+    if (profileId == _activeProfileId) {
+      _settings = _settings.copyWith(userName: normalized);
+      await PersistenceService.setUserName(normalized);
+    }
+    notifyListeners();
+  }
+
+  /// Deletes a profile (not its session history — callers that also want
+  /// the data gone must call SessionProvider.deleteSessionsForProfile).
+  /// At least one profile must always exist, and deleting the active
+  /// profile switches to whichever profile is now first in the list.
+  Future<void> deleteUserProfile(String profileId) async {
+    if (_profiles.length <= 1) {
+      throw StateError('At least one profile is required.');
+    }
+    if (!_profiles.any((profile) => profile.id == profileId)) return;
+    _profiles = _profiles.where((profile) => profile.id != profileId).toList();
+    if (_activeProfileId == profileId) {
+      _activeProfileId = _profiles.first.id;
+      _settings = _settings.copyWith(userName: _profiles.first.name);
+      await PersistenceService.setActiveProfileId(_activeProfileId);
+      await PersistenceService.setUserName(_profiles.first.name);
+    }
+    await PersistenceService.saveUserProfiles(_profiles);
+    notifyListeners();
+  }
+
+  /// Wholesale-replaces the profile list, used when restoring a backup.
+  /// Rejects a backup with duplicate ids or an activeProfileId that
+  /// isn't in the list, rather than silently picking a fallback —
+  /// a bad restore should fail loudly, not quietly corrupt state.
+  Future<void> replaceUserProfiles(
+    Iterable<UserProfile> profiles, {
+    required String activeProfileId,
+  }) async {
+    final values = profiles.toList();
+    if (values.isEmpty) {
+      throw ArgumentError('At least one profile is required.');
+    }
+    final ids = values.map((profile) => profile.id).toSet();
+    if (ids.length != values.length || !ids.contains(activeProfileId)) {
+      throw const FormatException('Invalid profile backup.');
+    }
+    _profiles = values;
+    _activeProfileId = activeProfileId;
+    _settings = _settings.copyWith(userName: activeProfile.name);
+    await PersistenceService.saveUserProfiles(_profiles);
+    await PersistenceService.setActiveProfileId(_activeProfileId);
+    await PersistenceService.setUserName(activeProfile.name);
+    notifyListeners();
+  }
+
+  String _validatedProfileName(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) {
+      throw ArgumentError.value(value, 'name', 'Profile name is required.');
+    }
+    return normalized.length <= 50 ? normalized : normalized.substring(0, 50);
+  }
+
+  // Names are compared case-insensitively so "Alex" and "alex" can't
+  // coexist and silently confuse whoever is picking a profile.
+  void _ensureUniqueProfileName(String name, {String? exceptId}) {
+    final duplicate = _profiles.any(
+      (profile) =>
+          profile.id != exceptId &&
+          profile.name.toLowerCase() == name.toLowerCase(),
+    );
+    if (duplicate) {
+      throw ArgumentError.value(name, 'name', 'Profile name already exists.');
+    }
+  }
+
   /// Store user-imported quotes JSON string.
   Future<void> setUserQuotes(String quotesJson) async {
     await PersistenceService.saveUserQuotes(quotesJson);
@@ -148,5 +290,4 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> clearUserQuotes() async {
     await PersistenceService.clearUserQuotes();
   }
-
 }

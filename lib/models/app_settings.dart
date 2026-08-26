@@ -8,6 +8,7 @@ class AppSettings {
   final String screenControl;
   final String themeMode;
   final String locale;
+  final String userName;
   final SoundConfig soundConfig;
   final VibrationConfig vibrationConfig;
   final bool transparentWidget;
@@ -18,6 +19,7 @@ class AppSettings {
     this.screenControl = 'deviceTimeOut',
     this.themeMode = 'deviceTheme',
     this.locale = 'system',
+    this.userName = '',
     this.soundConfig = const SoundConfig(),
     this.vibrationConfig = const VibrationConfig(),
     this.transparentWidget = true,
@@ -30,6 +32,7 @@ class AppSettings {
     String? screenControl,
     String? themeMode,
     String? locale,
+    String? userName,
     SoundConfig? soundConfig,
     VibrationConfig? vibrationConfig,
     bool? transparentWidget,
@@ -42,6 +45,7 @@ class AppSettings {
       screenControl: screenControl ?? this.screenControl,
       themeMode: themeMode ?? this.themeMode,
       locale: locale ?? this.locale,
+      userName: userName ?? this.userName,
       soundConfig: soundConfig ?? this.soundConfig,
       vibrationConfig: vibrationConfig ?? this.vibrationConfig,
       transparentWidget: transparentWidget ?? this.transparentWidget,
