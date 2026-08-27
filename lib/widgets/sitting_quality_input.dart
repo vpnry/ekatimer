@@ -109,15 +109,11 @@ class _SittingQualityInputState extends State<SittingQualityInput> {
           ),
         ),
         const SizedBox(height: 6),
-        if (rating == null)
-          Text(
-            t.translate('quality.hint'),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w400,
-            ),
-          )
-        else
+        // Only the star preview sits below the field. The empty state needs
+        // no caption here: the same 'quality.hint' text is already the
+        // field's placeholder, and showing it twice read as a stray
+        // duplicate rather than as guidance.
+        if (rating != null)
           QualityRatingLabel(
             key: const ValueKey('quality-rating-preview'),
             rating: rating,

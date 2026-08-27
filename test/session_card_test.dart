@@ -1,3 +1,4 @@
+import 'package:ekatimer/widgets/quality_rating_label.dart';
 import 'package:ekatimer/widgets/session_card.dart';
 import 'package:ekatimer/services/translation_service.dart';
 import 'package:flutter/material.dart';
@@ -54,20 +55,15 @@ void main() {
     expect(find.text('5:52 AM → 6:03 AM'), findsOneWidget);
     expect(find.text('11m'), findsOneWidget);
     expect(find.text('3.5'), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('session-quality')),
-        matching: find.byIcon(Icons.star_rounded),
-      ),
-      findsNWidgets(4),
-    );
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('session-quality')),
-        matching: find.byIcon(Icons.star_border_rounded),
-      ),
-      findsNWidgets(5),
-    );
+    final slots = tester
+        .widgetList<FractionalStarIcon>(
+          find.descendant(
+            of: find.byKey(const ValueKey('session-quality')),
+            matching: find.byType(FractionalStarIcon),
+          ),
+        )
+        .toList();
+    expect(slots.map((slot) => slot.fillFraction), [1, 1, 1, 0.5, 0]);
     expect(find.text('3.5*'), findsNothing);
   });
 

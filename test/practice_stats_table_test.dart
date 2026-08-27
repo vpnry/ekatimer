@@ -1,6 +1,7 @@
 import 'package:ekatimer/models/meditation_session.dart';
 import 'package:ekatimer/services/translation_service.dart';
 import 'package:ekatimer/widgets/practice_stats_table.dart';
+import 'package:ekatimer/widgets/quality_rating_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -53,20 +54,16 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('practice-quality-0-1')),
-        matching: find.byIcon(Icons.star_rounded),
-      ),
-      findsNothing,
-    );
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('practice-quality-0-1')),
-        matching: find.byIcon(Icons.star_border_rounded),
-      ),
-      findsNWidgets(5),
-    );
+    final zeroSlots = tester
+        .widgetList<FractionalStarIcon>(
+          find.descendant(
+            of: find.byKey(const ValueKey('practice-quality-0-1')),
+            matching: find.byType(FractionalStarIcon),
+          ),
+        )
+        .toList();
+    expect(zeroSlots, hasLength(5));
+    expect(zeroSlots.every((slot) => slot.fillFraction == 0), isTrue);
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('practice-quality-0-2')),
@@ -103,20 +100,15 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('practice-quality-0-6')),
-        matching: find.byIcon(Icons.star_rounded),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('practice-quality-0-6')),
-        matching: find.byIcon(Icons.star_border_rounded),
-      ),
-      findsNWidgets(5),
-    );
+    final sixthSlots = tester
+        .widgetList<FractionalStarIcon>(
+          find.descendant(
+            of: find.byKey(const ValueKey('practice-quality-0-6')),
+            matching: find.byType(FractionalStarIcon),
+          ),
+        )
+        .toList();
+    expect(sixthSlots.map((slot) => slot.fillFraction), [1, 0, 0, 0, 0]);
   });
 
   testWidgets('uses a horizontal scroll view for the wide table', (

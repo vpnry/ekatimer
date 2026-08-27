@@ -1,5 +1,7 @@
 // lib/widgets/edit_session_dialog.dart
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../models/meditation_session.dart';
 import '../services/translation_service.dart';
@@ -126,6 +128,18 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final theme = isDark ? AppTheme.darkTheme : AppTheme.lightTheme;
 
+    // showModalBottomSheet's useSafeArea only guards the top, left and right
+    // edges, so the sheet still runs underneath the system navigation bar and
+    // its Cancel/Save row ends up unreachable. viewInsets covers the keyboard
+    // and viewPadding the navigation bar; the larger of the two applies,
+    // because when the keyboard is open it already covers the nav bar and
+    // adding both would leave a large empty gap.
+    final mediaQuery = MediaQuery.of(context);
+    final bottomInset = math.max(
+      mediaQuery.viewInsets.bottom,
+      mediaQuery.viewPadding.bottom,
+    );
+
     return Theme(
       data: theme,
       child: Padding(
@@ -133,7 +147,7 @@ class _EditSessionDialogState extends State<_EditSessionDialog> {
           left: 16,
           right: 16,
           top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          bottom: bottomInset + 16,
         ),
         child: SingleChildScrollView(
           child: Column(

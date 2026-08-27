@@ -1,4 +1,5 @@
 import 'package:ekatimer/services/translation_service.dart';
+import 'package:ekatimer/widgets/quality_rating_label.dart';
 import 'package:ekatimer/widgets/sitting_quality_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,20 +50,16 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('quality-rating-preview')),
-        matching: find.byIcon(Icons.star_rounded),
-      ),
-      findsNothing,
-    );
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('quality-rating-preview')),
-        matching: find.byIcon(Icons.star_border_rounded),
-      ),
-      findsNWidgets(5),
-    );
+    final slots = tester
+        .widgetList<FractionalStarIcon>(
+          find.descendant(
+            of: find.byKey(const ValueKey('quality-rating-preview')),
+            matching: find.byType(FractionalStarIcon),
+          ),
+        )
+        .toList();
+    expect(slots, hasLength(5));
+    expect(slots.every((slot) => slot.fillFraction == 0), isTrue);
     expect(find.text('0.0*'), findsNothing);
 
     expect(
