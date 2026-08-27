@@ -48,6 +48,9 @@ class PersistenceService {
       sessionDelaySeconds: p.getInt(AppConstants.prefSessionDelay) ?? 0,
       locale: p.getString(AppConstants.prefLocale) ?? 'system',
       userName: p.getString(AppConstants.prefUserName) ?? '',
+      // Defaults to true so upgrading installs keep seeing quotes; only an
+      // explicit opt-out turns them off.
+      showQuotes: p.getBool(AppConstants.prefShowQuotes) ?? true,
     );
   }
 
@@ -110,6 +113,9 @@ class PersistenceService {
 
   static Future<void> setTransparentWidget(bool enabled) async =>
       saveBool(AppConstants.prefTransparentWidget, enabled);
+
+  static Future<void> setShowQuotes(bool enabled) async =>
+      saveBool(AppConstants.prefShowQuotes, enabled);
 
   static Future<void> setLocale(String locale) async =>
       saveString(AppConstants.prefLocale, locale);

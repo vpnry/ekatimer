@@ -85,6 +85,10 @@ class _CompleteScreenState extends State<CompleteScreen>
       final locale = TranslationService.of(context).locale;
       final settings = context.read<SettingsProvider>();
 
+      // Opted out of quotes: leave _motivation empty so the build skips the
+      // block entirely, and skip the asset and preference reads it needs.
+      if (!settings.showQuotes) return;
+
       // First, try to load user-imported quotes — these completely replace
       // the built-in quotes when available.
       String? userQuotesJson;
@@ -150,6 +154,50 @@ class _CompleteScreenState extends State<CompleteScreen>
         });
       }
     }
+  }
+
+  /// The reflection quote, or nothing at all.
+  ///
+  /// [_motivation] stays empty both when the user has turned quotes off and
+  /// when none could be loaded, and in either case the surrounding spacing
+  /// goes with it rather than leaving a gap where the card used to be.
+  List<Widget> _buildReflection(BuildContext context) {
+    if (_motivation.isEmpty) return const [];
+    return [
+      const SizedBox(height: 24),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withAlpha(10),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.primary.withAlpha(30)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                Icons.format_quote_rounded,
+                size: 20,
+                color: AppColors.primary.withAlpha(100),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _motivation,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
   }
 
   @override
@@ -345,48 +393,7 @@ class _CompleteScreenState extends State<CompleteScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 24),
-
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 18,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withAlpha(10),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: AppColors.primary.withAlpha(30),
-                              ),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 2),
-                                  child: Icon(
-                                    Icons.format_quote_rounded,
-                                    size: 20,
-                                    color: AppColors.primary.withAlpha(100),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    _motivation,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          height: 1.4,
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          ..._buildReflection(context),
                         ],
                       ),
                     ),

@@ -25,6 +25,7 @@ class SettingsProvider extends ChangeNotifier {
   VibrationConfig get vibrationConfig => _settings.vibrationConfig;
   int get sessionDelaySeconds => _settings.sessionDelaySeconds;
   bool get transparentWidget => _settings.transparentWidget;
+  bool get showQuotes => _settings.showQuotes;
   String get locale => _settings.locale;
   List<UserProfile> get profiles => List.unmodifiable(_profiles);
   String get activeProfileId => _activeProfileId;
@@ -146,6 +147,12 @@ class SettingsProvider extends ChangeNotifier {
     await PersistenceService.setTransparentWidget(enabled);
     // Trigger Android widget refresh directly with the current value
     await WidgetActionHandler.updateAllWidgets(transparent: enabled);
+    notifyListeners();
+  }
+
+  Future<void> setShowQuotes(bool enabled) async {
+    _settings = _settings.copyWith(showQuotes: enabled);
+    await PersistenceService.setShowQuotes(enabled);
     notifyListeners();
   }
 

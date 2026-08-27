@@ -13,6 +13,11 @@ class AppSettings {
   final VibrationConfig vibrationConfig;
   final bool transparentWidget;
   final int sessionDelaySeconds;
+
+  /// Whether the completion screen shows a reflection quote. On by default,
+  /// so existing installs keep the behavior they already had.
+  final bool showQuotes;
+
   const AppSettings({
     this.defaultTimerMode = TimerMode.timed,
     this.defaultDurationMinutes = 60,
@@ -24,6 +29,7 @@ class AppSettings {
     this.vibrationConfig = const VibrationConfig(),
     this.transparentWidget = true,
     this.sessionDelaySeconds = 0,
+    this.showQuotes = true,
   });
 
   AppSettings copyWith({
@@ -37,6 +43,7 @@ class AppSettings {
     VibrationConfig? vibrationConfig,
     bool? transparentWidget,
     int? sessionDelaySeconds,
+    bool? showQuotes,
   }) {
     return AppSettings(
       defaultTimerMode: defaultTimerMode ?? this.defaultTimerMode,
@@ -50,6 +57,7 @@ class AppSettings {
       vibrationConfig: vibrationConfig ?? this.vibrationConfig,
       transparentWidget: transparentWidget ?? this.transparentWidget,
       sessionDelaySeconds: sessionDelaySeconds ?? this.sessionDelaySeconds,
+      showQuotes: showQuotes ?? this.showQuotes,
     );
   }
 }

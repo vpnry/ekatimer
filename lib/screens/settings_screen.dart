@@ -432,6 +432,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Divider(),
 
             _buildSectionHeader(context, t.translate('settings.quotes')),
+            SwitchListTile(
+              secondary: const Icon(Icons.format_quote_rounded),
+              title: Text(t.translate('settings.showQuotes')),
+              subtitle: Text(
+                t.translate('settings.showQuotesDesc'),
+                style: const TextStyle(fontSize: 13),
+              ),
+              value: settings.showQuotes,
+              onChanged: (value) => settings.setShowQuotes(value),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Card(

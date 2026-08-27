@@ -274,6 +274,8 @@
     "editSession.notes": "Notes",
     "editSession.notesHint": "Add a note about this session…",
     "settings.quotes": "Motivational Quotes",
+    "settings.showQuotes": "Show quotes",
+    "settings.showQuotesDesc": "Display a quote on the session summary screen.",
     "settings.importQuotes": "Import Quotes.json",
     "settings.clearQuotes": "Clear Quotes.json",
     "settings.importQuotesHint": "These quotes appear when a session completes. Read instructions below.",
