@@ -1,4 +1,5 @@
 import '../models/meditation_session.dart';
+import 'time_utils.dart';
 
 /// One calendar day's practice time, bucketed into [SessionCalendar.slotCount]
 /// six-hour slots of the day (00-06, 06-12, 12-18, 18-24) for a heatmap-style view.
@@ -25,13 +26,9 @@ class SessionCalendar {
     required int days,
     required Iterable<MeditationSession> sessions,
   }) {
-    final normalizedStart = DateTime(
-      startDate.year,
-      startDate.month,
-      startDate.day,
-    );
+    final normalizedStart = TimeUtils.startOfDay(startDate);
     final values = List.generate(days, (_) => List.filled(slotCount, 0));
-    final endDate = normalizedStart.add(Duration(days: days));
+    final endDate = TimeUtils.addDays(normalizedStart, days);
 
     for (final session in sessions) {
       if (session.startTime.isBefore(normalizedStart) ||
@@ -39,19 +36,15 @@ class SessionCalendar {
         continue;
       }
 
-      final sessionDate = DateTime(
-        session.startTime.year,
-        session.startTime.month,
-        session.startTime.day,
-      );
-      final dayIndex = sessionDate.difference(normalizedStart).inDays;
+      final sessionDate = TimeUtils.startOfDay(session.startTime);
+      final dayIndex = TimeUtils.daysBetween(normalizedStart, sessionDate);
       values[dayIndex][slotIndex(session.startTime)] += session.durationSeconds;
     }
 
     return List.generate(
       days,
       (index) => SessionCalendarDay(
-        date: normalizedStart.add(Duration(days: index)),
+        date: TimeUtils.addDays(normalizedStart, index),
         slotSeconds: List.unmodifiable(values[index]),
       ),
     );

@@ -50,8 +50,8 @@ class _StatsScreenState extends State<StatsScreen>
   void initState() {
     super.initState();
     final now = DateTime.now();
-    _sessionEndDate = DateTime(now.year, now.month, now.day);
-    _sessionStartDate = _sessionEndDate.subtract(const Duration(days: 6));
+    _sessionEndDate = TimeUtils.startOfDay(now);
+    _sessionStartDate = TimeUtils.addDays(_sessionEndDate, -6);
     _weeklyCalendarStart = _startOfWeek(now);
     _monthlyCalendarStart = DateTime(now.year, now.month);
     _tabController = TabController(length: 5, vsync: this);
@@ -977,7 +977,7 @@ class _StatsScreenState extends State<StatsScreen>
     }
 
     final currentWeek = _startOfWeek(DateTime.now());
-    final endDate = _weeklyCalendarStart.add(const Duration(days: 6));
+    final endDate = TimeUtils.addDays(_weeklyCalendarStart, 6);
     return Column(
       children: [
         _buildReportViewSwitcher(
@@ -1466,10 +1466,9 @@ class _StatsScreenState extends State<StatsScreen>
     );
   }
 
-  DateTime _startOfWeek(DateTime date) {
-    final normalized = DateTime(date.year, date.month, date.day);
-    return normalized.subtract(Duration(days: normalized.weekday - 1));
-  }
+  /// Shorthand for this screen's call sites. Week and day boundaries are
+  /// computed in [TimeUtils] alone, so they match SessionProvider's queries.
+  DateTime _startOfWeek(DateTime date) => TimeUtils.startOfWeek(date);
 
   Widget _buildChartError(BuildContext context) => Center(
     child: Text(
@@ -1509,7 +1508,7 @@ class _StatsScreenState extends State<StatsScreen>
       0,
       (sum, row) => sum + row.totalSeconds,
     );
-    final periodEnd = startDate.add(Duration(days: dayCount));
+    final periodEnd = TimeUtils.addDays(startDate, dayCount);
     final periodQuality = _averageQuality(
       _sessionsInRange(provider.sessions, startDate, periodEnd),
     );
@@ -1685,7 +1684,7 @@ class _StatsScreenState extends State<StatsScreen>
                 sessions: provider.sessions,
                 showQuality: _showCalendarQuality,
                 startDate: startDate,
-                endDate: periodEnd.subtract(const Duration(days: 1)),
+                endDate: TimeUtils.addDays(periodEnd, -1),
                 dateLabelBuilder: (date) => includeMonthInRows
                     ? TimeUtils.formatDate(date)
                     : '${date.day}',

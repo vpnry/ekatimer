@@ -3,6 +3,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import '../utils/constants.dart';
+import '../utils/time_utils.dart';
 import '../models/meditation_session.dart';
 
 // Nearly every read/write below takes an optional `profileId`.
@@ -113,8 +114,8 @@ class DatabaseService {
     DateTime date, {
     String? profileId,
   }) async {
-    final startOfDay = DateTime(date.year, date.month, date.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final startOfDay = TimeUtils.startOfDay(date);
+    final endOfDay = TimeUtils.addDays(startOfDay, 1);
     return getSessionsInRange(startOfDay, endOfDay, profileId: profileId);
   }
 
@@ -132,11 +133,10 @@ class DatabaseService {
   }
 
   static Future<int> getTodayDuration({String? profileId}) async {
-    final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
+    final startOfDay = TimeUtils.startOfDay(DateTime.now());
     return getTotalDurationInRange(
       startOfDay,
-      startOfDay.add(const Duration(days: 1)),
+      TimeUtils.addDays(startOfDay, 1),
       profileId: profileId,
     );
   }
@@ -145,8 +145,8 @@ class DatabaseService {
     DateTime date, {
     String? profileId,
   }) async {
-    final startOfDay = DateTime(date.year, date.month, date.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final startOfDay = TimeUtils.startOfDay(date);
+    final endOfDay = TimeUtils.addDays(startOfDay, 1);
     return getTotalDurationInRange(startOfDay, endOfDay, profileId: profileId);
   }
 
@@ -177,15 +177,14 @@ class DatabaseService {
               final dt = DateTime.fromMillisecondsSinceEpoch(
                 m['startTime'] as int,
               );
-              return DateTime(dt.year, dt.month, dt.day);
+              return TimeUtils.startOfDay(dt);
             })
             .toSet()
             .toList()
           ..sort((a, b) => b.compareTo(a));
 
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
+    final today = TimeUtils.startOfDay(DateTime.now());
+    final yesterday = TimeUtils.addDays(today, -1);
 
     if (!sessionDates.contains(today) && !sessionDates.contains(yesterday)) {
       return 0;
@@ -194,9 +193,13 @@ class DatabaseService {
     int streak = 0;
     var checkDate = sessionDates.contains(today) ? today : yesterday;
 
+    // Steps back one calendar day at a time. Subtracting a 24-hour Duration
+    // would land on 23:00 or 01:00 across a DST switch, and every entry in
+    // sessionDates is midnight-normalized, so the lookup would miss and end
+    // the streak a day early.
     while (sessionDates.contains(checkDate)) {
       streak++;
-      checkDate = checkDate.subtract(const Duration(days: 1));
+      checkDate = TimeUtils.addDays(checkDate, -1);
     }
 
     return streak;
@@ -220,7 +223,7 @@ class DatabaseService {
               final dt = DateTime.fromMillisecondsSinceEpoch(
                 m['startTime'] as int,
               );
-              return DateTime(dt.year, dt.month, dt.day);
+              return TimeUtils.startOfDay(dt);
             })
             .toSet()
             .toList()
@@ -232,7 +235,11 @@ class DatabaseService {
     int current = 1;
 
     for (int i = 1; i < sessionDates.length; i++) {
-      final diff = sessionDates[i].difference(sessionDates[i - 1]).inDays;
+      // Counted in calendar days, not elapsed hours: two consecutive
+      // midnights are 23h apart across a spring-forward DST switch, which
+      // `difference().inDays` truncates to 0 — the day would count as
+      // neither a continuation nor a break, silently shortening the streak.
+      final diff = TimeUtils.daysBetween(sessionDates[i - 1], sessionDates[i]);
       if (diff == 1) {
         current++;
         if (current > longest) longest = current;

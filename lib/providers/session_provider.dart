@@ -3,6 +3,7 @@ import '../models/meditation_session.dart';
 import '../models/user_profile.dart';
 import '../services/database_service.dart';
 import '../services/persistence_service.dart';
+import '../utils/time_utils.dart';
 
 class SessionProvider extends ChangeNotifier {
   List<MeditationSession> _sessions = [];
@@ -99,29 +100,24 @@ class SessionProvider extends ChangeNotifier {
       profileId: profileId,
     );
 
+    // Every boundary below is built with TimeUtils' calendar-day helpers.
+    // Offsetting by a fixed 24-hour Duration would drift by an hour across a
+    // daylight-saving switch, pulling in or dropping sessions that sit near
+    // midnight at the edges of these ranges.
     final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final startOfWeekDt = DateTime(
-      startOfWeek.year,
-      startOfWeek.month,
-      startOfWeek.day,
-    );
+    final startOfWeekDt = TimeUtils.startOfWeek(now);
     final thisWeekDurationSeconds =
         await DatabaseService.getTotalDurationInRange(
       startOfWeekDt,
-      startOfWeekDt.add(const Duration(days: 7)),
+      TimeUtils.addDays(startOfWeekDt, 7),
       profileId: profileId,
     );
 
-    final startOf14Days = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).subtract(const Duration(days: 13));
+    final startOf14Days = TimeUtils.addDays(TimeUtils.startOfDay(now), -13);
     final last14DaysDurationSeconds =
         await DatabaseService.getTotalDurationInRange(
       startOf14Days,
-      startOf14Days.add(const Duration(days: 14)),
+      TimeUtils.addDays(startOf14Days, 14),
       profileId: profileId,
     );
 
@@ -217,12 +213,8 @@ class SessionProvider extends ChangeNotifier {
     final data = <WeeklyDataPoint>[];
 
     for (int i = weeks - 1; i >= 0; i--) {
-      final weekStart = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      ).subtract(Duration(days: now.weekday - 1 + (i * 7)));
-      final weekEnd = weekStart.add(const Duration(days: 7));
+      final weekStart = TimeUtils.addDays(TimeUtils.startOfWeek(now), -i * 7);
+      final weekEnd = TimeUtils.addDays(weekStart, 7);
       final duration = await DatabaseService.getTotalDurationInRange(
         weekStart,
         weekEnd,
@@ -242,11 +234,7 @@ class SessionProvider extends ChangeNotifier {
     final data = <DailyDataPoint>[];
 
     for (int i = days - 1; i >= 0; i--) {
-      final date = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      ).subtract(Duration(days: i));
+      final date = TimeUtils.addDays(TimeUtils.startOfDay(now), -i);
       final duration = await DatabaseService.getTotalDurationForDate(
         date,
         profileId: profileId,
@@ -357,7 +345,11 @@ class SessionProvider extends ChangeNotifier {
       monthEnd,
       profileId: _activeProfileId,
     );
-    final dayCount = monthEnd.subtract(const Duration(days: 1)).day;
+    // Day 0 of the next month is the last day of this one, so this yields
+    // the month's length without special-casing 28/29/30/31. Stepping back
+    // a 24-hour Duration from monthEnd could land on the second-to-last day
+    // across a daylight-saving switch and drop a row from the grid.
+    final dayCount = DateTime(year, month + 1, 0).day;
     final durations = List<int>.filled(dayCount, 0);
     final counts = List<int>.filled(dayCount, 0);
     for (final session in sessions) {

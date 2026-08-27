@@ -159,9 +159,14 @@ class _MeditationScreenState extends State<MeditationScreen>
       );
     }
 
+    // The session finished on its own (timer ran out or the native alarm
+    // fired). Navigation is deferred to after this frame because build()
+    // must not push a route while it is still running. The flag is left for
+    // _navigateToComplete to set: build() can run again before the callback
+    // fires, and claiming it here would make that callback a no-op and the
+    // CompleteScreen never appear.
     if (timerProvider.state == TimerState.completed &&
         !_hasNavigatedToComplete) {
-      _hasNavigatedToComplete = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _navigateToComplete(context);
       });
@@ -747,7 +752,18 @@ class _MeditationScreenState extends State<MeditationScreen>
     }
   }
 
+  /// Pushes the CompleteScreen exactly once per session.
+  ///
+  /// Two callers can race here: the End button calls this directly, and
+  /// `stopSession()` also flips the state to `completed`, which makes
+  /// build() schedule a call of its own. Without this guard both fire, and
+  /// the first CompleteScreen resets TimerProvider in its initState —
+  /// zeroing elapsedSeconds before the second one reads it, so the screen
+  /// the user actually sees reports a 00:00 session.
   void _navigateToComplete(BuildContext context) async {
+    if (_hasNavigatedToComplete) return;
+    _hasNavigatedToComplete = true;
+
     final timerProvider = context.read<TimerProvider>();
     final sessionProvider = context.read<SessionProvider>();
     await sessionProvider.loadSessions();
@@ -759,7 +775,10 @@ class _MeditationScreenState extends State<MeditationScreen>
         MaterialPageRoute(
           builder: (_) => CompleteScreen(
             durationSeconds: timerProvider.elapsedSeconds,
-            isTimedOut: timerProvider.state == TimerState.completed,
+            // `state` is TimerState.completed either way by this point, so
+            // it can't tell a natural finish from an early stop — that
+            // distinction is what lastSessionCompletedNaturally is for.
+            isTimedOut: timerProvider.lastSessionCompletedNaturally,
             sessionId: timerProvider.currentSessionId,
           ),
         ),

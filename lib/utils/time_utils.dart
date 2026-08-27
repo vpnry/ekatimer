@@ -2,6 +2,34 @@ import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 
 class TimeUtils {
+  /// Midnight at the start of [value]'s calendar day.
+  static DateTime startOfDay(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  /// [date] shifted by [amount] calendar days.
+  ///
+  /// Prefer this over `DateTime.add(Duration(days: n))`. That adds a fixed
+  /// 24-hour span, which a daylight-saving transition knocks off the
+  /// calendar: starting from midnight it arrives at 23:00 the day before,
+  /// or 01:00 the day after. Day-keyed lookups, streaks and range queries
+  /// then quietly miss.
+  static DateTime addDays(DateTime date, int amount) =>
+      DateTime(date.year, date.month, date.day + amount);
+
+  /// Whole calendar days from [from] to [to], ignoring clock time.
+  ///
+  /// `DateTime.difference().inDays` is unsafe here for the same reason.
+  /// Across the spring-forward switch two consecutive midnights are only 23
+  /// hours apart, and truncating that gives 0 days where the calendar says
+  /// 1. Rounding the hour count instead lands on the calendar answer at
+  /// both transitions.
+  static int daysBetween(DateTime from, DateTime to) =>
+      (startOfDay(to).difference(startOfDay(from)).inHours / 24).round();
+
+  /// Midnight on the Monday that starts [value]'s week.
+  static DateTime startOfWeek(DateTime value) =>
+      addDays(startOfDay(value), -(value.weekday - 1));
+
   static String formatDuration(int totalSeconds) {
     if (totalSeconds < 0) totalSeconds = 0;
     final hours = totalSeconds ~/ 3600;
