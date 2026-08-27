@@ -1,25 +1,59 @@
 <!--
   ekaTimer – Quick-Start Widget Layout (1×1)
-  Compact single-cell widget that shows just the timer duration label.
-  Tapping opens the app and auto-starts the corresponding timer mode.
+  Compact single-cell widget showing the lotus mark above the timer duration
+  label. Tapping opens the app and auto-starts the corresponding timer mode.
 -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg"
-    android:gravity="center">
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="4dp">
 
+    <!--
+      The mark is tinted in code alongside the label, so the two always match.
+      It is given a fixed height rather than a weight because a 1×1 cell is
+      small enough that letting it flex would squeeze the duration text, which
+      is the part the user actually reads.
+    -->
+    <ImageView
+        android:id="@+id/widget_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="18dp"
+        android:adjustViewBounds="true"
+        android:src="@drawable/ic_lotus"
+        android:contentDescription="@null" />
+
+    <!--
+      The shadow is what keeps the label readable once the background is made
+      transparent and the text sits straight on the user's wallpaper, which
+      may be any color. It draws a dark edge around every glyph, so the white
+      the widget switches to in that mode stands out over light and dark
+      wallpapers alike.
+
+      It stays on in the opaque state too. RemoteViews cannot call
+      setShadowLayer at runtime — only single-argument setters are available
+      to it — so this has to be decided here, and against the widget's own
+      background the shadow reads as a slight depth rather than an effect.
+    -->
     <TextView
         android:id="@+id/widget_action_label"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
         android:gravity="center"
         android:fontFamily="sans-serif-medium"
         android:text="1H"
         android:textColor="?android:attr/textColorPrimary"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:maxLines="1"
+        android:shadowColor="#CC000000"
+        android:shadowDx="0"
+        android:shadowDy="1"
+        android:shadowRadius="4" />
 
-</FrameLayout>
+</LinearLayout>
