@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ui' show Color;
+
 import 'package:flutter/foundation.dart';
 import 'package:alarm/alarm.dart';
 
@@ -53,6 +55,11 @@ class AlarmService {
         notificationSettings: const NotificationSettings(
           title: 'Meditation Complete',
           body: 'Your meditation session has ended.',
+          // Without this the package falls back to the launcher icon, which
+          // Android reduces to its alpha channel and draws as a solid white
+          // block. See res/drawable/ic_lotus.xml.
+          icon: 'ic_lotus',
+          iconColor: Color(0xFF176B6B),
         ),
       );
       await Alarm.set(alarmSettings: alarmSettings);

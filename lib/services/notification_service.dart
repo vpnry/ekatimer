@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
@@ -12,8 +13,11 @@ class NotificationService {
   Future<void> init() async {
     if (_initialized) return;
 
+    // Not the launcher icon: Android keeps only a small icon's alpha channel,
+    // so full-colour artwork arrives as a solid white block. See the comment
+    // in res/drawable/ic_lotus.xml.
     const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
+      '@drawable/ic_lotus',
     );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
@@ -61,7 +65,11 @@ class NotificationService {
       channelDescription: 'Daily meditation reminders',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: '@drawable/ic_lotus',
+      // Tints the silhouette and the app name in the notification shade with
+      // ekaTimer's teal instead of the system default grey.
+      color: Color(0xFF176B6B),
+      colorized: false,
     );
     const iosDetails = DarwinNotificationDetails(
       presentSound: true,

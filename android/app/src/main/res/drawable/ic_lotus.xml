@@ -1,0 +1,62 @@
+<!--
+  ekaTimer's lotus mark, as a flat silhouette. Used for notification small
+  icons and for the home-screen widget, both of which recolor it at runtime.
+
+  Android throws away the color of a notification's small icon and keeps only
+  the alpha channel, tinting the silhouette itself. Handing it the full-color
+  launcher icon therefore produced a solid white blob, because every opaque
+  pixel of that artwork became part of the silhouette. This drawable is built
+  the way the platform expects: one flat shape on a transparent field, so the
+  lotus reads as a lotus once the system recolors it.
+
+  Keep it that way — no gradients, no near-transparent detail, nothing that
+  relies on color to be legible. Callers supply the color.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!--
+      Five petals of one shape, fanned around the base of the flower at
+      (12, 18). They are drawn as a single merged silhouette rather than
+      outlined petals: the alpha-only rendering would fill any outline solid
+      anyway, so separation has to come from the fan's outer edge.
+    -->
+    <group
+        android:pivotX="12"
+        android:pivotY="18"
+        android:rotation="-68">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M12,18 C9.4,14.6 9.4,9.8 12,6.6 C14.6,9.8 14.6,14.6 12,18 Z" />
+    </group>
+    <group
+        android:pivotX="12"
+        android:pivotY="18"
+        android:rotation="-34">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M12,18 C9.4,14.6 9.4,9.8 12,6.6 C14.6,9.8 14.6,14.6 12,18 Z" />
+    </group>
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,18 C9.4,14.6 9.4,9.8 12,6.6 C14.6,9.8 14.6,14.6 12,18 Z" />
+    <group
+        android:pivotX="12"
+        android:pivotY="18"
+        android:rotation="34">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M12,18 C9.4,14.6 9.4,9.8 12,6.6 C14.6,9.8 14.6,14.6 12,18 Z" />
+    </group>
+    <group
+        android:pivotX="12"
+        android:pivotY="18"
+        android:rotation="68">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M12,18 C9.4,14.6 9.4,9.8 12,6.6 C14.6,9.8 14.6,14.6 12,18 Z" />
+    </group>
+</vector>
