@@ -26,6 +26,8 @@ class WidgetActionHandler {
 
   // ── Shared channel ────────────────────────────────────────────────────────
 
+  // Cross-language API: the Android value must match MainActivity.kt exactly.
+  // The iOS widget uses its existing platform-specific channel name.
   static final MethodChannel _channel = MethodChannel(
     Platform.isAndroid
         ? 'org.tipitakapali.ekatimer/widget'
@@ -208,10 +210,9 @@ class WidgetActionHandler {
   static Future<void> updateAllWidgets({required bool transparent}) async {
     if (!Platform.isAndroid) return;
     try {
-      await _channel.invokeMethod<void>(
-        'updateAllWidgets',
-        {'transparent': transparent},
-      );
+      await _channel.invokeMethod<void>('updateAllWidgets', {
+        'transparent': transparent,
+      });
     } on MissingPluginException {
       // ignore – method not registered on older native side
     } catch (e) {

@@ -120,9 +120,7 @@ class AppTheme {
 
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: AppColors.surfaceContainer,
         surfaceTintColor: Colors.transparent,
       ),
@@ -137,9 +135,7 @@ class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.onPrimary,
           shadowColor: AppColors.primary.withAlpha(25),
-          textStyle: textTheme.labelLarge?.copyWith(
-            color: AppColors.onPrimary,
-          ),
+          textStyle: textTheme.labelLarge?.copyWith(color: AppColors.onPrimary),
         ),
       ),
 
@@ -177,12 +173,12 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: AppColors.primary,
-            width: 1.0,
-          ),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.0),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         hintStyle: TextStyle(color: AppColors.onSurfaceVariant.withAlpha(150)),
       ),
 
@@ -206,7 +202,9 @@ class AppTheme {
           return AppColors.outline;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return AppColors.primary.withAlpha(80);
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary.withAlpha(80);
+          }
           return AppColors.outlineVariant;
         }),
       ),
@@ -288,9 +286,7 @@ class AppTheme {
 
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: AppColors.surfaceContainerDark,
         surfaceTintColor: Colors.transparent,
       ),
@@ -350,8 +346,13 @@ class AppTheme {
             width: 1.0,
           ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        hintStyle: TextStyle(color: AppColors.onSurfaceVariantDark.withAlpha(150)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
+        hintStyle: TextStyle(
+          color: AppColors.onSurfaceVariantDark.withAlpha(150),
+        ),
       ),
 
       sliderTheme: SliderThemeData(
@@ -360,7 +361,9 @@ class AppTheme {
         thumbColor: AppColors.primaryDark,
         overlayColor: AppColors.primaryDark.withAlpha(20),
         valueIndicatorColor: AppColors.primaryDark,
-        valueIndicatorTextStyle: const TextStyle(color: AppColors.onPrimaryDark),
+        valueIndicatorTextStyle: const TextStyle(
+          color: AppColors.onPrimaryDark,
+        ),
         trackHeight: 4,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
         overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
@@ -368,11 +371,15 @@ class AppTheme {
 
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return AppColors.primaryDark;
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primaryDark;
+          }
           return AppColors.outlineDark;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return AppColors.primaryDark.withAlpha(80);
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primaryDark.withAlpha(80);
+          }
           return AppColors.outlineVariantDark;
         }),
       ),

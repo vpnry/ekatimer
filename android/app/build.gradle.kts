@@ -15,6 +15,8 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
+    // This is ekaTimer's official Android identity. Changing it creates a
+    // separate app and disconnects existing installs from their private data.
     namespace = "org.tipitakapali.ekatimer"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
@@ -26,7 +28,6 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "org.tipitakapali.ekatimer"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -37,17 +38,24 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties.getProperty("keyAlias")
-            keyPassword = keystoreProperties.getProperty("keyPassword")
-            storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) }
-            storePassword = keystoreProperties.getProperty("storePassword")
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) }
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            // Never debug-sign a release that uses the official application ID:
+            // it cannot update the store app and is easy to publish by mistake.
+            // Without key.properties Gradle deliberately produces an unsigned APK.
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 }

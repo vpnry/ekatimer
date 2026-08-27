@@ -7,7 +7,8 @@ class VibrationService {
   factory VibrationService() => _instance;
   VibrationService._internal();
 
-  // Reuse the existing alarm channel — no new channel registration needed.
+  // Cross-language API shared with iOS AppDelegate. Keep the exact name in
+  // sync; a mismatch is only detected when an iOS vibration call is made.
   static const MethodChannel _iosChannel = MethodChannel(
     'org.tipitakapali.ekatimer/alarm',
   );

@@ -2,7 +2,7 @@ class AppConstants {
   AppConstants._();
 
   static const String appName = 'ekaTimer';
-  static const String appVersion = '1.0.20';
+  static const String appVersion = '1.0.28';
 
   static const int defaultTimerDurationMinutes = 60;
   static const int minTimerDurationMinutes = 1;
@@ -10,7 +10,7 @@ class AppConstants {
   static const int timerTickIntervalMs = 500;
 
   static const String databaseName = 'meditation_timer.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 4;
 
   static const String prefTimerMode = 'timer_mode';
   static const String prefTimerDuration = 'timer_duration';
@@ -26,6 +26,9 @@ class AppConstants {
   static const String prefVibrationIntervalMinutes =
       'vibration_interval_minutes';
   static const String prefLocale = 'locale';
+  static const String prefUserName = 'user_name';
+  static const String prefUserProfiles = 'user_profiles';
+  static const String prefActiveProfileId = 'active_profile_id';
   static const String prefSessionDelay = 'session_delay';
   static const String prefSessionVolume = 'session_volume';
   static const String prefActiveSession = 'active_session';
@@ -33,6 +36,7 @@ class AppConstants {
   static const String prefFixedHourPresets = 'fixed_hour_presets';
   static const String prefTransparentWidget = 'transparent_widget';
   static const String prefUserQuotes = 'user_quotes';
+  static const String prefShowQuotes = 'show_quotes';
 
   static const String sessionStateStartTime = 'session_start_time';
   static const String sessionStateDuration = 'session_duration';
@@ -41,6 +45,7 @@ class AppConstants {
   static const String sessionStatePauseDuration = 'session_pause_duration';
   static const String sessionStateEndTime = 'session_end_time';
   static const String sessionStatePauseStartTime = 'session_pause_start_time';
+  static const String sessionStateProfileId = 'session_profile_id';
 
   static const List<String> builtInSounds = [
     'Sadhu',

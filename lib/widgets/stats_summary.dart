@@ -42,7 +42,9 @@ class StatsSummary extends StatelessWidget {
           _buildStatCard(
             context,
             icon: Icons.self_improvement,
-            label: TranslationService.of(context).translate('complete.sessions'),
+            label: TranslationService.of(
+              context,
+            ).translate('complete.sessions'),
             value: '$totalSessions',
             color: AppColors.success,
           ),

@@ -40,10 +40,7 @@ class VibrationPicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: theme.textTheme.titleMedium,
-        ),
+        Text(label, style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
@@ -74,11 +71,7 @@ class VibrationPicker extends StatelessWidget {
                               : theme.colorScheme.primary,
                         ),
                         const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _vibrationLabel(context, vib),
-                          ),
-                        ),
+                        Expanded(child: Text(_vibrationLabel(context, vib))),
                       ],
                     ),
                   ),

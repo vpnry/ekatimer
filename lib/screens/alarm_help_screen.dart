@@ -40,8 +40,8 @@ class _AlarmHelpScreenState extends State<AlarmHelpScreen>
   Future<void> _checkBatteryStatus() async {
     if (!mounted) return;
     try {
-      final ignored = await BackgroundSettingsService
-          .isBatteryOptimizationIgnored();
+      final ignored =
+          await BackgroundSettingsService.isBatteryOptimizationIgnored();
       if (mounted) {
         setState(() {
           _batteryIgnored = ignored;
@@ -61,9 +61,7 @@ class _AlarmHelpScreenState extends State<AlarmHelpScreen>
     final isIos = Platform.isIOS;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(t.translate('alarmHelp.title')),
-      ),
+      appBar: AppBar(title: Text(t.translate('alarmHelp.title'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -161,7 +159,9 @@ class _AlarmHelpScreenState extends State<AlarmHelpScreen>
 
     return Card(
       elevation: 0,
-      color: isDark ? AppColors.surfaceContainerHighDark : AppColors.surfaceContainerHighest,
+      color: isDark
+          ? AppColors.surfaceContainerHighDark
+          : AppColors.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -210,17 +210,17 @@ class _AlarmHelpScreenState extends State<AlarmHelpScreen>
                   children: [
                     ActionChip(
                       avatar: Icon(Icons.battery_charging_full, size: 18),
-                      label: Text(t.translate('alarmHelp.battery.openSettings')),
+                      label: Text(
+                        t.translate('alarmHelp.battery.openSettings'),
+                      ),
                       onPressed: () =>
-                          BackgroundSettingsService
-                              .requestIgnoreBatteryOptimization(),
+                          BackgroundSettingsService.requestIgnoreBatteryOptimization(),
                     ),
                     ActionChip(
                       avatar: Icon(Icons.settings_backup_restore, size: 18),
                       label: Text(t.translate('alarmHelp.battery.openOem')),
                       onPressed: () =>
-                          BackgroundSettingsService
-                              .openOemBackgroundSettings(),
+                          BackgroundSettingsService.openOemBackgroundSettings(),
                     ),
                   ],
                 ),
@@ -283,10 +283,7 @@ class _InfoPoint extends StatelessWidget {
                 description,
                 style: TextStyle(
                   fontSize: 13,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withAlpha(170),
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(170),
                   height: 1.4,
                 ),
               ),

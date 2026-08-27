@@ -133,10 +133,9 @@ class _SplashScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'ekaTimer',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineLarge
-                  ?.copyWith(fontWeight: FontWeight.w300),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w300),
             ),
             const SizedBox(height: 24),
             const CircularProgressIndicator(
@@ -224,7 +223,6 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
   /// Pushes HomeScreen and removes every other route from the stack.
   /// Called both when a session ends naturally and when the user stops early.
 
-
   void _ensureMeditationScreen() {
     if (!mounted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -264,7 +262,9 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
       if (handled && mounted) {
         setState(() => _hasActiveSession = true);
         _ensureMeditationScreen();
-      } else if (!handled && WidgetActionHandler.selectedWidgetMode != null && mounted) {
+      } else if (!handled &&
+          WidgetActionHandler.selectedWidgetMode != null &&
+          mounted) {
         // Defer the pop using Future.delayed(Duration.zero) instead of addPostFrameCallback.
         // This executes the pop immediately in a new event loop turn, without waiting
         // for a rendering frame to be scheduled (since no setState was called here).
@@ -291,8 +291,9 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
 
     // ── 1. Handle widget-tap quick-start FIRST ────────────────────────────
     if (mounted) {
-      final handledWidgetAction =
-          await WidgetActionHandler.handleWidgetAction(context);
+      final handledWidgetAction = await WidgetActionHandler.handleWidgetAction(
+        context,
+      );
       if (handledWidgetAction && mounted) {
         setState(() {
           _hasActiveSession = true;

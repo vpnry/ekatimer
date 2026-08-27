@@ -80,8 +80,10 @@ class _EditFixedPresetsDialogState extends State<EditFixedPresetsDialog> {
                       controller: _controllers[i],
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        hintText: t.translate('editPresets.minutesFor',
-                            args: {'hour': String.fromCharCode(65 + i)}),
+                        hintText: t.translate(
+                          'editPresets.minutesFor',
+                          args: {'hour': String.fromCharCode(65 + i)},
+                        ),
                         border: const OutlineInputBorder(),
                         isDense: true,
                       ),
@@ -109,7 +111,10 @@ class _EditFixedPresetsDialogState extends State<EditFixedPresetsDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(t.translate('common.cancel')),
         ),
-        ElevatedButton(onPressed: _onSave, child: Text(t.translate('common.save'))),
+        ElevatedButton(
+          onPressed: _onSave,
+          child: Text(t.translate('common.save')),
+        ),
       ],
     );
   }

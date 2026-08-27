@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/timer_mode.dart';
 import '../models/meditation_session.dart';
+import '../models/user_profile.dart';
 import '../services/persistence_service.dart';
 import '../services/audio_service.dart';
 import '../services/vibration_service.dart';
@@ -31,6 +32,7 @@ class TimerProvider extends ChangeNotifier {
   int _pauseDurationSeconds = 0;
   late DateTime _pauseStartTime;
   String? _currentSessionId;
+  String _currentProfileId = UserProfile.defaultId;
 
   int _lastIntervalMinute = -1;
   int _lastVibrationIntervalMinute = -1;
@@ -52,6 +54,18 @@ class TimerProvider extends ChangeNotifier {
   Timer? _tickTimer;
   bool _alarmFired = false;
 
+  // Guards stopSession() and _onSessionComplete() against both running for
+  // the same session (e.g. the user taps Stop the instant the native alarm
+  // fires), which would otherwise insert two session rows sharing one id.
+  bool _sessionFinalized = false;
+
+  // Whether the most recently finalized session reached its target
+  // naturally (via _onSessionComplete) rather than being stopped early
+  // (via stopSession). TimerState alone can't tell CompleteScreen this:
+  // `_state` is TimerState.completed either way, so comparing against it
+  // is always true by the time anyone reads it.
+  bool _lastSessionCompletedNaturally = true;
+
   TimerState get state => _state;
   TimerMode get timerMode => _timerMode;
   int get durationMinutes => _durationMinutes;
@@ -65,6 +79,7 @@ class TimerProvider extends ChangeNotifier {
   int get endAtMinute => _endAtMinute;
   int get delayRemainingSeconds => _delayRemainingSeconds;
   String? get currentSessionId => _currentSessionId;
+  bool get lastSessionCompletedNaturally => _lastSessionCompletedNaturally;
 
   void configure({
     TimerMode? mode,
@@ -142,12 +157,18 @@ class TimerProvider extends ChangeNotifier {
 
   Future<void> startSession() async {
     _currentSessionId = const Uuid().v4();
+    // Captured once, here, not read again at save time: if the user
+    // switches profile mid-session, this session must stay attributed to
+    // whoever started it, not whoever is active when it finishes.
+    _currentProfileId = await PersistenceService.loadActiveProfileId();
     _startTime = DateTime.now();
     _elapsedSeconds = 0;
     _pauseDurationSeconds = 0;
     _lastIntervalMinute = -1;
     _lastVibrationIntervalMinute = -1;
     _alarmFired = false;
+    _sessionFinalized = false;
+    _lastSessionCompletedNaturally = true;
 
     switch (_timerMode) {
       case TimerMode.timed:
@@ -302,6 +323,13 @@ class TimerProvider extends ChangeNotifier {
   }
 
   Future<void> stopSession({bool completed = true}) async {
+    if (_sessionFinalized) return;
+    _sessionFinalized = true;
+    // [completed] says whether this stop still counts as finishing the
+    // session. The only caller today is the End button, which passes false,
+    // so the completion screen reports "ended early" rather than "complete".
+    _lastSessionCompletedNaturally = completed;
+
     _stopTick();
 
     await _alarmService.cancelAllAlarms();
@@ -319,6 +347,7 @@ class TimerProvider extends ChangeNotifier {
 
     final session = MeditationSession(
       id: _currentSessionId ?? const Uuid().v4(),
+      profileId: _currentProfileId,
       startTime: _startTime,
       endTime: now,
       durationSeconds: _elapsedSeconds,
@@ -368,7 +397,10 @@ class TimerProvider extends ChangeNotifier {
     _totalDurationSeconds = durationSeconds;
     _pauseDurationSeconds = pauseDuration;
     _currentSessionId = const Uuid().v4();
+    _currentProfileId = await PersistenceService.loadActiveSessionProfileId();
     _alarmFired = false;
+    _sessionFinalized = false;
+    _lastSessionCompletedNaturally = true;
 
     final modeStr = await PersistenceService.loadActiveSessionMode();
     _timerMode = TimerMode.fromString(modeStr ?? 'timed');
@@ -433,6 +465,7 @@ class TimerProvider extends ChangeNotifier {
       isPaused: _state == TimerState.paused,
       pauseDuration: _pauseDurationSeconds,
       endTime: _endTime?.millisecondsSinceEpoch ?? 0,
+      profileId: _currentProfileId,
       pauseStartTime: _state == TimerState.paused
           ? _pauseStartTime.millisecondsSinceEpoch
           : null,
@@ -534,8 +567,13 @@ class TimerProvider extends ChangeNotifier {
   }
 
   Future<void> _onSessionComplete({bool silent = false}) async {
-    if (_alarmFired) return;
+    if (_alarmFired || _sessionFinalized) return;
     _alarmFired = true;
+    _sessionFinalized = true;
+    // Reaching here — the tick loop hit zero, the native alarm fired, or a
+    // restored session's end time had already passed — always means the
+    // session ran its full course, so CompleteScreen should say "complete".
+    _lastSessionCompletedNaturally = true;
 
     _stopTick();
 
@@ -552,6 +590,7 @@ class TimerProvider extends ChangeNotifier {
 
     final session = MeditationSession(
       id: _currentSessionId ?? const Uuid().v4(),
+      profileId: _currentProfileId,
       startTime: _startTime,
       endTime: now,
       durationSeconds: _elapsedSeconds,
@@ -588,6 +627,8 @@ class TimerProvider extends ChangeNotifier {
     _lastIntervalMinute = -1;
     _lastVibrationIntervalMinute = -1;
     _alarmFired = false;
+    _sessionFinalized = false;
+    _lastSessionCompletedNaturally = true;
     notifyListeners();
   }
 

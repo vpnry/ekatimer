@@ -8,6 +8,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.widget.RemoteViews
 
@@ -131,6 +132,9 @@ open class MeditationTimerWidget : AppWidgetProvider() {
         // Key used for native-side SharedPreferences persistence
         private const val COMPANION_PREFS_TRANSPARENT = "transparent_widget"
 
+        // ekaTimer's teal, matching AppColors.primary on the Flutter side.
+        private const val BRAND_TEAL = 0xFF176B6B.toInt()
+
         /// Force-update all widget types with the given transparency value.
         ///
         /// The [transparent] flag is passed directly from Flutter and also
@@ -208,7 +212,18 @@ open class MeditationTimerWidget : AppWidgetProvider() {
                 "setBackgroundResource",
                 android.R.color.transparent
             )
+            // The layout's textColorPrimary follows the launcher's theme, not
+            // the wallpaper the label now sits on, so it disappeared against
+            // any wallpaper of similar tone. White plus the layout's shadow
+            // reads on both light and dark ones. The opaque branch leaves the
+            // colour alone: RemoteViews are rebuilt from the layout on every
+            // update, so the themed colour comes back on its own.
+            views.setTextColor(R.id.widget_action_label, Color.WHITE)
+            // ic_lotus ships uncoloured so each caller can tint it; match the
+            // label so the mark does not vanish where the text survives.
+            views.setInt(R.id.widget_logo, "setColorFilter", Color.WHITE)
         } else {
+            views.setInt(R.id.widget_logo, "setColorFilter", BRAND_TEAL)
             // Restore the normal styled background drawable
             views.setInt(
                 R.id.widget_container,

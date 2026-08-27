@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 class BackgroundSettingsService {
   BackgroundSettingsService._();
 
+  // Cross-language API: keep this exact name in sync with MainActivity.kt.
+  // A mismatch compiles successfully but makes every native call unavailable.
   static const MethodChannel _channel = MethodChannel(
     'org.tipitakapali.ekatimer/background_settings',
   );

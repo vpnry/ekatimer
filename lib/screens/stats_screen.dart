@@ -5,13 +5,20 @@ import '../providers/session_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/translation_service.dart';
 import '../services/csv_data_service.dart';
+import '../services/excel_data_service.dart';
 import '../theme/colors.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
 import '../models/meditation_session.dart';
 import '../widgets/session_card.dart';
 import '../widgets/edit_session_dialog.dart';
+import '../widgets/practice_stats_table.dart';
+import '../widgets/quality_rating_label.dart';
 import '../services/database_service.dart';
+import '../utils/sitting_quality.dart';
+import '../utils/session_calendar.dart';
+
+enum _StatsReportView { calendar, barChart }
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -28,6 +35,11 @@ class _StatsScreenState extends State<StatsScreen>
   late DateTime _sessionEndDate;
 
   DateTime? _oldestDate;
+  late DateTime _weeklyCalendarStart;
+  late DateTime _monthlyCalendarStart;
+  _StatsReportView _weeklyReportView = _StatsReportView.calendar;
+  _StatsReportView _monthlyReportView = _StatsReportView.calendar;
+  bool _showCalendarQuality = true;
 
   // Make futures nullable to avoid LateInitializationError during first build.
   Future<List<dynamic>>? _weeklyDataFuture;
@@ -38,8 +50,10 @@ class _StatsScreenState extends State<StatsScreen>
   void initState() {
     super.initState();
     final now = DateTime.now();
-    _sessionEndDate = DateTime(now.year, now.month, now.day);
-    _sessionStartDate = _sessionEndDate.subtract(const Duration(days: 6));
+    _sessionEndDate = TimeUtils.startOfDay(now);
+    _sessionStartDate = TimeUtils.addDays(_sessionEndDate, -6);
+    _weeklyCalendarStart = _startOfWeek(now);
+    _monthlyCalendarStart = DateTime(now.year, now.month);
     _tabController = TabController(length: 5, vsync: this);
 
     // Safely load the data after the initial widget build frame completes.
@@ -62,13 +76,36 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   void _refreshOldestDate() {
-    DatabaseService.getOldestSessionTimestamp().then((timestamp) {
-      if (timestamp != null && mounted) {
+    final profileId = context.read<SessionProvider>().activeProfileId;
+    DatabaseService.getOldestSessionTimestamp(profileId: profileId).then((
+      timestamp,
+    ) {
+      if (mounted) {
         setState(() {
-          _oldestDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+          _oldestDate = timestamp == null
+              ? null
+              : DateTime.fromMillisecondsSinceEpoch(timestamp);
         });
       }
     });
+  }
+
+  void _refreshReportFutures(SessionProvider provider) {
+    if (!mounted) return;
+    setState(() {
+      _weeklyDataFuture = provider.getWeeklyData();
+      _monthlyDataFuture = provider.getMonthlyData();
+      _yearlyDataFuture = provider.getYearlyData();
+    });
+  }
+
+  /// Pull-to-refresh handler: reloads sessions from the DB, rebuilds the
+  /// weekly/monthly/yearly chart futures, and re-checks the oldest
+  /// session date (which bounds the calendar/report date pickers).
+  Future<void> _refreshSessionsAndReports(SessionProvider provider) async {
+    await provider.loadSessions();
+    _refreshReportFutures(provider);
+    _refreshOldestDate();
   }
 
   @override
@@ -93,6 +130,26 @@ class _StatsScreenState extends State<StatsScreen>
     }
   }
 
+  String _formatPracticeDuration(int seconds) {
+    if (seconds <= 0) return '0:00';
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    return '$hours:${minutes.toString().padLeft(2, '0')}';
+  }
+
+  double? _averageQuality(Iterable<MeditationSession> sessions) {
+    return SittingQuality.average(sessions.map((session) => session.quality));
+  }
+
+  Iterable<MeditationSession> _sessionsInRange(
+    Iterable<MeditationSession> sessions,
+    DateTime start,
+    DateTime end,
+  ) => sessions.where(
+    (session) =>
+        !session.startTime.isBefore(start) && session.startTime.isBefore(end),
+  );
+
   @override
   Widget build(BuildContext context) {
     final t = TranslationService.of(context);
@@ -113,6 +170,9 @@ class _StatsScreenState extends State<StatsScreen>
           // Delete-all button is inside the Sessions tab
           bottom: TabBar(
             controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 18),
             tabs: [
               Tab(text: t.translate('stats.overview')),
               Tab(text: t.translate('stats.sessions')),
@@ -425,6 +485,7 @@ class _StatsScreenState extends State<StatsScreen>
                 0,
                 (sum, s) => sum + s.durationSeconds,
               );
+              final dailyQuality = _averageQuality(sessions);
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -435,6 +496,7 @@ class _StatsScreenState extends State<StatsScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
+                          flex: 3,
                           child: Wrap(
                             crossAxisAlignment: WrapCrossAlignment.center,
                             spacing: 8,
@@ -467,12 +529,53 @@ class _StatsScreenState extends State<StatsScreen>
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          TimeUtils.formatDurationReadable(totalSeconds),
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondaryLight,
-                            fontWeight: FontWeight.w500,
+                        Flexible(
+                          flex: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${t.translate('stats.dailyTotal')}: ${TimeUtils.formatDurationReadable(totalSeconds)}',
+                                textAlign: TextAlign.end,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondaryLight,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              if (dailyQuality != null)
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerRight,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${t.translate('stats.qualityAverage')}: ',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textSecondaryLight,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      QualityRatingLabel(
+                                        rating: dailyQuality,
+                                        iconSize: 8,
+                                        gap: 1,
+                                        starSpacing: 0.5,
+                                        compact: true,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textSecondaryLight,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ],
@@ -482,8 +585,10 @@ class _StatsScreenState extends State<StatsScreen>
                     (session) => SessionCard(
                       id: session.id,
                       startTime: session.startTime,
+                      endTime: session.endTime,
                       durationSeconds: session.durationSeconds,
                       completed: session.completed,
+                      quality: session.quality,
                       notes: session.notes,
                       onDelete: () => _confirmDelete(context, session.id),
                       onEdit: () => _onEditSession(context, session),
@@ -575,6 +680,17 @@ class _StatsScreenState extends State<StatsScreen>
                 icon: const Icon(Icons.file_upload_outlined, size: 20),
                 tooltip: t.translate('stats.exportFiltered'),
                 onPressed: () => _exportFilteredSessions(
+                  context,
+                  filteredSessions,
+                  _sessionStartDate,
+                  _sessionEndDate,
+                ),
+                visualDensity: VisualDensity.compact,
+              ),
+              IconButton(
+                icon: const Icon(Icons.table_view_outlined, size: 20),
+                tooltip: t.translate('stats.exportExcel'),
+                onPressed: () => _exportFilteredSessionsToExcel(
                   context,
                   filteredSessions,
                   _sessionStartDate,
@@ -692,8 +808,13 @@ class _StatsScreenState extends State<StatsScreen>
       );
       for (final session in daySessions) {
         final status = session.completed ? '✓' : '✗';
+        final quality = SittingQuality.normalize(session.quality);
+        final qualityText = quality == null
+            ? ''
+            : ' · ${t.translate('quality.label')}: ${SittingQuality.display(quality)}';
+        final notesText = session.notes == null ? '' : ' - ${session.notes}';
         buffer.writeln(
-          '  $status ${TimeUtils.formatDurationReadable(session.durationSeconds)} ${session.notes != null ? '- ${session.notes}' : ''}',
+          '  $status ${TimeUtils.formatDurationReadable(session.durationSeconds)}$qualityText$notesText',
         );
       }
     }
@@ -726,7 +847,7 @@ class _StatsScreenState extends State<StatsScreen>
 
     try {
       final filename =
-          'ekatimer_${_formatShortDate(startDate)}_${_formatShortDate(endDate)}.csv';
+          'meditation_timer_${_formatShortDate(startDate)}_${_formatShortDate(endDate)}.csv';
       await CsvDataService.exportSessionsToCsv(sessions, filename: filename);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -753,23 +874,72 @@ class _StatsScreenState extends State<StatsScreen>
     }
   }
 
+  /// Exports just the sessions currently shown for [startDate]..[endDate]
+  /// (the filtered/report range), not the whole history — see
+  /// ExcelDataService for the actual .xlsx encoding.
+  Future<void> _exportFilteredSessionsToExcel(
+    BuildContext context,
+    List<MeditationSession> sessions,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    if (sessions.isEmpty) return;
+
+    try {
+      final filename =
+          'meditation_timer_${_formatShortDate(startDate)}_${_formatShortDate(endDate)}.xlsx';
+      await ExcelDataService.exportSessionsToExcel(
+        sessions,
+        filename: filename,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              TranslationService.of(context).translate('stats.exportedExcel'),
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${TranslationService.of(context).translate('stats.exportFailed')}: $e',
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Opens the edit dialog for one session and, if saved, refreshes both
+  /// the session list and every report future so charts stay in sync
+  /// with a quality/notes/time edit made from the stats screen.
   Future<void> _onEditSession(
     BuildContext context,
     MeditationSession session,
   ) async {
     final updated = await showEditSessionDialog(context, session);
     if (updated != null && context.mounted) {
-      await context.read<SessionProvider>().updateSession(updated);
+      final provider = context.read<SessionProvider>();
+      await provider.updateSession(updated);
+      if (!mounted || !context.mounted) return;
+      _refreshReportFutures(provider);
       _refreshOldestDate();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(TranslationService.of(context).translate('editSession.updated')),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.green,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            TranslationService.of(context).translate('editSession.updated'),
           ),
-        );
-      }
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
@@ -786,10 +956,12 @@ class _StatsScreenState extends State<StatsScreen>
             child: Text(t.translate('history.cancel')),
           ),
           TextButton(
-            onPressed: () {
-              context.read<SessionProvider>().deleteSession(id);
-              _refreshOldestDate();
+            onPressed: () async {
               Navigator.of(ctx).pop();
+              final provider = context.read<SessionProvider>();
+              await provider.deleteSession(id);
+              _refreshReportFutures(provider);
+              _refreshOldestDate();
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: Text(t.translate('history.delete')),
@@ -800,17 +972,229 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildWeeklyTab(BuildContext context, SessionProvider provider) {
+    if (provider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final currentWeek = _startOfWeek(DateTime.now());
+    final endDate = TimeUtils.addDays(_weeklyCalendarStart, 6);
+    return Column(
+      children: [
+        _buildReportViewSwitcher(
+          context,
+          selected: _weeklyReportView,
+          onChanged: (view) => setState(() => _weeklyReportView = view),
+        ),
+        Expanded(
+          child: _weeklyReportView == _StatsReportView.calendar
+              ? _buildTimeSlotCalendar(
+                  context,
+                  provider: provider,
+                  startDate: _weeklyCalendarStart,
+                  dayCount: 7,
+                  periodLabel:
+                      '${_formatNumericDate(_weeklyCalendarStart)} – ${_formatNumericDate(endDate)}',
+                  includeMonthInRows: true,
+                  qualityToggleKey: const ValueKey(
+                    'weekly-calendar-quality-toggle',
+                  ),
+                  onPrevious: () => setState(() {
+                    _weeklyCalendarStart = _weeklyCalendarStart.subtract(
+                      const Duration(days: 7),
+                    );
+                  }),
+                  onNext: _weeklyCalendarStart.isBefore(currentWeek)
+                      ? () => setState(() {
+                          _weeklyCalendarStart = _weeklyCalendarStart.add(
+                            const Duration(days: 7),
+                          );
+                        })
+                      : null,
+                  onCurrent: () =>
+                      setState(() => _weeklyCalendarStart = currentWeek),
+                )
+              : _buildHistoricalBarChart(
+                  context,
+                  future: _weeklyDataFuture,
+                  titleKey: 'stats.weeklyTitle',
+                  barColor: AppColors.primary,
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMonthlyTab(BuildContext context, SessionProvider provider) {
+    if (provider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
+    final dayCount = DateTime(
+      _monthlyCalendarStart.year,
+      _monthlyCalendarStart.month + 1,
+      0,
+    ).day;
+    return Column(
+      children: [
+        _buildReportViewSwitcher(
+          context,
+          selected: _monthlyReportView,
+          onChanged: (view) => setState(() => _monthlyReportView = view),
+        ),
+        Expanded(
+          child: _monthlyReportView == _StatsReportView.calendar
+              ? _buildTimeSlotCalendar(
+                  context,
+                  provider: provider,
+                  startDate: _monthlyCalendarStart,
+                  dayCount: dayCount,
+                  periodLabel:
+                      '${_monthlyCalendarStart.year}-${_monthlyCalendarStart.month.toString().padLeft(2, '0')}',
+                  includeMonthInRows: false,
+                  qualityToggleKey: const ValueKey(
+                    'monthly-calendar-quality-toggle',
+                  ),
+                  onPrevious: () => setState(() {
+                    _monthlyCalendarStart = DateTime(
+                      _monthlyCalendarStart.year,
+                      _monthlyCalendarStart.month - 1,
+                    );
+                  }),
+                  onNext: _monthlyCalendarStart.isBefore(currentMonth)
+                      ? () => setState(() {
+                          _monthlyCalendarStart = DateTime(
+                            _monthlyCalendarStart.year,
+                            _monthlyCalendarStart.month + 1,
+                          );
+                        })
+                      : null,
+                  onCurrent: () =>
+                      setState(() => _monthlyCalendarStart = currentMonth),
+                )
+              : _buildHistoricalBarChart(
+                  context,
+                  future: _monthlyDataFuture,
+                  titleKey: 'stats.monthlyTitle',
+                  barColor: AppColors.primaryLight,
+                  qualityRatingBuilder: (point) {
+                    final month = point as MonthlyDataPoint;
+                    return _averageQuality(
+                      _sessionsInRange(
+                        provider.sessions,
+                        month.startDate,
+                        DateTime(
+                          month.startDate.year,
+                          month.startDate.month + 1,
+                        ),
+                      ),
+                    );
+                  },
+                  onBarTap: (point) => _showMonthDetails(
+                    context,
+                    provider,
+                    point as MonthlyDataPoint,
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  /// The calendar-vs-bar-chart segmented toggle shown above each report
+  /// tab; [selected]/[onChanged] let each tab (daily/weekly/monthly/...)
+  /// keep its own independent view choice.
+  Widget _buildReportViewSwitcher(
+    BuildContext context, {
+    required _StatsReportView selected,
+    required ValueChanged<_StatsReportView> onChanged,
+  }) {
     final t = TranslationService.of(context);
-    if (_weeklyDataFuture == null) {
+
+    Widget button({
+      required _StatsReportView view,
+      required IconData icon,
+      required String label,
+    }) {
+      final isSelected = selected == view;
+      final child = Text(label, maxLines: 1, overflow: TextOverflow.ellipsis);
+      final style = ButtonStyle(
+        minimumSize: const WidgetStatePropertyAll(Size(0, 46)),
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: 10),
+        ),
+      );
+
+      if (isSelected) {
+        return FilledButton.icon(
+          onPressed: () => onChanged(view),
+          icon: Icon(icon, size: 18),
+          label: child,
+          style: style,
+        );
+      }
+      return OutlinedButton.icon(
+        onPressed: () => onChanged(view),
+        icon: Icon(icon, size: 18),
+        label: child,
+        style: style,
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: button(
+              view: _StatsReportView.calendar,
+              icon: Icons.calendar_month_outlined,
+              label: t.translate('stats.view.calendar'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: button(
+              view: _StatsReportView.barChart,
+              icon: Icons.bar_chart_rounded,
+              label: t.translate('stats.view.barChart'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Generic bar chart shared by every report period (day/week/month/
+  /// year). [qualityRatingBuilder], when supplied, overlays a quality
+  /// star rating per bar; [onBarTap] drives the year/month drill-down
+  /// sheets ([_showYearDetails], [_showMonthDetails]).
+  Widget _buildHistoricalBarChart(
+    BuildContext context, {
+    required Future<List<dynamic>>? future,
+    required String titleKey,
+    required Color barColor,
+    ValueChanged<dynamic>? onBarTap,
+    double? Function(dynamic point)? qualityRatingBuilder,
+  }) {
+    if (future == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
     return FutureBuilder<List<dynamic>>(
-      future: _weeklyDataFuture,
+      future: future,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _buildChartError(context);
+        }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
+        final data = snapshot.data!;
+        final minimumChartWidth = MediaQuery.sizeOf(context).width - 40;
+        final chartWidth = qualityRatingBuilder == null
+            ? minimumChartWidth
+            : (data.length * 52.0).clamp(minimumChartWidth, double.infinity);
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -818,18 +1202,37 @@ class _StatsScreenState extends State<StatsScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                t.translate('stats.weeklyTitle'),
+                TranslationService.of(context).translate(titleKey),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                height: 260,
-                child: _buildBarChart(
-                  context,
-                  data: snapshot.data!,
-                  barColor: AppColors.primary,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: chartWidth,
+                  height: 260,
+                  child: _buildBarChart(
+                    context,
+                    data: data,
+                    barColor: barColor,
+                    onBarTap: onBarTap,
+                    qualityRatingBuilder: qualityRatingBuilder,
+                  ),
                 ),
               ),
+              if (onBarTap != null) ...[
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    TranslationService.of(
+                      context,
+                    ).translate('stats.tapBarHint'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         );
@@ -837,41 +1240,474 @@ class _StatsScreenState extends State<StatsScreen>
     );
   }
 
-  Widget _buildMonthlyTab(BuildContext context, SessionProvider provider) {
-    final t = TranslationService.of(context);
-    if (_monthlyDataFuture == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return FutureBuilder<List<dynamic>>(
-      future: _monthlyDataFuture,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                t.translate('stats.monthlyTitle'),
-                style: Theme.of(context).textTheme.titleLarge,
+  /// Drill-down sheet from a tapped year bar: shows that year's 12
+  /// months, each tappable into [_showMonthDetails].
+  Future<void> _showYearDetails(
+    BuildContext context,
+    SessionProvider provider,
+    YearlyDataPoint year,
+  ) {
+    final future = provider.getMonthlyDataForYear(year.year);
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final t = TranslationService.of(sheetContext);
+        return SafeArea(
+          child: SizedBox(
+            height: MediaQuery.sizeOf(sheetContext).height * 0.68,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: FutureBuilder<List<MonthlyDataPoint>>(
+                future: future,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return _buildChartError(context);
+                  }
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final data = snapshot.data!;
+                  final total = data.fold<int>(
+                    0,
+                    (sum, point) => sum + point.durationSeconds,
+                  );
+                  final chartWidth = (data.length * 52.0).clamp(
+                    MediaQuery.sizeOf(context).width - 40,
+                    double.infinity,
+                  );
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${t.translate('stats.monthlyDetail')} — ${year.year}',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${TimeUtils.formatDurationReadable(total)} · ${t.translate('stats.tapBarHint')}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: SizedBox(
+                            width: chartWidth,
+                            child: _buildBarChart(
+                              context,
+                              data: data,
+                              barColor: AppColors.primary,
+                              qualityRatingBuilder: (point) {
+                                final month = point as MonthlyDataPoint;
+                                return _averageQuality(
+                                  _sessionsInRange(
+                                    provider.sessions,
+                                    month.startDate,
+                                    DateTime(
+                                      month.startDate.year,
+                                      month.startDate.month + 1,
+                                    ),
+                                  ),
+                                );
+                              },
+                              onBarTap: (point) => _showMonthDetails(
+                                sheetContext,
+                                provider,
+                                point as MonthlyDataPoint,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-              const SizedBox(height: 24),
-              SizedBox(
-                height: 260,
-                child: _buildBarChart(
-                  context,
-                  data: snapshot.data!,
-                  barColor: AppColors.primaryLight,
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  /// Drill-down sheet from a tapped month bar: shows that month's days
+  /// via [SessionProvider.getDailyDataForMonth] (the calendar-grid
+  /// variant, not the rolling-window one used by the main daily tab).
+  Future<void> _showMonthDetails(
+    BuildContext context,
+    SessionProvider provider,
+    MonthlyDataPoint month,
+  ) {
+    final monthEnd = DateTime(month.startDate.year, month.startDate.month + 1);
+    final future = provider.getDailyDataForMonth(
+      month.startDate.year,
+      month.startDate.month,
+    );
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final t = TranslationService.of(sheetContext);
+        return SafeArea(
+          child: SizedBox(
+            height: MediaQuery.sizeOf(sheetContext).height * 0.72,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: FutureBuilder<List<DailyDataPoint>>(
+                future: future,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return _buildChartError(context);
+                  }
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final data = snapshot.data!;
+                  final total = data.fold<int>(
+                    0,
+                    (sum, point) => sum + point.durationSeconds,
+                  );
+                  final monthQuality = _averageQuality(
+                    _sessionsInRange(
+                      provider.sessions,
+                      month.startDate,
+                      monthEnd,
+                    ),
+                  );
+                  final chartWidth = (data.length * 52.0).clamp(
+                    MediaQuery.sizeOf(context).width - 40,
+                    double.infinity,
+                  );
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${t.translate('stats.dailyDetail')} — ${month.label} ${month.startDate.year}',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      if (monthQuality == null)
+                        Text(
+                          '${t.translate('stats.monthlyTotal')}: ${TimeUtils.formatDurationReadable(total)}',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        )
+                      else
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              '${t.translate('stats.monthlyTotal')}: ${TimeUtils.formatDurationReadable(total)} · ${t.translate('stats.qualityAverage')}: ',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                            QualityRatingLabel(
+                              rating: monthQuality,
+                              iconSize: 11,
+                              starSpacing: 0.5,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: SizedBox(
+                            width: chartWidth,
+                            child: _buildBarChart(
+                              context,
+                              data: data,
+                              barColor: AppColors.primaryLight,
+                              qualityRatingBuilder: (point) {
+                                final day = point as DailyDataPoint;
+                                final nextDay = day.date.add(
+                                  const Duration(days: 1),
+                                );
+                                return _averageQuality(
+                                  _sessionsInRange(
+                                    provider.sessions,
+                                    day.date,
+                                    nextDay,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Shorthand for this screen's call sites. Week and day boundaries are
+  /// computed in [TimeUtils] alone, so they match SessionProvider's queries.
+  DateTime _startOfWeek(DateTime date) => TimeUtils.startOfWeek(date);
+
+  Widget _buildChartError(BuildContext context) => Center(
+    child: Text(
+      TranslationService.of(context).translate('stats.noData'),
+      style: Theme.of(context).textTheme.bodyLarge,
+    ),
+  );
+
+  String _formatNumericDate(DateTime date) =>
+      '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+
+  /// The heatmap-style calendar view: one row per day, one cell per
+  /// 6-hour slot (see SessionCalendar), shaded by practice time. Used
+  /// by the calendar toggle in [_buildReportViewSwitcher] as the
+  /// alternative to the bar chart.
+  Widget _buildTimeSlotCalendar(
+    BuildContext context, {
+    required SessionProvider provider,
+    required DateTime startDate,
+    required int dayCount,
+    required String periodLabel,
+    required bool includeMonthInRows,
+    required Key qualityToggleKey,
+    required VoidCallback onPrevious,
+    required VoidCallback? onNext,
+    required VoidCallback onCurrent,
+  }) {
+    final t = TranslationService.of(context);
+    final settings = context.watch<SettingsProvider>();
+    final theme = Theme.of(context);
+    final rows = SessionCalendar.build(
+      startDate: startDate,
+      days: dayCount,
+      sessions: provider.sessions,
+    );
+    final totalSeconds = rows.fold<int>(
+      0,
+      (sum, row) => sum + row.totalSeconds,
+    );
+    final periodEnd = TimeUtils.addDays(startDate, dayCount);
+    final periodQuality = _averageQuality(
+      _sessionsInRange(provider.sessions, startDate, periodEnd),
+    );
+    final totalLabelKey = dayCount > 7
+        ? 'stats.monthlyTotal'
+        : 'stats.totalTime';
+    final profileName = settings.userName.isEmpty
+        ? t.translate('stats.calendar.meditator')
+        : settings.userName;
+
+    return RefreshIndicator(
+      onRefresh: () => _refreshSessionsAndReports(provider),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              profileName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              periodLabel,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: t.translate('stats.calendar.previous'),
+                        onPressed: onPrevious,
+                        icon: const Icon(Icons.chevron_left_rounded),
+                      ),
+                      IconButton(
+                        tooltip: t.translate('stats.calendar.current'),
+                        onPressed: onCurrent,
+                        icon: const Icon(Icons.today_outlined),
+                      ),
+                      IconButton(
+                        tooltip: t.translate('stats.calendar.next'),
+                        onPressed: onNext,
+                        icon: const Icon(Icons.chevron_right_rounded),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.star_outline_rounded,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          t.translate('quality.label'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Switch.adaptive(
+                        key: qualityToggleKey,
+                        value: _showCalendarQuality,
+                        onChanged: (value) =>
+                            setState(() => _showCalendarQuality = value),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(18),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                t.translate(totalLabelKey),
+                                style: theme.textTheme.bodySmall,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                TimeUtils.formatDurationReadable(totalSeconds),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_showCalendarQuality && periodQuality != null) ...[
+                          Container(
+                            width: 1,
+                            height: 38,
+                            color: theme.dividerColor,
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Text(
+                                  t.translate('stats.qualityAverage'),
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                                const SizedBox(height: 2),
+                                QualityRatingLabel(
+                                  rating: periodQuality,
+                                  iconSize: 14,
+                                  gap: 1,
+                                  starSpacing: 0.5,
+                                  compact: true,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _copyCalendarReport(context, rows),
+                      icon: const Icon(Icons.copy_all_outlined, size: 18),
+                      label: Text(t.translate('stats.calendar.copyReport')),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            margin: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.all(1),
+              child: PracticeStatsTable(
+                sessions: provider.sessions,
+                showQuality: _showCalendarQuality,
+                startDate: startDate,
+                endDate: TimeUtils.addDays(periodEnd, -1),
+                dateLabelBuilder: (date) => includeMonthInRows
+                    ? TimeUtils.formatDate(date)
+                    : '${date.day}',
+                durationLabelBuilder: _formatPracticeDuration,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  void _copyCalendarReport(
+    BuildContext context,
+    List<SessionCalendarDay> rows,
+  ) {
+    Clipboard.setData(ClipboardData(text: SessionCalendar.buildReport(rows)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(TranslationService.of(context).translate('stats.copied')),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -884,6 +1720,9 @@ class _StatsScreenState extends State<StatsScreen>
     return FutureBuilder<List<dynamic>>(
       future: _yearlyDataFuture,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _buildChartError(context);
+        }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -911,6 +1750,20 @@ class _StatsScreenState extends State<StatsScreen>
                   data: data,
                   barColor: AppColors.primary.withAlpha(180),
                   itemsPerRow: itemsPerRow,
+                  onBarTap: (point) => _showYearDetails(
+                    context,
+                    provider,
+                    point as YearlyDataPoint,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: Text(
+                  t.translate('stats.tapBarHint'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
@@ -927,6 +1780,7 @@ class _StatsScreenState extends State<StatsScreen>
     required List<dynamic> data,
     required Color barColor,
     int itemsPerRow = 6,
+    ValueChanged<dynamic>? onBarTap,
   }) {
     final t = TranslationService.of(context);
     if (data.isEmpty) {
@@ -969,56 +1823,60 @@ class _StatsScreenState extends State<StatsScreen>
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        SizedBox(
-                          height: 14,
-                          child: hasValue
-                              ? FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    _formatShortDuration(seconds),
-                                    style: const TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
+                    child: InkWell(
+                      onTap: onBarTap == null ? null : () => onBarTap(point),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                            height: 14,
+                            child: hasValue
+                                ? FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      _formatShortDuration(seconds),
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
                                     ),
-                                    maxLines: 1,
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          height: height.clamp(4.0, 100.0),
-                          decoration: BoxDecoration(
-                            color: hasValue
-                                ? barColor
-                                : Theme.of(
-                                    context,
-                                  ).dividerColor.withValues(alpha: 0.15),
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(6),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            height: height.clamp(4.0, 100.0),
+                            decoration: BoxDecoration(
+                              color: hasValue
+                                  ? barColor
+                                  : Theme.of(
+                                      context,
+                                    ).dividerColor.withValues(alpha: 0.15),
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(6),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        SizedBox(
-                          height: 14,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              point.label,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                              maxLines: 1,
+                          const SizedBox(height: 6),
+                          SizedBox(
+                            height: 14,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                point.label,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                maxLines: 1,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -1036,11 +1894,13 @@ class _StatsScreenState extends State<StatsScreen>
     );
   }
 
-  // Unified bar chart component which implements text fitting to prevent wrapping issues.
+  // Preserve the original weekly/monthly bar chart as an alternate report view.
   Widget _buildBarChart(
     BuildContext context, {
     required List<dynamic> data,
     required Color barColor,
+    ValueChanged<dynamic>? onBarTap,
+    double? Function(dynamic point)? qualityRatingBuilder,
   }) {
     final t = TranslationService.of(context);
     if (data.isEmpty) {
@@ -1057,72 +1917,116 @@ class _StatsScreenState extends State<StatsScreen>
       (max, d) => d.durationSeconds > max ? d.durationSeconds : max,
     );
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: data.map((point) {
-        final int seconds = point.durationSeconds;
-        final bool hasValue = seconds > 0;
-        final height = maxSeconds > 0 ? (seconds / maxSeconds) * 150.0 : 0.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableHeight = constraints.hasBoundedHeight
+            ? constraints.maxHeight
+            : 194.0;
+        final valueLabelHeight = qualityRatingBuilder == null ? 16.0 : 30.0;
+        final maxBarHeight = (availableHeight - valueLabelHeight - 28).clamp(
+          4.0,
+          150.0,
+        );
 
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // Display label only if time exists. Fit to container width.
-                SizedBox(
-                  height: 16,
-                  child: hasValue
-                      ? FittedBox(
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: data.map((point) {
+            final int seconds = point.durationSeconds;
+            final bool hasValue = seconds > 0;
+            final height = maxSeconds > 0
+                ? (seconds / maxSeconds) * maxBarHeight
+                : 0.0;
+            final qualityRating = qualityRatingBuilder?.call(point);
+
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: InkWell(
+                  onTap: onBarTap == null ? null : () => onBarTap(point),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      SizedBox(
+                        height: valueLabelHeight,
+                        child: hasValue
+                            ? FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: qualityRating == null
+                                    ? Text(
+                                        _formatShortDuration(seconds),
+                                        style: const TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                      )
+                                    : Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _formatShortDuration(seconds),
+                                            style: const TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            maxLines: 1,
+                                          ),
+                                          QualityRatingLabel(
+                                            rating: qualityRating,
+                                            iconSize: 7,
+                                            gap: 0.5,
+                                            starSpacing: 0.5,
+                                            compact: true,
+                                            style: const TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        height: height.clamp(4.0, maxBarHeight),
+                        decoration: BoxDecoration(
+                          color: hasValue
+                              ? barColor
+                              : Theme.of(
+                                  context,
+                                ).dividerColor.withValues(alpha: 0.15),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(6),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 16,
+                        child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            _formatShortDuration(seconds),
-                            style: const TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            point.label,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
                             maxLines: 1,
                           ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-                const SizedBox(height: 4),
-                // Chart columns with responsive round edges.
-                Container(
-                  height: height.clamp(4.0, 150.0),
-                  decoration: BoxDecoration(
-                    color: hasValue
-                        ? barColor
-                        : Theme.of(context).dividerColor.withValues(
-                            alpha: 0.15,
-                          ), // Dim inactive bars
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(6),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // X-Axis labels scaled down to prevent text wraps.
-                SizedBox(
-                  height: 16,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      point.label,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      maxLines: 1,
-                    ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 }
